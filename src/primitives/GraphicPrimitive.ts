@@ -19,6 +19,10 @@ export abstract class GraphicPrimitive {
     private static readonly INT_TOLERANCE = 1e-5;
     private static oldalpha: number = 1.0;
 
+    static resetAlphaForRender(): void {
+        GraphicPrimitive.oldalpha = 1.0;
+    }
+
     virtualPoint: PointG[] = [];
     protected changed: boolean = true;
     protected macroFont: string = '';
@@ -30,7 +34,6 @@ export abstract class GraphicPrimitive {
     private mult: number = 1.0;
     private macroFontSize: number = 4;
     private currentLayer: LayerDesc | null = null;
-    private alpha: number = 1.0;
     private old_layer: number = -1;
 
     // Cached text layout state (recomputed when changed=true)
@@ -309,12 +312,20 @@ export abstract class GraphicPrimitive {
             g.activateSelectColor(this.currentLayer!);
         } else {
             const layerColor = this.currentLayer!.getColor();
-            if (layerColor && (g.getColor() !== layerColor ||
-                GraphicPrimitive.oldalpha !== this.alpha)) {
-                g.setColor(layerColor);
-                this.alpha = this.currentLayer!.getAlpha();
-                GraphicPrimitive.oldalpha = this.alpha;
-                g.setAlpha(this.alpha);
+            if (layerColor) {
+                const currentColor = g.getColor();
+                const layerAlpha = this.currentLayer!.getAlpha();
+                // Compare color values, not object references
+                const colorChanged = currentColor.getRed() !== layerColor.getRed() ||
+                    currentColor.getGreen() !== layerColor.getGreen() ||
+                    currentColor.getBlue() !== layerColor.getBlue();
+                // Always check alpha against the current layer's alpha
+                const alphaChanged = GraphicPrimitive.oldalpha !== layerAlpha;
+                if (colorChanged || alphaChanged) {
+                    g.setColor(layerColor);
+                    g.setAlpha(layerAlpha);
+                    GraphicPrimitive.oldalpha = layerAlpha;
+                }
             }
         }
         return true;
@@ -370,6 +381,10 @@ export abstract class GraphicPrimitive {
 
     hasName(): boolean { return this.name.length !== 0; }
     hasValue(): boolean { return this.value.length !== 0; }
+    getName(): string { return this.name; }
+    getValue(): string { return this.value; }
+    setNameStr(s: string): void { this.name = s; this.setChanged(true); }
+    setValueStr(s: string): void { this.value = s; this.setChanged(true); }
 
     protected testIfValidHandle(i: number): boolean {
         if (i === this.getNameVirtualPointNumber() && this.name.length === 0) return false;

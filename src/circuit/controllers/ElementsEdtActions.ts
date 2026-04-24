@@ -53,7 +53,9 @@ export class ElementsEdtActions {
 
     // Callbacks
     public onTextEditRequested: ((prim: PrimitiveAdvText, sx: number, sy: number) => void) | null = null;
+    public onExistingTextEditRequested: ((prim: PrimitiveAdvText) => void) | null = null;
     public onPropertiesRequested: ((prim: GraphicPrimitive) => void) | null = null;
+    public onContextMenuRequested: ((sx: number, sy: number) => void) | null = null;
 
     constructor(
         model: DrawingModel,
@@ -153,10 +155,14 @@ export class ElementsEdtActions {
                     // Fire callback if a primitive is selected
                     const sel = this.selectionActions.getSelectedPrimitives();
                     if (sel.length > 0) {
-                        this.onPropertiesRequested?.(sel[0]);
+                        if (sel[0] instanceof PrimitiveAdvText) {
+                            this.onExistingTextEditRequested?.(sel[0] as PrimitiveAdvText);
+                        } else {
+                            this.onPropertiesRequested?.(sel[0]);
+                        }
                     }
                 } else if (button3) {
-                    // TODO: Show popup menu
+                    // Handled via contextmenu event in CircuitPanel
                 } else {
                     this.editorActions.handleSelection(cs, x, y, toggle);
                 }

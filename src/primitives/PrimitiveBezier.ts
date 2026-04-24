@@ -54,6 +54,10 @@ export class PrimitiveBezier extends GraphicPrimitive {
 
     getControlPointNumber(): number { return PrimitiveBezier.N_POINTS; }
 
+    getDashStyle(): number { return this.dashStyle; }
+    setDashStyle(v: number): void { this.dashStyle = this.checkDashStyle(v); this.setChanged(true); }
+    getArrowData(): Arrow { return this.arrowData; }
+
     private drawArrow(g: GraphicsInterface, coordSys: MapCoordinates,
         aa: number, bb: number, cc: number, dd: number): PointG {
         let psx = this.virtualPoint[aa]!.x, psy = this.virtualPoint[aa]!.y;

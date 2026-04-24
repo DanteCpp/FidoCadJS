@@ -42,6 +42,9 @@ export class PrimitivePCBLine extends GraphicPrimitive {
 
     getControlPointNumber(): number { return PrimitivePCBLine.N_POINTS; }
 
+    getWidth(): number { return this.width; }
+    setWidth(v: number): void { this.width = v; this.setChanged(true); }
+
     draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);

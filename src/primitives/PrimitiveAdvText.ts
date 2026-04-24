@@ -293,6 +293,15 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     getFontDimension(): number { return this.siy; }
     setFontDimension(s: number): void { this.siy = s; this.checkSizes(); this.recalcSize = true; }
 
+    getFontWidth(): number { return this.six; }
+    setFontWidth(s: number): void { this.six = s; this.checkSizes(); this.recalcSize = true; }
+
+    getFontName(): string { return this.fontName; }
+    setFontName(name: string): void {
+        this.fontName = (name && name.trim() !== '' && name !== '*') ? name.trim() : Globals.defaultTextFont;
+        this.recalcSize = true;
+    }
+
     getOrientation(): number { return this.o; }
     setOrientation(o: number): void { this.o = o; this.recalcSize = true; }
 
@@ -303,6 +312,20 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         } else {
             this.sty &= ~PrimitiveAdvText.TEXT_MIRRORED;
         }
+        this.recalcSize = true;
+    }
+
+    isBold(): boolean { return (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0; }
+    setBold(v: boolean): void {
+        if (v) this.sty |= PrimitiveAdvText.TEXT_BOLD;
+        else this.sty &= ~PrimitiveAdvText.TEXT_BOLD;
+        this.recalcSize = true;
+    }
+
+    isItalic(): boolean { return (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0; }
+    setItalic(v: boolean): void {
+        if (v) this.sty |= PrimitiveAdvText.TEXT_ITALIC;
+        else this.sty &= ~PrimitiveAdvText.TEXT_ITALIC;
         this.recalcSize = true;
     }
 

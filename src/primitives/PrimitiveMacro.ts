@@ -65,9 +65,24 @@ export class PrimitiveMacro extends GraphicPrimitive {
     setDrawOnlyLayer(la: number): void { this.drawOnlyLayer = la; }
     getMaxLayer(): number { return this.macroModel.getMaxLayer(); }
     getOrientation(): number { return this.o; }
+    setOrientation(o: number): void { this.o = o; this.setChanged(true); }
     isMirrored(): boolean { return this.m; }
+    setMirrored(v: boolean): void { this.m = v; this.setChanged(true); }
+    getMacroName(): string { return this.macroName; }
     getMacroDesc(): string | null { return this.macroDesc; }
     setMacroDesc(d: string): void { this.macroDesc = d; }
+
+    /** Look up a macro by key, set name and description, and parse the sub-circuit. */
+    initializeFromKey(key: string): void {
+        this.macroName = key.toLowerCase();
+        const macro = this.library.get(this.macroName);
+        if (macro) {
+            this.macroDesc = macro.description;
+        } else {
+            this.macroDesc = null;
+        }
+        this.macroStore(this.layers);
+    }
 
     containsLayer(l: number): boolean { return this.macroModel.containsLayer(l); }
 

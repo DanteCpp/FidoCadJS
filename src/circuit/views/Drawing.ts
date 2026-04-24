@@ -3,6 +3,7 @@ import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import { DrawingModel } from '../model/DrawingModel.js';
 import { LayerDesc } from '../../layers/LayerDesc.js';
 import { PrimitiveMacro } from '../../primitives/PrimitiveMacro.js';
+import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 
 export class Drawing {
     private oZ: number = 0;
@@ -26,6 +27,9 @@ export class Drawing {
             console.error('Drawing.draw: ouch... cs not initialized :-(');
             return;
         }
+
+        // Reset alpha state at start of each render
+        GraphicPrimitive.resetAlphaForRender();
 
         if (
             this.drawingModel.getChanged() ||

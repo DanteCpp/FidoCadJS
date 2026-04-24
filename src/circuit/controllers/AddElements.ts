@@ -284,20 +284,28 @@ export class AddElements {
         try {
             sa.setSelectionAll(false);
 
+            let orientation = 0;
+            let mirror = false;
+            if (primEdit instanceof PrimitiveMacro) {
+                orientation = primEdit.getOrientation();
+                mirror = primEdit.isMirrored();
+            }
+
             const macro = new PrimitiveMacro(
                 this.model.getLibrary(),
                 this.model.getLayers(),
                 this.model.getTextFont(),
                 this.model.getTextFontSize()
             );
-            // Set the position and macro name
             macro.virtualPoint[0]!.x = x;
             macro.virtualPoint[0]!.y = y;
             macro.virtualPoint[1]!.x = x + 10;
             macro.virtualPoint[1]!.y = y + 10;
             macro.virtualPoint[2]!.x = x + 10;
             macro.virtualPoint[2]!.y = y + 5;
-            macro.macroDesc = macroKey;
+            macro.setOrientation(orientation);
+            macro.setMirrored(mirror);
+            macro.initializeFromKey(macroKey);
             this.model.addPrimitive(macro, true, this.undoActions);
             return macro;
         } catch (e) {

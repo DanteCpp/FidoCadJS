@@ -54,6 +54,10 @@ export class PrimitiveLine extends GraphicPrimitive {
 
     getControlPointNumber(): number { return PrimitiveLine.N_POINTS; }
 
+    getDashStyle(): number { return this.dashStyle; }
+    setDashStyle(v: number): void { this.dashStyle = this.checkDashStyle(v); this.setChanged(true); }
+    getArrowData(): Arrow { return this.arrowData; }
+
     draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);

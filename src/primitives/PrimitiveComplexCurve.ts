@@ -77,6 +77,14 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
 
     getControlPointNumber(): number { return this.nPoints + 2; }
 
+    getFilled(): boolean { return this.isFilled; }
+    setFilled(v: boolean): void { this.isFilled = v; this.setChanged(true); }
+    getIsClosed(): boolean { return this.isClosed; }
+    setIsClosed(v: boolean): void { this.isClosed = v; this.setChanged(true); }
+    getDashStyle(): number { return this.dashStyle; }
+    setDashStyle(v: number): void { this.dashStyle = this.checkDashStyle(v); this.setChanged(true); }
+    getArrowData(): Arrow { return this.arrowData; }
+
     addPoint(x: number, y: number): void {
         if (this.nPoints + 2 >= this.storageSize) {
             const oN = this.storageSize;

@@ -1,4 +1,5 @@
 import { CircuitPanel } from '../circuit/CircuitPanel.js';
+import { showOptionsDialog } from './OptionsDialog.js';
 
 interface MenuItem {
     kind: 'action' | 'separator';
@@ -140,6 +141,13 @@ export class MenuBar {
                 label: 'Export SVG',
                 shortcut: 'Ctrl+E',
                 action: () => this.exportSVG(),
+            },
+            { kind: 'separator' },
+            {
+                kind: 'action',
+                label: 'Options...',
+                shortcut: 'Ctrl+,',
+                action: () => showOptionsDialog(this.panel),
             },
         ];
     }
@@ -332,5 +340,42 @@ export class MenuBar {
             this.redoMenuItem.style.opacity = canRedo ? '1' : '0.5';
             this.redoMenuItem.style.cursor = canRedo ? 'pointer' : 'default';
         }
+    }
+
+    // Public methods for keyboard shortcuts
+    newFile(): void {
+        this.onNewCircuit();
+    }
+
+    openFile(): void {
+        this.importCircuit();
+    }
+
+    saveFile(): void {
+        this.exportCircuit();
+    }
+
+    saveFileAs(): void {
+        // For now, same as save - could add filename prompt later
+        this.exportCircuit();
+    }
+
+    exportFile(): void {
+        this.exportSVG();
+    }
+
+    printFile(): void {
+        // TODO: Implement print functionality
+        console.log('Print not yet implemented');
+    }
+
+    closeFile(): void {
+        // TODO: Implement close with dirty check
+        if (this.panel.getModel().getChanged()) {
+            if (!confirm('You have unsaved changes. Close anyway?')) {
+                return;
+            }
+        }
+        this.onNewCircuit();
     }
 }

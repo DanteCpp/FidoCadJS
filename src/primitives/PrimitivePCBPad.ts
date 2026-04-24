@@ -52,6 +52,15 @@ export class PrimitivePCBPad extends GraphicPrimitive {
 
     setDrawOnlyPads(pd: boolean): void { this.drawOnlyPads = pd; }
 
+    getRx(): number { return this.rx; }
+    setRx(v: number): void { this.rx = v; this.setChanged(true); }
+    getRy(): number { return this.ry; }
+    setRy(v: number): void { this.ry = v; this.setChanged(true); }
+    getRi(): number { return this.ri; }
+    setRi(v: number): void { this.ri = v; this.setChanged(true); }
+    getSty(): number { return this.sty; }
+    setSty(v: number): void { this.sty = v; this.setChanged(true); }
+
     draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);

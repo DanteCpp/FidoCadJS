@@ -194,12 +194,15 @@ export class GraphicsCanvas implements GraphicsInterface {
         const xStep = cs.getXGridStep() * cs.getXMagnitude();
         const yStep = cs.getYGridStep() * cs.getYMagnitude();
 
+        const xStart = ((cs.getXCenter() % xStep) + xStep) % xStep;
+        const yStart = ((cs.getYCenter() % yStep) + yStep) % yStep;
+
         if (xStep < 5 || yStep < 5) {
             // Draw dots
             this.setColor(colorDots);
             const dotSize = 1;
-            for (let x = cs.getXCenter() % xStep; x < xmax; x += xStep) {
-                for (let y = cs.getYCenter() % yStep; y < ymax; y += yStep) {
+            for (let x = xStart; x < xmax; x += xStep) {
+                for (let y = yStart; y < ymax; y += yStep) {
                     if (x >= xmin && y >= ymin) {
                         this.ctx.fillRect(x, y, dotSize, dotSize);
                     }
@@ -208,14 +211,16 @@ export class GraphicsCanvas implements GraphicsInterface {
         } else {
             // Draw lines
             this.setColor(colorLines);
+            this.ctx.lineWidth = 1;
+            this.ctx.setLineDash([]);
             this.ctx.beginPath();
-            for (let x = cs.getXCenter() % xStep; x < xmax; x += xStep) {
+            for (let x = xStart; x < xmax; x += xStep) {
                 if (x >= xmin) {
                     this.ctx.moveTo(x, ymin);
                     this.ctx.lineTo(x, ymax);
                 }
             }
-            for (let y = cs.getYCenter() % yStep; y < ymax; y += yStep) {
+            for (let y = yStart; y < ymax; y += yStep) {
                 if (y >= ymin) {
                     this.ctx.moveTo(xmin, y);
                     this.ctx.lineTo(xmax, y);

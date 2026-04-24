@@ -1,23 +1,30 @@
 import { CircuitPanel } from './circuit/CircuitPanel.js';
 import { ElementsEdtActions } from './circuit/controllers/ElementsEdtActions.js';
+import { SettingsManager } from './settings/SettingsManager.js';
+import { loadStandardLibraries } from './circuit/controllers/LibraryLoader.js';
+import { LibraryModel } from './librarymodel/LibraryModel.js';
+import { MacroPicker } from './macropicker/MacroPicker.js';
 import { MenuBar } from './ui/MenuBar.js';
 import { GraphicPrimitive } from './primitives/GraphicPrimitive.js';
 import { PrimitiveAdvText } from './primitives/PrimitiveAdvText.js';
-
-// Sample FidoCadJ circuit for testing
-const SAMPLE_CIRCUIT = `LI 50 100 150 100 0 0 0 0 -1
-LI 100 50 100 150 0 0 0 0 -1
-RV 75 75 125 125 0 0 1 0 0
-EV 60 60 140 140 0 0 0 0
-BE 50 50 80 30 120 30 150 50 0 0 0 0 0 0 0 -1
-TY 110 95 4 4 0 0 0 * FidoCadTS
-`;
+import { PrimitiveLine } from './primitives/PrimitiveLine.js';
+import { PrimitiveRectangle } from './primitives/PrimitiveRectangle.js';
+import { PrimitiveOval } from './primitives/PrimitiveOval.js';
+import { PrimitiveBezier } from './primitives/PrimitiveBezier.js';
+import { PrimitivePCBLine } from './primitives/PrimitivePCBLine.js';
+import { PrimitivePCBPad } from './primitives/PrimitivePCBPad.js';
+import { PrimitivePolygon } from './primitives/PrimitivePolygon.js';
+import { PrimitiveComplexCurve } from './primitives/PrimitiveComplexCurve.js';
+import { PrimitiveMacro } from './primitives/PrimitiveMacro.js';
 
 class FidoCadTS {
     private circuitPanel!: CircuitPanel;
     private toolbar!: HTMLElement;
     private menuBar!: MenuBar;
     private propertiesSidebar!: HTMLElement;
+    private libraryPanel!: HTMLElement;
+    private macroPicker!: MacroPicker;
+    private libraryModel!: LibraryModel;
 
     constructor() {
         const app = document.getElementById('app');
@@ -30,136 +37,113 @@ class FidoCadTS {
         this.toolbar = document.createElement('div');
         app.appendChild(this.toolbar);
 
-        // Create canvas area with editor container and properties sidebar
-        const canvasArea = document.createElement('div');
-        canvasArea.style.cssText = 'display: flex; flex: 1; overflow: hidden;';
+        // Create main workspace row: editor + properties sidebar + library panel (right)
+        const workspaceRow = document.createElement('div');
+        workspaceRow.style.cssText = 'display: flex; flex: 1; overflow: hidden;';
 
+        // Center editor container
         const editorContainer = document.createElement('div');
         editorContainer.style.cssText = 'flex: 1; overflow: hidden;';
 
-        // Properties sidebar (initially hidden)
+        // Properties sidebar (initially hidden, left of library panel)
         this.propertiesSidebar = document.createElement('div');
         this.propertiesSidebar.style.cssText =
-            'width: 280px; background: #f5f5f5; border-left: 1px solid #ccc; ' +
+            'width: 280px; background: #f5f5f5; border-right: 1px solid #ccc; ' +
             'display: none; flex-direction: column; overflow-y: auto;';
         this.propertiesSidebar.innerHTML = '<div style="padding: 12px; font-weight: bold; border-bottom: 1px solid #ddd;">Properties</div>';
 
-        // Append editor container and sidebar to canvas area BEFORE creating CircuitPanel
-        canvasArea.appendChild(editorContainer);
-        canvasArea.appendChild(this.propertiesSidebar);
-        app.appendChild(canvasArea);
+        // Right library panel
+        this.libraryPanel = document.createElement('div');
+        this.libraryPanel.style.cssText =
+            'width: 240px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden;';
+
+        this.macroPicker = new MacroPicker();
+        this.macroPicker.element.style.flex = '1';
+        this.libraryPanel.appendChild(this.macroPicker.element);
+
+        workspaceRow.appendChild(editorContainer);
+        workspaceRow.appendChild(this.propertiesSidebar);
+        workspaceRow.appendChild(this.libraryPanel);
+        app.appendChild(workspaceRow);
 
         // Now create CircuitPanel after editorContainer is in the DOM
         this.circuitPanel = new CircuitPanel(editorContainer);
+        SettingsManager.getInstance().applyToPanel(this.circuitPanel);
 
         // Create menu bar after CircuitPanel is ready
         this.menuBar = new MenuBar(this.circuitPanel, () => this.newCircuit());
+        this.circuitPanel.setMenuBar(this.menuBar);
         app.insertBefore(this.menuBar.getElement(), this.toolbar);
 
         // Create toolbar buttons
         this.createToolbar();
 
-        // Create status bar below editor
+        // Thin status bar (coordinates moved to toolbar)
         const statusBar = document.createElement('div');
         statusBar.style.cssText =
-            'height: 20px; padding: 2px 8px; background: #f0f0f0; border-top: 1px solid #ccc; ' +
-            'font-size: 11px; font-family: monospace; color: #666; display: flex; align-items: center;';
-        statusBar.textContent = 'X: 0  Y: 0';
-        this.circuitPanel.onCoordinatesChange = (lx, ly) => {
-            statusBar.textContent = `X: ${Math.round(lx)}  Y: ${Math.round(ly)}`;
-        };
+            'height: 4px; background: #e0e0e0; border-top: 1px solid #ccc;';
         app.appendChild(statusBar);
 
         // Wire up properties panel
         this.wirePropertiesPanel();
 
-        // Load sample circuit
-        this.circuitPanel.loadCircuit(SAMPLE_CIRCUIT);
-        this.circuitPanel.render();
+        // Load standard FCL libraries asynchronously
+        this.initLibraries();
 
         console.log('FidoCadTS initialized');
     }
 
+    private async initLibraries(): Promise<void> {
+        await loadStandardLibraries(this.circuitPanel.getParserActions());
+        this.libraryModel = new LibraryModel(this.circuitPanel.getModel());
+        this.macroPicker.refresh(this.libraryModel);
+        this.macroPicker.onMacroSelected = (key) => {
+            this.circuitPanel.setMacroTool(key);
+        };
+        console.log(`Libraries loaded: ${this.libraryModel.getAllLibraries().length} libraries, ` +
+            `${this.libraryModel.getAllMacros().size} macros`);
+    }
+
     private createToolbar(): void {
+        // Main toolbar container with vertical layout (two rows)
         this.toolbar.style.cssText =
-            'display: flex; align-items: center; gap: 4px; padding: 6px 8px; ' +
+            'display: flex; flex-direction: column; padding: 2px 8px; ' +
             'background: #f0f0f0; border-bottom: 1px solid #ccc; font-family: sans-serif; font-size: 12px;';
 
-        // File group
-        this.addButton('Open', () => this.importCircuit());
-        this.addButton('Save FCD', () => this.exportCircuit());
-        this.addButton('Export SVG', () => this.exportSVG());
+        // ===== FIRST ROW: Drawing tools =====
+        const firstRow = document.createElement('div');
+        firstRow.style.cssText = 'display: flex; align-items: center; gap: 4px; padding: 2px 0;';
 
-        // Divider
-        this.addDivider();
-
-        // View group
-        this.addButton('Zoom In', () => {
-            this.circuitPanel.zoomIn();
-            this.updateZoomLabel();
-        });
-
-        const zoomLabel = document.createElement('span');
-        zoomLabel.textContent = '100%';
-        zoomLabel.style.cssText =
-            'min-width: 40px; text-align: center; padding: 2px 4px; color: #333;';
-        this.toolbar.appendChild(zoomLabel);
-
-        this.circuitPanel.onZoomChange = () => this.updateZoomLabel();
-        const updateZoomLabel = () => {
-            zoomLabel.textContent = this.circuitPanel.getZoomPercent() + '%';
-        };
-        this.updateZoomLabel = updateZoomLabel;
-
-        this.addButton('Zoom Out', () => {
-            this.circuitPanel.zoomOut();
-            this.updateZoomLabel();
-        });
-        this.addButton('Fit', () => {
-            this.circuitPanel.zoomToFit();
-            this.updateZoomLabel();
-        });
-
-        const gridButton = this.addButton('Grid', () => {
-            const visible = this.circuitPanel.isGridVisible();
-            this.circuitPanel.setGridVisible(!visible);
-            gridButton.style.background = this.circuitPanel.isGridVisible() ? '#b0c8e8' : '';
-            gridButton.style.border = this.circuitPanel.isGridVisible() ? '1px solid #5a8fc0' : '';
-        });
-        // Initialize grid button state
-        if (this.circuitPanel.isGridVisible()) {
-            gridButton.style.background = '#b0c8e8';
-            gridButton.style.border = '1px solid #5a8fc0';
-        }
-
-        // Divider
-        this.addDivider();
-
-        // Tools group
-        const toolDefs: Array<[string, number]> = [
-            ['Select',   ElementsEdtActions.SELECTION],
-            ['Zoom',     ElementsEdtActions.ZOOM],
-            ['Hand',     ElementsEdtActions.HAND],
-            ['Line',     ElementsEdtActions.LINE],
-            ['Bezier',   ElementsEdtActions.BEZIER],
-            ['Rect',     ElementsEdtActions.RECTANGLE],
-            ['Oval',     ElementsEdtActions.ELLIPSE],
-            ['Polygon',  ElementsEdtActions.POLYGON],
-            ['Text',     ElementsEdtActions.TEXT],
-            ['Conn',     ElementsEdtActions.CONNECTION],
-            ['PCB Line', ElementsEdtActions.PCB_LINE],
-            ['PCB Pad',  ElementsEdtActions.PCB_PAD],
-            ['ComplexCv',ElementsEdtActions.COMPLEXCURVE],
+        // Tool group — icon buttons in original FidoCadJ order
+        const toolDefs: Array<[string, string, number]> = [
+            ['A or space: Select and move an object. Type R to rotate, S to swap.', 'arrow.png',       ElementsEdtActions.SELECTION],
+            ['Left click: increase zoom, right click: decrease zoom.',              'magnifier.png',   ElementsEdtActions.ZOOM],
+            ['Scroll through a big drawing.',                                       'move.png',        ElementsEdtActions.HAND],
+            ['L: Draw a line.',                                                     'line.png',        ElementsEdtActions.LINE],
+            ['T: Place a text.',                                                    'text.png',        ElementsEdtActions.TEXT],
+            ['B: Draw a four-point Bézier primitive.',                              'bezier.png',      ElementsEdtActions.BEZIER],
+            ['P: Place a polygon.',                                                 'polygon.png',     ElementsEdtActions.POLYGON],
+            ['V: Open or closed curve.',                                            'complexcurve.png',ElementsEdtActions.COMPLEXCURVE],
+            ['E: Place an ellipse (hold Control for a circle).',                    'ellipse.png',     ElementsEdtActions.ELLIPSE],
+            ['R: Place a rectangle.',                                               'rectangle.png',   ElementsEdtActions.RECTANGLE],
+            ['C: Place an electrical connection.',                                  'connection.png',  ElementsEdtActions.CONNECTION],
+            ['I: Place a Printed Circuit Board line.',                              'pcbline.png',     ElementsEdtActions.PCB_LINE],
+            ['Z: Place a Printed Circuit Board pad.',                               'pcbpad.png',      ElementsEdtActions.PCB_PAD],
         ];
+
         const toolButtons = new Map<number, HTMLButtonElement>();
-        for (const [label, toolId] of toolDefs) {
-            const btn = this.addButton(label, () => {
+        for (const [tooltip, icon, toolId] of toolDefs) {
+            const btn = this.addIconButtonToRow(firstRow, `/icons/${icon}`, tooltip, () => {
                 this.circuitPanel.setTool(toolId);
             });
             toolButtons.set(toolId, btn);
         }
 
-        // Wire tool change callback to update button styles
+        // Macro tool button (no icon — activated by library selection)
+        const macroBtn = this.addButtonToRow(firstRow, 'Macro', () => {});
+        macroBtn.title = 'Select a component from the Library panel to activate';
+        toolButtons.set(ElementsEdtActions.MACRO, macroBtn);
+
         this.circuitPanel.onToolChange = (toolId) => {
             for (const [id, btn] of toolButtons) {
                 const active = id === toolId;
@@ -168,24 +152,183 @@ class FidoCadTS {
             }
         };
 
-        // Add divider before layer selector
-        this.addDivider();
+        this.toolbar.appendChild(firstRow);
 
-        // Add layer selector
-        const layerSelect = document.createElement('select');
-        layerSelect.style.cssText = 'font-size: 12px; padding: 4px 6px; border-radius: 2px; border: 1px solid #ccc; background: white;';
-        const layers = this.circuitPanel.getLayerDescriptions();
-        for (let i = 0; i < layers.length; i++) {
+        // ===== SECOND ROW: Navigation, zoom, layer controls =====
+        const secondRow = document.createElement('div');
+        secondRow.style.cssText = 'display: flex; align-items: center; gap: 4px; padding: 2px 0;';
+
+        // Zoom combobox with exact FidoCadJ levels
+        const zoomLevels = [25, 50, 75, 100, 150, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000, 4000];
+        const zoomSelect = document.createElement('select');
+        zoomSelect.style.cssText =
+            'font-size: 12px; padding: 3px 4px; border-radius: 2px; border: 1px solid #ccc; ' +
+            'background: white; width: 72px;';
+        zoomSelect.title = 'Zoom level';
+        for (const level of zoomLevels) {
             const opt = document.createElement('option');
-            opt.value = String(i);
-            opt.textContent = `Layer ${i}: ${layers[i]}`;
-            layerSelect.appendChild(opt);
+            opt.value = String(level);
+            opt.textContent = `${level}%`;
+            zoomSelect.appendChild(opt);
         }
-        layerSelect.value = String(this.circuitPanel.getCurrentLayer());
-        layerSelect.addEventListener('change', () => {
-            this.circuitPanel.setCurrentLayer(Number(layerSelect.value));
+        zoomSelect.value = '100';
+        zoomSelect.addEventListener('change', () => {
+            const pct = Number(zoomSelect.value);
+            this.circuitPanel.setZoom(pct * 20 / 100);
         });
-        this.toolbar.appendChild(layerSelect);
+
+        const syncZoomSelect = () => {
+            const current = this.circuitPanel.getZoomPercent();
+            let closest = zoomLevels[0];
+            let minDist = Math.abs(current - zoomLevels[0]);
+            for (const level of zoomLevels) {
+                const d = Math.abs(current - level);
+                if (d < minDist) { minDist = d; closest = level; }
+            }
+            zoomSelect.value = String(closest);
+        };
+        this.circuitPanel.onZoomChange = syncZoomSelect;
+        secondRow.appendChild(zoomSelect);
+
+        // Fit button
+        this.addButtonToRow(secondRow, 'Fit', () => {
+            this.circuitPanel.zoomToFit();
+            syncZoomSelect();
+        });
+
+        // Small divider
+        const divider1 = document.createElement('span');
+        divider1.style.cssText = 'width: 1px; height: 20px; background: #bbb; margin: 0 2px;';
+        secondRow.appendChild(divider1);
+
+        // Show Grid toggle
+        const gridBtn = this.addButtonToRow(secondRow, 'Show Grid', () => {
+            const visible = this.circuitPanel.isGridVisible();
+            this.circuitPanel.setGridVisible(!visible);
+            this.setToggleActive(gridBtn, this.circuitPanel.isGridVisible());
+        });
+        this.setToggleActive(gridBtn, this.circuitPanel.isGridVisible());
+
+        // Snap to Grid toggle
+        const snapBtn = this.addButtonToRow(secondRow, 'Snap', () => {
+            const active = this.circuitPanel.isSnapActive();
+            this.circuitPanel.setSnap(!active);
+            this.setToggleActive(snapBtn, this.circuitPanel.isSnapActive());
+        });
+        this.setToggleActive(snapBtn, this.circuitPanel.isSnapActive());
+
+        // Library toggle
+        const libBtn = this.addButtonToRow(secondRow, 'Libs', () => {
+            const visible = this.libraryPanel.style.display !== 'none';
+            this.libraryPanel.style.display = visible ? 'none' : 'flex';
+            this.setToggleActive(libBtn, !visible);
+        });
+        this.setToggleActive(libBtn, true);
+
+        // Small divider
+        const divider2 = document.createElement('span');
+        divider2.style.cssText = 'width: 1px; height: 20px; background: #bbb; margin: 0 2px;';
+        secondRow.appendChild(divider2);
+
+        // Layer selector (custom dropdown with color swatches)
+        const layerDescs = this.circuitPanel.getLayers();
+        const layerColorCSS = (idx: number): string => {
+            const c = layerDescs[idx].getColor();
+            return c ? `rgb(${c.getRed()},${c.getGreen()},${c.getBlue()})` : '#888';
+        };
+        const makeSwatchEl = (color: string): HTMLSpanElement => {
+            const sw = document.createElement('span');
+            sw.style.cssText =
+                `display:inline-block; width:14px; height:14px; min-width:14px;` +
+                ` border:1px solid #666; background:${color}; border-radius:2px;`;
+            return sw;
+        };
+
+        const layerDropdown = document.createElement('div');
+        layerDropdown.style.cssText = 'position:relative; display:inline-block;';
+        layerDropdown.title = 'Active layer';
+
+        // Button (always visible — shows current layer)
+        const layerBtn = document.createElement('div');
+        layerBtn.style.cssText =
+            'display:flex; align-items:center; gap:5px; cursor:pointer;' +
+            ' border:1px solid #ccc; border-radius:2px; padding:3px 6px;' +
+            ' background:white; font-size:12px; user-select:none; min-width:160px;';
+
+        const btnSwatch = makeSwatchEl(layerColorCSS(this.circuitPanel.getCurrentLayer()));
+        const btnLabel = document.createElement('span');
+        btnLabel.style.cssText = 'flex:1;';
+        const currentIdx = this.circuitPanel.getCurrentLayer();
+        btnLabel.textContent = `Layer ${currentIdx}: ${layerDescs[currentIdx].getDescription()}`;
+        const btnArrow = document.createElement('span');
+        btnArrow.textContent = '▾';
+        btnArrow.style.cssText = 'color:#666; font-size:10px;';
+        layerBtn.append(btnSwatch, btnLabel, btnArrow);
+
+        // Dropdown list (hidden by default)
+        const layerList = document.createElement('div');
+        layerList.style.cssText =
+            'display:none; position:absolute; top:100%; left:0; z-index:1000;' +
+            ' border:1px solid #ccc; border-radius:2px; background:white;' +
+            ' box-shadow:2px 4px 8px rgba(0,0,0,0.18); min-width:100%;' +
+            ' max-height:260px; overflow-y:auto;';
+
+        const updateBtn = (idx: number) => {
+            btnSwatch.style.background = layerColorCSS(idx);
+            btnLabel.textContent = `Layer ${idx}: ${layerDescs[idx].getDescription()}`;
+        };
+
+        for (let i = 0; i < layerDescs.length; i++) {
+            const item = document.createElement('div');
+            item.style.cssText =
+                'display:flex; align-items:center; gap:5px; padding:4px 8px;' +
+                ' cursor:pointer; font-size:12px; white-space:nowrap;';
+            item.append(makeSwatchEl(layerColorCSS(i)));
+            const lbl = document.createElement('span');
+            lbl.textContent = `Layer ${i}: ${layerDescs[i].getDescription()}`;
+            item.appendChild(lbl);
+            item.addEventListener('mouseenter', () => { item.style.background = '#e8f0fe'; });
+            item.addEventListener('mouseleave', () => { item.style.background = ''; });
+            item.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this.circuitPanel.setCurrentLayer(i);
+                updateBtn(i);
+                layerList.style.display = 'none';
+            });
+            layerList.appendChild(item);
+        }
+
+        const toggleList = () => {
+            layerList.style.display = layerList.style.display === 'none' ? 'block' : 'none';
+        };
+        layerBtn.addEventListener('click', toggleList);
+
+        const closeOnOutside = (e: MouseEvent) => {
+            if (!layerDropdown.contains(e.target as Node)) {
+                layerList.style.display = 'none';
+            }
+        };
+        document.addEventListener('mousedown', closeOnOutside);
+
+        layerDropdown.append(layerBtn, layerList);
+        secondRow.appendChild(layerDropdown);
+
+        // Spacer
+        const spacer = document.createElement('span');
+        spacer.style.cssText = 'flex: 1;';
+        secondRow.appendChild(spacer);
+
+        // Coordinates display (right side, like ToolbarZoom)
+        const coordsLabel = document.createElement('span');
+        coordsLabel.textContent = 'X: 0  Y: 0';
+        coordsLabel.style.cssText =
+            'font-family: monospace; font-size: 11px; color: #555; min-width: 120px; text-align: right;';
+        secondRow.appendChild(coordsLabel);
+        this.circuitPanel.onCoordinatesChange = (lx, ly) => {
+            coordsLabel.textContent = `X: ${Math.round(lx)}  Y: ${Math.round(ly)}`;
+        };
+
+        this.toolbar.appendChild(secondRow);
 
         // Initialize with SELECT tool
         this.circuitPanel.setTool(ElementsEdtActions.SELECTION);
@@ -197,14 +340,40 @@ class FidoCadTS {
         this.circuitPanel.addKeyboardListeners();
     }
 
-    private updateZoomLabel: () => void = () => {};
-
     private newCircuit(): void {
         this.circuitPanel.clearCircuit();
-        this.updateZoomLabel();
     }
 
-    private addButton(label: string, onClick: () => void): HTMLButtonElement {
+    private setToggleActive(btn: HTMLButtonElement, active: boolean): void {
+        btn.style.background = active ? '#b0c8e8' : '#e8e8e8';
+        btn.style.border = active ? '1px solid #5a8fc0' : '1px solid transparent';
+    }
+
+    private addIconButtonToRow(row: HTMLElement, iconSrc: string, tooltip: string, onClick: () => void): HTMLButtonElement {
+        const btn = document.createElement('button');
+        btn.title = tooltip;
+        btn.style.cssText =
+            'padding: 3px; cursor: pointer; border: 1px solid transparent; ' +
+            'background: #e8e8e8; border-radius: 2px; display: flex; align-items: center; justify-content: center;';
+        const img = document.createElement('img');
+        img.src = iconSrc;
+        img.width = 20;
+        img.height = 20;
+        img.alt = tooltip;
+        img.style.display = 'block';
+        btn.appendChild(img);
+        btn.addEventListener('click', onClick);
+        btn.addEventListener('mouseenter', () => {
+            if (btn.style.opacity !== '0.4') btn.style.background = '#ddd';
+        });
+        btn.addEventListener('mouseleave', () => {
+            if (btn.style.opacity !== '0.4' && !btn.style.borderColor) btn.style.background = '#e8e8e8';
+        });
+        row.appendChild(btn);
+        return btn;
+    }
+
+    private addButtonToRow(row: HTMLElement, label: string, onClick: () => void): HTMLButtonElement {
         const button = document.createElement('button');
         button.textContent = label;
         button.style.cssText =
@@ -221,55 +390,8 @@ class FidoCadTS {
                 button.style.background = '#e8e8e8';
             }
         });
-        this.toolbar.appendChild(button);
+        row.appendChild(button);
         return button;
-    }
-
-    private addDivider(): void {
-        const divider = document.createElement('span');
-        divider.style.cssText =
-            'width: 1px; height: 20px; background: #bbb; margin: 0 4px;';
-        this.toolbar.appendChild(divider);
-    }
-
-    private exportCircuit(): void {
-        const circuitText = this.circuitPanel.getCircuitText();
-        const blob = new Blob([circuitText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'circuit.fcd';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    private exportSVG(): void {
-        const svgText = this.circuitPanel.exportSVG();
-        const blob = new Blob([svgText], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'circuit.svg';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    private importCircuit(): void {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.fcd,.txt';
-        input.addEventListener('change', (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const text = event.target?.result as string;
-                this.circuitPanel.loadCircuit(text);
-                this.updateZoomLabel();
-            };
-            reader.readAsText(file);
-        });
-        input.click();
     }
 
     private wirePropertiesPanel(): void {
@@ -278,251 +400,250 @@ class FidoCadTS {
             this.showPropertiesPanel(prim);
         };
 
-        // Wire up text edit callback
-        this.circuitPanel.onTextEditRequested = (prim, sx, sy) => {
-            this.circuitPanel.showTextEdit(sx, sy, prim);
+        this.circuitPanel.onTextEditRequested = (prim, _sx, _sy) => {
+            this.showPropertiesPanel(prim);
+        };
+
+        this.circuitPanel.onExistingTextEditRequested = (prim) => {
+            this.showPropertiesPanel(prim);
         };
     }
 
     private showPropertiesPanel(prim: GraphicPrimitive): void {
-        // Clear existing content (keep header)
         const header = this.propertiesSidebar.firstElementChild;
         this.propertiesSidebar.innerHTML = '';
         this.propertiesSidebar.appendChild(header as HTMLElement);
 
-        // Create form container
         const form = document.createElement('div');
-        form.style.cssText = 'padding: 12px; display: flex; flex-direction: column; gap: 12px;';
+        form.style.cssText = 'padding: 12px; display: flex; flex-direction: column; gap: 10px;';
 
-        // Layer selector (common to all primitives)
-        const layerRow = this.createPropertyRow('Layer:');
-        const layerSelect = document.createElement('select');
-        layerSelect.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-        const layers = this.circuitPanel.getLayerDescriptions();
-        for (let i = 0; i < layers.length; i++) {
-            const opt = document.createElement('option');
-            opt.value = String(i);
-            opt.textContent = `Layer ${i}: ${layers[i]}`;
-            layerSelect.appendChild(opt);
-        }
-        layerSelect.value = String(prim.getLayer());
-        layerSelect.addEventListener('change', () => {
-            prim.setLayer(Number(layerSelect.value));
+        const redraw = () => {
             prim.setChanged(true);
             this.circuitPanel.getModel().setChanged(true);
             this.circuitPanel.render();
-        });
-        layerRow.appendChild(layerSelect);
-        form.appendChild(layerRow);
+        };
 
-        // Type-specific fields
-        if (prim instanceof PrimitiveAdvText) {
-            const textPrim = prim as PrimitiveAdvText;
+        // --- Section heading helper ---
+        const addSection = (title: string): void => {
+            const sec = document.createElement('div');
+            sec.textContent = title;
+            sec.style.cssText =
+                'font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; ' +
+                'letter-spacing: 0.5px; margin-top: 4px; padding-bottom: 2px; border-bottom: 1px solid #ddd;';
+            form.appendChild(sec);
+        };
 
-            // Text content
-            const textRow = this.createPropertyRow('Text:');
-            const textInput = document.createElement('input');
-            textInput.type = 'text';
-            textInput.value = textPrim.getString();
-            textInput.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            textInput.addEventListener('input', () => {
-                textPrim.setString(textInput.value);
-                textPrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            textRow.appendChild(textInput);
-            form.appendChild(textRow);
+        // --- Common helpers ---
+        const addText = (label: string, get: () => string, set: (v: string) => void): void => {
+            const row = this.createPropertyRow(label);
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.value = get();
+            inp.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
+            inp.addEventListener('input', () => { set(inp.value); redraw(); });
+            row.appendChild(inp);
+            form.appendChild(row);
+        };
 
-            // Font size
-            const fontSizeRow = this.createPropertyRow('Font size:');
-            const fontSizeInput = document.createElement('input');
-            fontSizeInput.type = 'number';
-            fontSizeInput.value = String(textPrim.getFontDimension());
-            fontSizeInput.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            fontSizeInput.addEventListener('input', () => {
-                textPrim.setFontDimension(Number(fontSizeInput.value));
-                textPrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            fontSizeRow.appendChild(fontSizeInput);
-            form.appendChild(fontSizeRow);
+        const addNumber = (label: string, get: () => number, set: (v: number) => void,
+                           min?: number, max?: number, step?: number): void => {
+            const row = this.createPropertyRow(label);
+            const inp = document.createElement('input');
+            inp.type = 'number';
+            inp.value = String(get());
+            inp.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
+            if (min !== undefined) inp.min = String(min);
+            if (max !== undefined) inp.max = String(max);
+            if (step !== undefined) inp.step = String(step);
+            inp.addEventListener('change', () => { set(Number(inp.value)); redraw(); });
+            row.appendChild(inp);
+            form.appendChild(row);
+        };
 
-            // Orientation
-            const orientRow = this.createPropertyRow('Orientation:');
-            const orientSelect = document.createElement('select');
-            orientSelect.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            [0, 90, 180, 270].forEach(angle => {
+        const addCheck = (label: string, get: () => boolean, set: (v: boolean) => void): void => {
+            const row = this.createPropertyRow(label);
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = get();
+            cb.addEventListener('change', () => { set(cb.checked); redraw(); });
+            row.appendChild(cb);
+            form.appendChild(row);
+        };
+
+        const addSelect = (label: string, options: { value: string; text: string }[],
+                           get: () => string, set: (v: string) => void): void => {
+            const row = this.createPropertyRow(label);
+            const sel = document.createElement('select');
+            sel.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
+            for (const o of options) {
                 const opt = document.createElement('option');
-                opt.value = String(angle);
-                opt.textContent = `${angle}°`;
-                orientSelect.appendChild(opt);
-            });
-            orientSelect.value = String(textPrim.getOrientation());
-            orientSelect.addEventListener('change', () => {
-                textPrim.setOrientation(Number(orientSelect.value));
-                textPrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            orientRow.appendChild(orientSelect);
-            form.appendChild(orientRow);
-
-            // Mirror
-            const mirrorRow = this.createPropertyRow('Mirror:');
-            const mirrorCheck = document.createElement('input');
-            mirrorCheck.type = 'checkbox';
-            mirrorCheck.checked = textPrim.isMirrored() !== 0;
-            mirrorCheck.addEventListener('change', () => {
-                textPrim.setMirrored(mirrorCheck.checked ? 1 : 0);
-                textPrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            mirrorRow.appendChild(mirrorCheck);
-            form.appendChild(mirrorRow);
-
-        } else if (prim instanceof (window as any).PrimitiveLine) {
-            const linePrim = prim as any;
-
-            // Dash style
-            const dashRow = this.createPropertyRow('Dash style:');
-            const dashSelect = document.createElement('select');
-            dashSelect.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            for (let i = 0; i <= 5; i++) {
-                const opt = document.createElement('option');
-                opt.value = String(i);
-                opt.textContent = String(i);
-                dashSelect.appendChild(opt);
+                opt.value = o.value;
+                opt.textContent = o.text;
+                sel.appendChild(opt);
             }
-            dashSelect.value = String(linePrim.getDashStyle());
-            dashSelect.addEventListener('change', () => {
-                linePrim.setDashStyle(Number(dashSelect.value));
-                linePrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            dashRow.appendChild(dashSelect);
-            form.appendChild(dashRow);
+            sel.value = get();
+            sel.addEventListener('change', () => { set(sel.value); redraw(); });
+            row.appendChild(sel);
+            form.appendChild(row);
+        };
 
-            // Arrow start
-            const arrowStartRow = this.createPropertyRow('Arrow start:');
-            const arrowStartCheck = document.createElement('input');
-            arrowStartCheck.type = 'checkbox';
-            arrowStartCheck.checked = linePrim.getArrowStart() !== 0;
-            arrowStartCheck.addEventListener('change', () => {
-                linePrim.setArrowStart(arrowStartCheck.checked ? 1 : 0);
-                linePrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            arrowStartRow.appendChild(arrowStartCheck);
-            form.appendChild(arrowStartRow);
+        const dashOptions = Array.from({ length: 10 }, (_, i) => ({ value: String(i), text: String(i) }));
+        const orientOptions = [0, 90, 180, 270].map(a => ({ value: String(a), text: `${a}°` }));
 
-            // Arrow end
-            const arrowEndRow = this.createPropertyRow('Arrow end:');
-            const arrowEndCheck = document.createElement('input');
-            arrowEndCheck.type = 'checkbox';
-            arrowEndCheck.checked = linePrim.getArrowEnd() !== 0;
-            arrowEndCheck.addEventListener('change', () => {
-                linePrim.setArrowEnd(arrowEndCheck.checked ? 1 : 0);
-                linePrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            arrowEndRow.appendChild(arrowEndCheck);
-            form.appendChild(arrowEndRow);
+        const addArrowSection = (arrowLabel: string,
+                                  getArrowStart: () => boolean, setArrowStart: (v: boolean) => void,
+                                  getArrowEnd: () => boolean, setArrowEnd: (v: boolean) => void,
+                                  getArrowStyle: () => number, setArrowStyle: (v: number) => void,
+                                  getArrowLen: () => number, setArrowLen: (v: number) => void,
+                                  getArrowWid: () => number, setArrowWid: (v: number) => void): void => {
+            addSection(arrowLabel);
+            addCheck('Arrow start:', getArrowStart, setArrowStart);
+            addCheck('Arrow end:', getArrowEnd, setArrowEnd);
+            addSelect('Style:', [
+                { value: '0', text: 'Filled' },
+                { value: '2', text: 'Empty' },
+                { value: '1', text: 'Limiter' },
+                { value: '3', text: 'Empty+Limiter' },
+            ], () => String(getArrowStyle()), v => setArrowStyle(Number(v)));
+            addNumber('Length:', getArrowLen, setArrowLen, 0, undefined, 1);
+            addNumber('Half width:', getArrowWid, setArrowWid, 0, undefined, 1);
+        };
 
-        } else if ((prim instanceof (window as any).PrimitiveRectangle) || (prim instanceof (window as any).PrimitiveOval)) {
-            const shapePrim = prim as any;
+        const addLayerSection = (): void => {
+            addSection('Common');
+            const layers = this.circuitPanel.getLayerDescriptions();
+            addSelect('Layer:', layers.map((name, i) => ({ value: String(i), text: `${i}: ${name}` })),
+                () => String(prim.getLayer()),
+                v => { prim.setLayer(Number(v)); redraw(); });
+        };
 
-            // Filled checkbox
-            const filledRow = this.createPropertyRow('Filled:');
-            const filledCheck = document.createElement('input');
-            filledCheck.type = 'checkbox';
-            filledCheck.checked = shapePrim.getFilled() !== 0;
-            filledCheck.addEventListener('change', () => {
-                shapePrim.setFilled(filledCheck.checked ? 1 : 0);
-                shapePrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            filledRow.appendChild(filledCheck);
-            form.appendChild(filledRow);
+        const addNameValue = (): void => {
+            if (prim.getNameVirtualPointNumber() >= 0) {
+                addText('Name:', () => prim.getName(), v => prim.setNameStr(v));
+                addText('Value:', () => prim.getValue(), v => prim.setValueStr(v));
+            }
+        };
 
-        } else if (prim instanceof (window as any).PrimitivePCBLine) {
-            const pcbLinePrim = prim as any;
+        // ===== TYPE-SPECIFIC SECTIONS =====
 
-            // Thickness
-            const thicknessRow = this.createPropertyRow('Thickness:');
-            const thicknessInput = document.createElement('input');
-            thicknessInput.type = 'number';
-            thicknessInput.value = String(pcbLinePrim.getThickness());
-            thicknessInput.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            thicknessInput.addEventListener('input', () => {
-                pcbLinePrim.setThickness(Number(thicknessInput.value));
-                pcbLinePrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            thicknessRow.appendChild(thicknessInput);
-            form.appendChild(thicknessRow);
+        if (prim instanceof PrimitiveAdvText) {
+            addSection('Text');
+            addText('Content:', () => prim.getString(), v => prim.setString(v));
+            addNumber('Font size:', () => prim.getFontDimension(), v => prim.setFontDimension(v), 1, 2000);
+            addNumber('Font width:', () => prim.getFontWidth(), v => prim.setFontWidth(v), 1, 2000);
+            addNumber('Orientation:', () => prim.getOrientation(), v => prim.setOrientation(v), -360, 360, 1);
+            addCheck('Mirror:', () => prim.isMirrored() !== 0, v => prim.setMirrored(v ? 1 : 0));
+            addCheck('Bold:', () => prim.isBold(), v => prim.setBold(v));
+            addCheck('Italic:', () => prim.isItalic(), v => prim.setItalic(v));
+            addText('Font:', () => prim.getFontName(), v => prim.setFontName(v));
+            addLayerSection();
 
-        } else if (prim instanceof (window as any).PrimitivePCBPad) {
-            const pcbPadPrim = prim as any;
+        } else if (prim instanceof PrimitiveLine) {
+            const ad = prim.getArrowData();
+            addSection('Line');
+            addSelect('Dash style:', dashOptions, () => String(prim.getDashStyle()), v => prim.setDashStyle(Number(v)));
+            addArrowSection('Arrows',
+                () => ad.isArrowStart(), v => { ad.setArrowStart(v); redraw(); },
+                () => ad.isArrowEnd(), v => { ad.setArrowEnd(v); redraw(); },
+                () => ad.getArrowStyle(), v => { ad.setArrowStyle(v); redraw(); },
+                () => ad.getArrowLength(), v => { ad.setArrowLength(v); redraw(); },
+                () => ad.getArrowHalfWidth(), v => { ad.setArrowHalfWidth(v); redraw(); });
+            addLayerSection();
+            addNameValue();
 
-            // Size X
-            const sizeXRow = this.createPropertyRow('Size X:');
-            const sizeXInput = document.createElement('input');
-            sizeXInput.type = 'number';
-            sizeXInput.value = String(pcbPadPrim.getSizex());
-            sizeXInput.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            sizeXInput.addEventListener('input', () => {
-                pcbPadPrim.setSizex(Number(sizeXInput.value));
-                pcbPadPrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            sizeXRow.appendChild(sizeXInput);
-            form.appendChild(sizeXRow);
+        } else if (prim instanceof PrimitiveRectangle) {
+            addSection('Rectangle');
+            addCheck('Filled:', () => prim.getFilled(), v => prim.setFilled(v));
+            addSelect('Dash style:', dashOptions, () => String(prim.getDashStyle()), v => prim.setDashStyle(Number(v)));
+            addLayerSection();
+            addNameValue();
 
-            // Size Y
-            const sizeYRow = this.createPropertyRow('Size Y:');
-            const sizeYInput = document.createElement('input');
-            sizeYInput.type = 'number';
-            sizeYInput.value = String(pcbPadPrim.getSizey());
-            sizeYInput.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            sizeYInput.addEventListener('input', () => {
-                pcbPadPrim.setSizey(Number(sizeYInput.value));
-                pcbPadPrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            sizeYRow.appendChild(sizeYInput);
-            form.appendChild(sizeYRow);
+        } else if (prim instanceof PrimitiveOval) {
+            addSection('Ellipse');
+            addCheck('Filled:', () => prim.getFilled(), v => prim.setFilled(v));
+            addSelect('Dash style:', dashOptions, () => String(prim.getDashStyle()), v => prim.setDashStyle(Number(v)));
+            addLayerSection();
+            addNameValue();
 
-            // Drill
-            const drillRow = this.createPropertyRow('Drill:');
-            const drillInput = document.createElement('input');
-            drillInput.type = 'number';
-            drillInput.value = String(pcbPadPrim.getDrill());
-            drillInput.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
-            drillInput.addEventListener('input', () => {
-                pcbPadPrim.setDrill(Number(drillInput.value));
-                pcbPadPrim.setChanged(true);
-                this.circuitPanel.getModel().setChanged(true);
-                this.circuitPanel.render();
-            });
-            drillRow.appendChild(drillInput);
-            form.appendChild(drillRow);
+        } else if (prim instanceof PrimitiveBezier) {
+            const ad = prim.getArrowData();
+            addSection('Bézier');
+            addSelect('Dash style:', dashOptions, () => String(prim.getDashStyle()), v => prim.setDashStyle(Number(v)));
+            addArrowSection('Arrows',
+                () => ad.isArrowStart(), v => { ad.setArrowStart(v); redraw(); },
+                () => ad.isArrowEnd(), v => { ad.setArrowEnd(v); redraw(); },
+                () => ad.getArrowStyle(), v => { ad.setArrowStyle(v); redraw(); },
+                () => ad.getArrowLength(), v => { ad.setArrowLength(v); redraw(); },
+                () => ad.getArrowHalfWidth(), v => { ad.setArrowHalfWidth(v); redraw(); });
+            addLayerSection();
+            addNameValue();
+
+        } else if (prim instanceof PrimitivePCBLine) {
+            addSection('PCB Line');
+            addNumber('Width:', () => prim.getWidth(), v => prim.setWidth(v), 0, undefined, 0.5);
+            addLayerSection();
+            addNameValue();
+
+        } else if (prim instanceof PrimitivePCBPad) {
+            addSection('PCB Pad');
+            addNumber('Size X:', () => prim.getRx(), v => prim.setRx(v), 0, undefined, 0.5);
+            addNumber('Size Y:', () => prim.getRy(), v => prim.setRy(v), 0, undefined, 0.5);
+            addNumber('Drill radius:', () => prim.getRi(), v => prim.setRi(v), 0, undefined, 0.5);
+            addSelect('Shape:', [
+                { value: '0', text: 'Oval' },
+                { value: '1', text: 'Rectangle' },
+                { value: '2', text: 'Rounded rect.' },
+            ], () => String(prim.getSty()), v => prim.setSty(Number(v)));
+            addLayerSection();
+            addNameValue();
+
+        } else if (prim instanceof PrimitivePolygon) {
+            addSection('Polygon');
+            addCheck('Filled:', () => prim.getFilled(), v => prim.setFilled(v));
+            addSelect('Dash style:', dashOptions, () => String(prim.getDashStyle()), v => prim.setDashStyle(Number(v)));
+            addLayerSection();
+            addNameValue();
+
+        } else if (prim instanceof PrimitiveComplexCurve) {
+            const ad = prim.getArrowData();
+            addSection('Complex curve');
+            addCheck('Filled:', () => prim.getFilled(), v => prim.setFilled(v));
+            addCheck('Closed:', () => prim.getIsClosed(), v => prim.setIsClosed(v));
+            addSelect('Dash style:', dashOptions, () => String(prim.getDashStyle()), v => prim.setDashStyle(Number(v)));
+            addArrowSection('Arrows',
+                () => ad.isArrowStart(), v => { ad.setArrowStart(v); redraw(); },
+                () => ad.isArrowEnd(), v => { ad.setArrowEnd(v); redraw(); },
+                () => ad.getArrowStyle(), v => { ad.setArrowStyle(v); redraw(); },
+                () => ad.getArrowLength(), v => { ad.setArrowLength(v); redraw(); },
+                () => ad.getArrowHalfWidth(), v => { ad.setArrowHalfWidth(v); redraw(); });
+            addLayerSection();
+            addNameValue();
+
+        } else if (prim instanceof PrimitiveMacro) {
+            addSection('Component');
+            const nameRow = this.createPropertyRow('Macro:');
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = prim.getMacroName();
+            nameSpan.style.cssText = 'flex: 1; font-size: 12px; font-family: monospace; color: #555;';
+            nameRow.appendChild(nameSpan);
+            form.appendChild(nameRow);
+            addSelect('Orientation:', orientOptions,
+                () => String(prim.getOrientation() * 90),
+                v => prim.setOrientation(Math.round(Number(v) / 90)));
+            addCheck('Mirror:', () => prim.isMirrored(), v => prim.setMirrored(v));
+            addLayerSection();
+            addNameValue();
+
+        } else {
+            // Fallback: just show layer for unknown types
+            addLayerSection();
+            addNameValue();
         }
 
-        // Close button
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Close';
         closeBtn.style.cssText =
-            'padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; ' +
+            'margin-top: 8px; padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; ' +
             'border-radius: 4px; background: #e0e0e0; font-size: 13px; align-self: flex-end;';
         closeBtn.addEventListener('click', () => {
             this.propertiesSidebar.style.display = 'none';

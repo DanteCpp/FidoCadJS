@@ -100,8 +100,8 @@ export class DrawingSize {
         newZoom.setMagnitudesNoCheck(z, z);
         z = newZoom.getYMagnitude();
 
-        newZoom.setXCenter(centerOrg.x * z);
-        newZoom.setYCenter(centerOrg.y * z);
+        newZoom.setXCenter(-centerOrg.x * z);
+        newZoom.setYCenter(-centerOrg.y * z);
 
         return newZoom;
     }

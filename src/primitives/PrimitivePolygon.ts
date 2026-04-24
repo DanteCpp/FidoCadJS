@@ -41,6 +41,11 @@ export class PrimitivePolygon extends GraphicPrimitive {
 
     getControlPointNumber(): number { return this.nPoints + 2; }
 
+    getFilled(): boolean { return this.isFilled; }
+    setFilled(v: boolean): void { this.isFilled = v; this.setChanged(true); }
+    getDashStyle(): number { return this.dashStyle; }
+    setDashStyle(v: number): void { this.dashStyle = this.checkDashStyle(v); this.setChanged(true); }
+
     removePoint(x: number, y: number, tolerance: number): void {
         if (this.nPoints <= 3) return;
         let minDistance = GeometricDistances.pointToPoint(

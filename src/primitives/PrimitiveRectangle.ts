@@ -44,6 +44,11 @@ export class PrimitiveRectangle extends GraphicPrimitive {
 
     getControlPointNumber(): number { return PrimitiveRectangle.N_POINTS; }
 
+    getFilled(): boolean { return this.isFilled; }
+    setFilled(v: boolean): void { this.isFilled = v; this.setChanged(true); }
+    getDashStyle(): number { return this.dashStyle; }
+    setDashStyle(v: number): void { this.dashStyle = this.checkDashStyle(v); this.setChanged(true); }
+
     draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);
