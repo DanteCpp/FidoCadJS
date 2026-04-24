@@ -1,6 +1,5 @@
 import { CircuitPanel } from './circuit/CircuitPanel.js';
 import { ElementsEdtActions } from './circuit/controllers/ElementsEdtActions.js';
-import { SettingsManager } from './settings/SettingsManager.js';
 import { loadStandardLibraries } from './circuit/controllers/LibraryLoader.js';
 import { LibraryModel } from './librarymodel/LibraryModel.js';
 import { MacroPicker } from './macropicker/MacroPicker.js';
@@ -16,6 +15,11 @@ import { PrimitivePCBPad } from './primitives/PrimitivePCBPad.js';
 import { PrimitivePolygon } from './primitives/PrimitivePolygon.js';
 import { PrimitiveComplexCurve } from './primitives/PrimitiveComplexCurve.js';
 import { PrimitiveMacro } from './primitives/PrimitiveMacro.js';
+import { loadLocale } from './i18n/i18n.js';
+import { AccessResources } from './i18n/AccessResources.js';
+import { SettingsManager } from './settings/SettingsManager.js';
+import { Globals } from './globals/Globals.js';
+// import { getString } from './i18n/i18n.js'; // currently unused
 
 class FidoCadTS {
     private circuitPanel!: CircuitPanel;
@@ -27,6 +31,21 @@ class FidoCadTS {
     private libraryModel!: LibraryModel;
 
     constructor() {
+        const mgr = SettingsManager.getInstance();
+        const settings = mgr.getSettings();
+
+        // Load locale bundle before any UI is built
+        loadLocale(settings.locale).then(() => {
+            Globals.messages = new AccessResources();
+            this.initUI();
+        }).catch((e) => {
+            console.error('Failed to load locale:', e);
+            Globals.messages = new AccessResources();
+            this.initUI();
+        });
+    }
+
+    private initUI(): void {
         const app = document.getElementById('app');
         if (!app) {
             console.error('Could not find #app element');

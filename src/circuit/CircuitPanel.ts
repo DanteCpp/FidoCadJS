@@ -1052,7 +1052,12 @@ export class CircuitPanel {
     copySelected(): void {
         const selected = this.selectionActions.getSelectedPrimitives();
         if (selected.length === 0) return;
-        this.clipboard = this.selectionActions.getSelectedString(true, this.parserActions);
+        const text = this.selectionActions.getSelectedString(true, this.parserActions);
+        this.clipboard = text;
+        // Also push to the system clipboard so it can be pasted into other apps
+        if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(text).catch(() => { /* ignore permission errors */ });
+        }
     }
 
     cutSelected(): void {
@@ -1062,11 +1067,25 @@ export class CircuitPanel {
         this.onUndoStateChange?.();
     }
 
-    paste(): void {
-        if (!this.clipboard) return;
+    async paste(): Promise<void> {
+        let text = '';
+        // Prefer system clipboard
+        if (navigator.clipboard?.readText) {
+            try {
+                text = await navigator.clipboard.readText();
+            } catch {
+                // permission denied or non-secure context – fall back
+            }
+        }
+        // Fall back to internal clipboard if system read yielded nothing
+        if (!text) {
+            text = this.clipboard;
+        }
+        if (!text) return;
+
         // Deselect everything so only pasted items end up selected
         this.selectionActions.setSelectionAll(false);
-        this.parserActions.addString(this.clipboard, true);
+        this.parserActions.addString(text, true);
         // Offset pasted selection by one grid step so it doesn't overlap the original
         const step = this.mapCoordinates.getXGridStep();
         this.editorActions.moveAllSelected(step, step);
@@ -1077,7 +1096,21 @@ export class CircuitPanel {
 
     duplicateSelected(): void {
         this.copySelected();
-        this.paste();
+        // duplicate should not overwrite the OS clipboard when possible, so keep
+        // internal buffer hot and let paste fall back to it.
+        void this.paste();
+    }
+
+    // Return true if the user might be able to paste (either via system clipboard
+    // or the internal fallback).
+    canPaste(): boolean {
+        if (this.clipboard.length > 0) return true;
+        try {
+            if (typeof (navigator as any).clipboard?.readText === 'function') return true;
+        } catch {
+            /* non-secure context or permission denied */
+        }
+        return false;
     }
 
     // ─── Context Menu ─────────────────────────────────────────────────────────

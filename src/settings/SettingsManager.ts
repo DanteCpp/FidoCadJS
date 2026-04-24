@@ -28,6 +28,16 @@ export interface AppSettings {
     gridColor: string;
     selectionLTRColor: string;
     selectionRTLColor: string;
+
+    // Locale
+    locale: string;
+}
+
+function getDefaultLocale(): string {
+    const nav = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'en';
+    const lang = nav.split('-')[0].toLowerCase();
+    const supported = ['cs', 'de', 'el', 'en', 'es', 'fr', 'it', 'ja', 'nl', 'ru', 'zh'];
+    return supported.includes(lang) ? lang : 'en';
 }
 
 const DEFAULTS: AppSettings = {
@@ -45,6 +55,7 @@ const DEFAULTS: AppSettings = {
     gridColor: '#6464c8',
     selectionLTRColor: '#008000',
     selectionRTLColor: '#0000ff',
+    locale: getDefaultLocale(),
 };
 
 const STORAGE_KEY = 'fidocadts.settings';
@@ -102,6 +113,11 @@ export class SettingsManager {
             if (raw) {
                 const parsed = JSON.parse(raw) as Partial<AppSettings>;
                 Object.assign(this.settings, parsed);
+                // Validate locale: if not in supported set, reset to default
+                const supported = ['cs', 'de', 'el', 'en', 'es', 'fr', 'it', 'ja', 'nl', 'ru', 'zh'];
+                if (!supported.includes(this.settings.locale)) {
+                    this.settings.locale = getDefaultLocale();
+                }
             }
         } catch {
             // ignore parse errors — keep defaults

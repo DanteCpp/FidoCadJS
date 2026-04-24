@@ -1,4 +1,9 @@
+import { AccessResources } from '../i18n/AccessResources.js';
+
 export class Globals {
+    /** Global message bundle — mirrors Java's Globals.messages. */
+    static messages: AccessResources;
+
     static readonly lineWidthDefault = 0.5;
     static lineWidth = Globals.lineWidthDefault;
 

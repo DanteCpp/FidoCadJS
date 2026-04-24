@@ -177,13 +177,13 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.ctx.save();
         this.ctx.translate(xa, ya);
         if (orientation !== 0) {
-            this.ctx.rotate((orientation * 90 * Math.PI) / 180);
+            this.ctx.rotate((orientation * Math.PI) / 180);
         }
         if (mirror) {
             this.ctx.scale(-1, 1);
         }
         if (needsStretching) {
-            this.ctx.scale(xyfactor, 1);
+            this.ctx.scale(1, xyfactor);
         }
         this.ctx.fillText(txt, 0, h);
         this.ctx.restore();
