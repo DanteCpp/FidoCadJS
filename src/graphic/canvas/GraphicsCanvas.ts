@@ -22,6 +22,7 @@ export class GraphicsCanvas implements GraphicsInterface {
     private fontItalic: boolean = false;
     private fontBold: boolean = false;
     private dirtyRect: { x: number; y: number; w: number; h: number } | null = null;
+    private selectedColor: ColorCanvas = new ColorCanvas(0, 255, 0);
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -163,13 +164,26 @@ export class GraphicsCanvas implements GraphicsInterface {
     activateSelectColor(l: LayerDesc): void {
         const baseColor = l.getColor();
         if (baseColor) {
-            const r = baseColor.getRed();
-            const g = baseColor.getGreen();
-            const b = baseColor.getBlue();
-            // Blend with green (selection color)
-            const blended = new ColorCanvas(Math.floor(r * 0.5), Math.floor(g * 0.8 + 255 * 0.2), Math.floor(b * 0.5));
+            const sr = this.selectedColor.getRed();
+            const sg = this.selectedColor.getGreen();
+            const sb = this.selectedColor.getBlue();
+            const lr = baseColor.getRed();
+            const lg = baseColor.getGreen();
+            const lb = baseColor.getBlue();
+            // Java-style blend: selectedColor * 0.6 + layerColor * 0.4
+            const blended = new ColorCanvas(
+                Math.floor(sr * 0.6 + lr * 0.4),
+                Math.floor(sg * 0.6 + lg * 0.4),
+                Math.floor(sb * 0.6 + lb * 0.4)
+            );
             this.setColor(blended);
         }
+        // Force full opacity for selected elements (matches Java behavior)
+        this.ctx.globalAlpha = 1.0;
+    }
+
+    setSelectedColor(c: ColorInterface): void {
+        this.selectedColor = new ColorCanvas(c.getRed(), c.getGreen(), c.getBlue());
     }
 
     drawAdvText(xyfactor: number, xa: number, ya: number, _qq: number, h: number, _w: number, _th: number,

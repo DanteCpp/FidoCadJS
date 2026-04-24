@@ -88,6 +88,7 @@ export class GraphicsNull implements GraphicsInterface {
     drawPolygon(_p: PolygonInterface): void {}
 
     activateSelectColor(_l: LayerDesc): void {}
+    setSelectedColor(_c: ColorInterface): void {}
 
     drawAdvText(_xyfactor: number, _xa: number, _ya: number,
         _qq: number, _h: number, _w: number, _th: number,

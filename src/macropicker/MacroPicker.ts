@@ -12,7 +12,13 @@
 import type { LibraryModel } from '../librarymodel/LibraryModel.js';
 import type { Library } from '../librarymodel/Library.js';
 import type { Category } from '../librarymodel/Category.js';
-import type { MacroDesc } from '../primitives/MacroDesc.js';
+import { MacroDesc } from '../primitives/MacroDesc.js';
+import { DrawingModel } from '../circuit/model/DrawingModel.js';
+import { ParserActions } from '../circuit/controllers/ParserActions.js';
+import { Drawing, registerDrawingHooks } from '../circuit/views/Drawing.js';
+import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
+import { DrawingSize } from '../geom/DrawingSize.js';
+import { StandardLayers } from '../layers/StandardLayers.js';
 
 export class MacroPicker {
     readonly element: HTMLElement;
@@ -22,6 +28,13 @@ export class MacroPicker {
     private searchInput: HTMLInputElement;
     private selectedRow: HTMLElement | null = null;
     private filterText: string = '';
+    private previewCanvas: HTMLCanvasElement;
+    private previewModel: DrawingModel;
+    private previewParser: ParserActions;
+    private previewGraphics: GraphicsCanvas;
+    private previewDrawing: Drawing;
+    private libraryMacros: Map<string, MacroDesc> = new Map();
+    private resizeObserver: ResizeObserver;
 
     constructor() {
         this.element = document.createElement('div');
@@ -55,12 +68,41 @@ export class MacroPicker {
         this.treeContainer.style.cssText =
             'flex: 1; overflow-y: auto; padding-bottom: 8px;';
         this.element.appendChild(this.treeContainer);
+
+        // Preview container (fixed height at bottom)
+        const previewContainer = document.createElement('div');
+        previewContainer.style.cssText =
+            'height: 200px; flex-shrink: 0; border-top: 1px solid #ccc; ' +
+            'background: #fff; position: relative; overflow: hidden;';
+        this.previewCanvas = document.createElement('canvas');
+        this.previewCanvas.style.cssText =
+            'display: block; width: 100%; height: 100%;';
+        previewContainer.appendChild(this.previewCanvas);
+        this.element.appendChild(previewContainer);
+
+        // Initialize preview rendering infrastructure
+        this.previewModel = new DrawingModel();
+        this.previewModel.setLayers(StandardLayers.createStandardLayers());
+        this.previewParser = new ParserActions(this.previewModel);
+        this.previewGraphics = new GraphicsCanvas(this.previewCanvas);
+        registerDrawingHooks();
+        this.previewDrawing = new Drawing(this.previewModel);
+
+        // Handle HiDPI and container resizing
+        this.resizeObserver = new ResizeObserver(() => {
+            this.schedulePreviewUpdate();
+        });
+        this.resizeObserver.observe(previewContainer);
+
+        // Draw placeholder text initially
+        this.drawPlaceholder();
     }
 
     refresh(libraryModel: LibraryModel): void {
         this.treeContainer.innerHTML = '';
         this.selectedRow = null;
         this.filterText = this.searchInput.value.toLowerCase().trim();
+        this.libraryMacros = libraryModel.getAllMacros();
 
         const libs = libraryModel.getAllLibraries();
         libs.forEach((lib, idx) => {
@@ -124,6 +166,7 @@ export class MacroPicker {
 
     private buildMacroRow(macro: MacroDesc): HTMLElement {
         const row = document.createElement('div');
+        row.dataset.macroKey = macro.key;
         row.style.cssText =
             'padding: 4px 6px 4px 32px; cursor: pointer; color: #222; ' +
             'display: flex; justify-content: space-between; align-items: center; ' +
@@ -156,6 +199,7 @@ export class MacroPicker {
             row.style.background = '#c8daf4';
             row.style.fontWeight = 'bold';
             this.onMacroSelected?.(macro.key, macro.name);
+            this.renderPreview(macro);
         });
 
         return row;
@@ -186,6 +230,113 @@ export class MacroPicker {
     private setArrow(header: HTMLElement, expanded: boolean): void {
         const arrow = header.querySelector('span') as HTMLElement;
         if (arrow) arrow.textContent = expanded ? '▾' : '▸';
+    }
+
+    // ── Preview rendering ──────────────────────────────────────────────────────
+
+    private renderPreview(macro: MacroDesc): void {
+        this.previewModel.setLibrary(this.libraryMacros);
+        this.previewParser.parseString(macro.description);
+
+        const container = this.previewCanvas.parentElement;
+        if (!container) return;
+
+        const rect = container.getBoundingClientRect();
+        const w = Math.floor(rect.width);
+        const h = Math.floor(rect.height);
+        if (w <= 0 || h <= 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        this.previewCanvas.width = Math.floor(w * dpr);
+        this.previewCanvas.height = Math.floor(h * dpr);
+        this.previewGraphics.setZoom(dpr);
+
+        // Calculate zoom-to-fit with 85% viewport margin (matches Java behavior)
+        const mc = DrawingSize.calculateZoomToFit(
+            this.previewModel,
+            Math.floor(w * 0.85),
+            Math.floor(h * 0.85),
+            true
+        );
+
+        // Center adjustment: TS calculateZoomToFit already negates center,
+        // so we just add 10px margin (matching Java: -center + 10 with center already negated)
+        mc.setXCenter(mc.getXCenter() + 10);
+        mc.setYCenter(mc.getYCenter() + 10);
+
+        // Clear with white background
+        const ctx = this.previewCanvas.getContext('2d');
+        if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+        }
+        this.previewGraphics.clearDirtyRect();
+        this.previewGraphics.markDirtyFull(this.previewCanvas.width, this.previewCanvas.height);
+
+        // Apply inverse transform for HiDPI canvas
+        ctx?.save();
+        if (ctx && dpr !== 1) {
+            ctx.scale(dpr, dpr);
+        }
+
+        this.previewDrawing.draw(this.previewGraphics, mc);
+
+        if (ctx && dpr !== 1) {
+            ctx.restore();
+        }
+    }
+
+    private previewTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    private schedulePreviewUpdate(): void {
+        if (this.previewTimeout) {
+            clearTimeout(this.previewTimeout);
+        }
+        this.previewTimeout = setTimeout(() => {
+            this.previewTimeout = null;
+            const container = this.previewCanvas.parentElement;
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            if (rect.width <= 0 || rect.height <= 0) return;
+
+            // Re-render current macro or placeholder
+            if (this.selectedRow && this.selectedRow.dataset.macroKey) {
+                const macro = this.libraryMacros.get(this.selectedRow.dataset.macroKey);
+                if (macro) {
+                    this.renderPreview(macro);
+                    return;
+                }
+            }
+            this.drawPlaceholder();
+        }, 100);
+    }
+
+    private drawPlaceholder(): void {
+        const container = this.previewCanvas.parentElement;
+        if (!container) return;
+
+        const rect = container.getBoundingClientRect();
+        const w = Math.floor(rect.width);
+        const h = Math.floor(rect.height);
+        if (w <= 0 || h <= 0) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        this.previewCanvas.width = Math.floor(w * dpr);
+        this.previewCanvas.height = Math.floor(h * dpr);
+
+        const ctx = this.previewCanvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.fillStyle = '#bbb';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Select a component to preview', w / 2, h / 2);
+        ctx.restore();
     }
 
     // ── Filtering ─────────────────────────────────────────────────────────────

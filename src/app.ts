@@ -21,7 +21,7 @@ import { SettingsManager } from './settings/SettingsManager.js';
 import { Globals } from './globals/Globals.js';
 // import { getString } from './i18n/i18n.js'; // currently unused
 
-class FidoCadTS {
+class FidoCadJS {
     private circuitPanel!: CircuitPanel;
     private toolbar!: HTMLElement;
     private menuBar!: MenuBar;
@@ -109,7 +109,7 @@ class FidoCadTS {
         // Load standard FCL libraries asynchronously
         this.initLibraries();
 
-        console.log('FidoCadTS initialized');
+        console.log('FidoCadJS initialized');
     }
 
     private async initLibraries(): Promise<void> {
@@ -688,15 +688,15 @@ class FidoCadTS {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         try {
-            new FidoCadTS();
+            new FidoCadJS();
         } catch (e) {
-            console.error('Failed to initialize FidoCadTS:', e);
+            console.error('Failed to initialize FidoCadJS:', e);
         }
     });
 } else {
     try {
-        new FidoCadTS();
+        new FidoCadJS();
     } catch (e) {
-        console.error('Failed to initialize FidoCadTS:', e);
+        console.error('Failed to initialize FidoCadJS:', e);
     }
 }

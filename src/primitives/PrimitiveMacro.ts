@@ -43,7 +43,14 @@ export class PrimitiveMacro extends GraphicPrimitive {
     private macroName: string = '';
     macroDesc: string | null = null;
     private exportInvisible: boolean = false;
+    /** Tracks whether the inner model's primitives have been set to selected. */
+    private selected: boolean = false;
     private x1: number = 0; private y1: number = 0;
+    private bboxMinX: number = 0;
+    private bboxMinY: number = 0;
+    private bboxMaxX: number = 0;
+    private bboxMaxY: number = 0;
+    private bboxValid: boolean = false;
 
     constructor(lib: Map<string, MacroDesc>, l: LayerDesc[], f: string, size: number) {
         super();
@@ -54,6 +61,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.macroModel = new DrawingModel();
         this.macroCoord = new MapCoordinates();
         this.changed = true;
+        this.bboxValid = false;
         this.initPrimitive(-1, f, size);
         this.macroStore(l);
     }
@@ -74,6 +82,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
 
     /** Look up a macro by key, set name and description, and parse the sub-circuit. */
     initializeFromKey(key: string): void {
+        this.bboxValid = false;
         this.macroName = key.toLowerCase();
         const macro = this.library.get(this.macroName);
         if (macro) {
@@ -89,6 +98,9 @@ export class PrimitiveMacro extends GraphicPrimitive {
     override setChanged(c: boolean): void {
         super.setChanged(c);
         this.macroModel.setChanged(c);
+        if (c) {
+            this.bboxValid = false;
+        }
     }
 
     private macroStore(layerV: LayerDesc[]): void {
@@ -119,6 +131,21 @@ export class PrimitiveMacro extends GraphicPrimitive {
             this.macroModel.setChanged(true);
         }
 
+        // Propagate selection state to inner primitives so they render in green.
+        if (this.isSelected()) {
+            if (!this.selected) {
+                for (const prim of this.macroModel.getPrimitiveVector()) {
+                    prim.setSelected(true);
+                }
+                this.selected = true;
+            }
+        } else if (this.selected) {
+            for (const prim of this.macroModel.getPrimitiveVector()) {
+                prim.setSelected(false);
+            }
+            this.selected = false;
+        }
+
         this.macroModel.setDrawOnlyLayer(this.drawOnlyLayer);
         this.macroModel.setDrawOnlyPads(this.drawOnlyPads);
 
@@ -143,6 +170,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
 
     parseTokens(tokens: string[], nn: number): void {
         this.changed = true;
+        this.bboxValid = false;
         if (tokens[0] !== 'MC') throw new Error(`MC: Invalid primitive: ${tokens[0]}`);
         if (nn < 6) throw new Error('Bad arguments on MC');
 
@@ -164,6 +192,31 @@ export class PrimitiveMacro extends GraphicPrimitive {
 
         this.macroDesc = macro.description;
         this.macroStore(this.layers);
+    }
+
+    private computeBoundingBox(): void {
+        if (!this.changed && this.bboxValid) return;
+        this.bboxMinX = Number.MAX_SAFE_INTEGER;
+        this.bboxMinY = Number.MAX_SAFE_INTEGER;
+        this.bboxMaxX = Number.MIN_SAFE_INTEGER;
+        this.bboxMaxY = Number.MIN_SAFE_INTEGER;
+        this.bboxValid = true;
+
+        for (const prim of this.macroModel.getPrimitiveVector()) {
+            for (let i = 0; i < prim.getControlPointNumber(); i++) {
+                const pt = prim.virtualPoint[i];
+                if (!pt) continue;
+                if (pt.x < this.bboxMinX) this.bboxMinX = pt.x;
+                if (pt.x > this.bboxMaxX) this.bboxMaxX = pt.x;
+                if (pt.y < this.bboxMinY) this.bboxMinY = pt.y;
+                if (pt.y > this.bboxMaxY) this.bboxMaxY = pt.y;
+            }
+        }
+
+        // Handle empty case
+        if (this.bboxMinX === Number.MAX_SAFE_INTEGER) {
+            this.bboxMinX = this.bboxMinY = this.bboxMaxX = this.bboxMaxY = 0;
+        }
     }
 
     getDistanceToPoint(px: number, py: number): number {
@@ -193,10 +246,42 @@ export class PrimitiveMacro extends GraphicPrimitive {
 
         if (this.macroDesc === null) return Number.MAX_SAFE_INTEGER;
 
-        // Phase 2: call into macro model's EditorActions for precise distance.
-        // Phase 1 stub: return distance to the macro anchor point.
-        const dx = vx - 100, dy = vy - 100;
-        return Math.trunc(Math.sqrt(dx * dx + dy * dy));
+        // Precise distance: check all inner primitives.
+        let minDistance = Number.MAX_SAFE_INTEGER;
+        const layerV = this.macroModel.getLayers();
+        for (const prim of this.macroModel.getPrimitiveVector()) {
+            const d = prim.getDistanceToPoint(vx, vy);
+            if (d <= minDistance) {
+                const layer = prim.getLayer();
+                if (layer < layerV.length && layerV[layer].isVisible()) {
+                    minDistance = d;
+                }
+            }
+        }
+
+        if (minDistance < Number.MAX_SAFE_INTEGER) {
+            return minDistance;
+        }
+
+        // Fall back to bounding box test.
+        this.computeBoundingBox();
+        if (vx >= this.bboxMinX && vx <= this.bboxMaxX &&
+            vy >= this.bboxMinY && vy <= this.bboxMaxY) {
+            return 0;
+        }
+
+        // Point is outside bounding box: distance to nearest edge.
+        let dxEdge = 0;
+        let dyEdge = 0;
+        if (vx < this.bboxMinX) dxEdge = this.bboxMinX - vx;
+        else if (vx > this.bboxMaxX) dxEdge = vx - this.bboxMaxX;
+        if (vy < this.bboxMinY) dyEdge = this.bboxMinY - vy;
+        else if (vy > this.bboxMaxY) dyEdge = vy - this.bboxMaxY;
+
+        if (dxEdge !== 0 || dyEdge !== 0) {
+            return Math.trunc(Math.sqrt(dxEdge * dxEdge + dyEdge * dyEdge));
+        }
+        return Number.MAX_SAFE_INTEGER;
     }
 
     resetExport(): void { this.alreadyExported = false; }

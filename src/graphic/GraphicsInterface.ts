@@ -33,6 +33,7 @@ export interface GraphicsInterface {
     fillPolygon(p: PolygonInterface): void;
     drawPolygon(p: PolygonInterface): void;
     activateSelectColor(l: LayerDesc): void;
+    setSelectedColor(c: ColorInterface): void;
     drawAdvText(xyfactor: number, xa: number, ya: number,
         qq: number, h: number, w: number, th: number,
         needsStretching: boolean, orientation: number, mirror: boolean,

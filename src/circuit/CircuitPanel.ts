@@ -3,6 +3,7 @@ import { ParserActions } from './controllers/ParserActions.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
 import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
+import type { ColorInterface } from '../graphic/ColorInterface.js';
 import { StandardLayers } from '../layers/StandardLayers.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
@@ -756,6 +757,10 @@ export class CircuitPanel {
     setGridColor(c: string): void { this.gridColor = c; }
     setSelectionLTRColor(c: string): void { this.selectionLTRColor = c; }
     setSelectionRTLColor(c: string): void { this.selectionRTLColor = c; }
+
+    setSelectedColor(c: ColorInterface): void {
+        this.ctx.setSelectedColor(c);
+    }
 
     zoomIn(): void {
         const factor = 1.2;
