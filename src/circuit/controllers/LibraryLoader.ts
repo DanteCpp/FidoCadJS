@@ -13,12 +13,14 @@ interface LibraryEntry {
     prefix: string;
 }
 
+const BASE = import.meta.env.BASE_URL;
+
 const STANDARD_LIBRARIES: LibraryEntry[] = [
-    { url: '/lib/FCDstdlib.fcl',       prefix: '' },
-    { url: '/lib/PCB.fcl',             prefix: 'PCB' },
-    { url: '/lib/elettrotecnica.fcl',  prefix: 'elettrotecnica' },
-    { url: '/lib/EY_Libraries.fcl',    prefix: 'EY_Libraries' },
-    { url: '/lib/IHRAM.fcl',           prefix: 'IHRAM' },
+    { url: `${BASE}lib/FCDstdlib.fcl`,       prefix: '' },
+    { url: `${BASE}lib/PCB.fcl`,             prefix: 'PCB' },
+    { url: `${BASE}lib/elettrotecnica.fcl`,  prefix: 'elettrotecnica' },
+    { url: `${BASE}lib/EY_Libraries.fcl`,    prefix: 'EY_Libraries' },
+    { url: `${BASE}lib/IHRAM.fcl`,           prefix: 'IHRAM' },
 ];
 
 export async function loadStandardLibraries(parserActions: ParserActions): Promise<void> {

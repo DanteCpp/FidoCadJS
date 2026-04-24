@@ -152,7 +152,7 @@ class FidoCadTS {
 
         const toolButtons = new Map<number, HTMLButtonElement>();
         for (const [tooltip, icon, toolId] of toolDefs) {
-            const btn = this.addIconButtonToRow(firstRow, `/icons/${icon}`, tooltip, () => {
+            const btn = this.addIconButtonToRow(firstRow, `${import.meta.env.BASE_URL}icons/${icon}`, tooltip, () => {
                 this.circuitPanel.setTool(toolId);
             });
             toolButtons.set(toolId, btn);
