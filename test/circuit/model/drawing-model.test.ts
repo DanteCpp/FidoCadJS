@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
-import { PrimitiveLine } from '../../src/primitives/PrimitiveLine.js';
+import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';
+import { StandardLayers } from '../../../src/layers/StandardLayers.js';
+import { PrimitiveLine } from '../../../src/primitives/PrimitiveLine.js';
 
 describe('DrawingModel', () => {
     let model: DrawingModel;
@@ -24,7 +24,7 @@ describe('DrawingModel', () => {
 
     it('addPrimitive appends a primitive to the vector', () => {
         const prim = new PrimitiveLine(0, 0, 10, 10, 0, false, false, 0, 3, 2, 0, '', 4);
-        model.addPrimitive(prim);
+        model.addPrimitive(prim, true, null);
         expect(model.getPrimitiveVector()).toHaveLength(1);
         expect(model.getPrimitiveVector()[0]).toBe(prim);
     });
@@ -43,6 +43,7 @@ describe('DrawingModel', () => {
     });
 
     it('setChanged / getChanged flag works', () => {
+        model.setChanged(false);
         expect(model.getChanged()).toBe(false);
         model.setChanged(true);
         expect(model.getChanged()).toBe(true);

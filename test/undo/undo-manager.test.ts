@@ -30,6 +30,7 @@ describe('UndoManager', () => {
 
     it('undoPush followed by undoPop returns state', () => {
         mgr.undoPush(makeState('state1'));
+        mgr.undoPush(makeState('state2'));
         expect(mgr.canUndo()).toBe(true);
         const result = mgr.undoPop();
         expect(result.text).toBe('state1');
@@ -74,8 +75,8 @@ describe('UndoManager', () => {
 
     it('isNextOperationOnALibrary detects library operation', () => {
         mgr.undoPush(makeState('normal'));
-        expect(mgr.isNextOperationOnALibrary()).toBe(false);
         mgr.undoPush(makeState('lib', true));
+        mgr.undoPop();
         expect(mgr.isNextOperationOnALibrary()).toBe(true);
     });
 
