@@ -280,7 +280,7 @@ class FidoCadJS {
         const btnLabel = document.createElement('span');
         btnLabel.style.cssText = 'flex:1;';
         const currentIdx = this.circuitPanel.getCurrentLayer();
-        btnLabel.textContent = `Layer ${currentIdx}: ${layerDescs[currentIdx].getDescription()}`;
+        btnLabel.textContent = `${layerDescs[currentIdx].getDescription()}`;
         const btnArrow = document.createElement('span');
         btnArrow.textContent = '▾';
         btnArrow.style.cssText = 'color:#666; font-size:10px;';
@@ -296,7 +296,7 @@ class FidoCadJS {
 
         const updateBtn = (idx: number) => {
             btnSwatch.style.background = layerColorCSS(idx);
-            btnLabel.textContent = `Layer ${idx}: ${layerDescs[idx].getDescription()}`;
+            btnLabel.textContent = `${layerDescs[idx].getDescription()}`;
         };
 
         for (let i = 0; i < layerDescs.length; i++) {
@@ -306,7 +306,7 @@ class FidoCadJS {
                 ' cursor:pointer; font-size:12px; white-space:nowrap;';
             item.append(makeSwatchEl(layerColorCSS(i)));
             const lbl = document.createElement('span');
-            lbl.textContent = `Layer ${i}: ${layerDescs[i].getDescription()}`;
+            lbl.textContent = `${layerDescs[i].getDescription()}`;
             item.appendChild(lbl);
             item.addEventListener('mouseenter', () => { item.style.background = '#e8f0fe'; });
             item.addEventListener('mouseleave', () => { item.style.background = ''; });
@@ -480,7 +480,9 @@ class FidoCadJS {
 
         const redraw = () => {
             prim.setChanged(true);
-            this.circuitPanel.getModel().setChanged(true);
+            const model = this.circuitPanel.getModel();
+            model.setChanged(true);
+            model.sortPrimitiveLayers();
             this.circuitPanel.render();
         };
 
@@ -572,10 +574,91 @@ class FidoCadJS {
 
         const addLayerSection = (): void => {
             addSection('Common');
-            const layers = this.circuitPanel.getLayerDescriptions();
-            addSelect('Layer:', layers.map((name, i) => ({ value: String(i), text: `${i}: ${name}` })),
-                () => String(prim.getLayer()),
-                v => { prim.setLayer(Number(v)); redraw(); });
+            const layerDescs = this.circuitPanel.getLayers();
+            const layerNames = this.circuitPanel.getLayerDescriptions();
+            const layerColorCSS = (idx: number): string => {
+                const c = layerDescs[idx]?.getColor();
+                return c ? `rgb(${c.getRed()},${c.getGreen()},${c.getBlue()})` : '#888';
+            };
+            const makeSwatchEl = (color: string): HTMLSpanElement => {
+                const sw = document.createElement('span');
+                sw.style.cssText =
+                    `display:inline-block; width:14px; height:14px; min-width:14px;` +
+                    ` border:1px solid #666; background:${color}; border-radius:2px;`;
+                return sw;
+            };
+
+            const row = this.createPropertyRow('Layer:');
+
+            const layerDropdown = document.createElement('div');
+            layerDropdown.style.cssText = 'position:relative; display:inline-block; flex:1;';
+
+            // Button showing current layer
+            const layerBtn = document.createElement('div');
+            layerBtn.style.cssText =
+                'display:flex; align-items:center; gap:5px; cursor:pointer;' +
+                ' border:1px solid #ccc; border-radius:2px; padding:3px 6px;' +
+                ' background:white; font-size:12px; user-select:none;';
+
+            const currentIdx = prim.getLayer();
+            const btnSwatch = makeSwatchEl(layerColorCSS(currentIdx));
+            const btnLabel = document.createElement('span');
+            btnLabel.style.cssText = 'flex:1;';
+            btnLabel.textContent = `${layerNames[currentIdx] ?? ''}`;
+            const btnArrow = document.createElement('span');
+            btnArrow.textContent = '▾';
+            btnArrow.style.cssText = 'color:#666; font-size:10px;';
+            layerBtn.append(btnSwatch, btnLabel, btnArrow);
+
+            // Dropdown list (hidden by default)
+            const layerList = document.createElement('div');
+            layerList.style.cssText =
+                'display:none; position:absolute; top:100%; left:0; z-index:1000;' +
+                ' border:1px solid #ccc; border-radius:2px; background:white;' +
+                ' box-shadow:2px 4px 8px rgba(0,0,0,0.18); min-width:100%;' +
+                ' max-height:260px; overflow-y:auto;';
+
+            const updateBtn = (idx: number) => {
+                btnSwatch.style.background = layerColorCSS(idx);
+                btnLabel.textContent = `${layerNames[idx] ?? ''}`;
+            };
+
+            for (let i = 0; i < layerDescs.length; i++) {
+                const item = document.createElement('div');
+                item.style.cssText =
+                    'display:flex; align-items:center; gap:5px; padding:4px 8px;' +
+                    ' cursor:pointer; font-size:12px; white-space:nowrap;';
+                item.append(makeSwatchEl(layerColorCSS(i)));
+                const lbl = document.createElement('span');
+                lbl.textContent = `${layerNames[i] ?? ''}`;
+                item.appendChild(lbl);
+                item.addEventListener('mouseenter', () => { item.style.background = '#e8f0fe'; });
+                item.addEventListener('mouseleave', () => { item.style.background = ''; });
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    prim.setLayer(i);
+                    updateBtn(i);
+                    layerList.style.display = 'none';
+                    redraw();
+                });
+                layerList.appendChild(item);
+            }
+
+            const toggleList = () => {
+                layerList.style.display = layerList.style.display === 'none' ? 'block' : 'none';
+            };
+            layerBtn.addEventListener('click', toggleList);
+
+            const closeOnOutside = (e: MouseEvent) => {
+                if (!layerDropdown.contains(e.target as Node)) {
+                    layerList.style.display = 'none';
+                }
+            };
+            document.addEventListener('mousedown', closeOnOutside);
+
+            layerDropdown.append(layerBtn, layerList);
+            row.appendChild(layerDropdown);
+            form.appendChild(row);
         };
 
         const addNameValue = (): void => {
