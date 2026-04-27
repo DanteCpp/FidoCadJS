@@ -261,7 +261,7 @@ export class MenuBar {
         return [
             {
                 kind: 'action',
-                label: 'Define',
+                label: 'View code',
                 shortcut: 'Ctrl+G',
                 action: () => this.showDefineDialog(),
             },
@@ -314,7 +314,7 @@ export class MenuBar {
             'min-width: 400px; font-family: monospace;';
 
         const title = document.createElement('h3');
-        title.textContent = 'Circuit Definition (FidoCadJ Format)';
+        title.textContent = 'Circuit Definition';
         title.style.cssText = 'margin-top: 0;';
         dialog.appendChild(title);
 

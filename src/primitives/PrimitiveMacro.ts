@@ -161,7 +161,6 @@ export class PrimitiveMacro extends GraphicPrimitive {
     }
 
     draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
-        this.setLayer(0);
         if (this.selectLayer(g, layerV)) {
             this.drawText(g, coordSys, layerV, this.drawOnlyLayer);
         }
