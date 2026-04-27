@@ -58,7 +58,43 @@ const DEFAULTS: AppSettings = {
     locale: getDefaultLocale(),
 };
 
-const STORAGE_KEY = 'fidocadts.settings';
+const STORAGE_KEY = 'fidocadts.settings.v1';
+const SUPPORTED_LOCALES = ['cs', 'de', 'el', 'en', 'es', 'fr', 'it', 'ja', 'nl', 'ru', 'zh'] as const;
+const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+function isFiniteNumberInRange(v: unknown, min: number, max: number): v is number {
+    return typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
+}
+
+function isValidColor(v: unknown): v is string {
+    return typeof v === 'string' && COLOR_RE.test(v);
+}
+
+function sanitize(parsed: unknown): Partial<AppSettings> {
+    if (parsed === null || typeof parsed !== 'object') return {};
+    const p = parsed as Record<string, unknown>;
+    const out: Partial<AppSettings> = {};
+
+    if (isFiniteNumberInRange(p.gridSizeX, 1, 1000)) out.gridSizeX = p.gridSizeX;
+    if (isFiniteNumberInRange(p.gridSizeY, 1, 1000)) out.gridSizeY = p.gridSizeY;
+    if (typeof p.snapToGrid === 'boolean') out.snapToGrid = p.snapToGrid;
+    if (typeof p.antiAlias === 'boolean') out.antiAlias = p.antiAlias;
+    if (isFiniteNumberInRange(p.strokeSize, 0.01, 100)) out.strokeSize = p.strokeSize;
+    if (isFiniteNumberInRange(p.connectionSize, 0.01, 100)) out.connectionSize = p.connectionSize;
+    if (isFiniteNumberInRange(p.pcbLineWidth, 0.01, 1000)) out.pcbLineWidth = p.pcbLineWidth;
+    if (isFiniteNumberInRange(p.pcbPadWidth, 0.01, 1000)) out.pcbPadWidth = p.pcbPadWidth;
+    if (isFiniteNumberInRange(p.pcbPadHeight, 0.01, 1000)) out.pcbPadHeight = p.pcbPadHeight;
+    if (isFiniteNumberInRange(p.pcbPadDrill, 0.01, 1000)) out.pcbPadDrill = p.pcbPadDrill;
+    if (isValidColor(p.backgroundColor)) out.backgroundColor = p.backgroundColor;
+    if (isValidColor(p.gridColor)) out.gridColor = p.gridColor;
+    if (isValidColor(p.selectionLTRColor)) out.selectionLTRColor = p.selectionLTRColor;
+    if (isValidColor(p.selectionRTLColor)) out.selectionRTLColor = p.selectionRTLColor;
+    if (typeof p.locale === 'string'
+        && (SUPPORTED_LOCALES as readonly string[]).includes(p.locale)) {
+        out.locale = p.locale;
+    }
+    return out;
+}
 
 export class SettingsManager {
     private static instance: SettingsManager | null = null;
@@ -110,25 +146,19 @@ export class SettingsManager {
     private load(): void {
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const parsed = JSON.parse(raw) as Partial<AppSettings>;
-                Object.assign(this.settings, parsed);
-                // Validate locale: if not in supported set, reset to default
-                const supported = ['cs', 'de', 'el', 'en', 'es', 'fr', 'it', 'ja', 'nl', 'ru', 'zh'];
-                if (!supported.includes(this.settings.locale)) {
-                    this.settings.locale = getDefaultLocale();
-                }
-            }
-        } catch {
-            // ignore parse errors — keep defaults
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            Object.assign(this.settings, sanitize(parsed));
+        } catch (e) {
+            console.warn('SettingsManager: failed to load settings, using defaults:', e);
         }
     }
 
     private save(): void {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
-        } catch {
-            // ignore quota errors
+        } catch (e) {
+            console.warn('SettingsManager: failed to persist settings:', e);
         }
     }
 }

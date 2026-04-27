@@ -9,9 +9,10 @@ export class TextCanvas implements TextInterface {
         this.ctx = ctx;
     }
 
-    setFont(name: string, size: number): void {
+    setFont(name: string, size: number, isItalic?: boolean, isBold?: boolean): void {
         this.fontSize = size;
-        this.font = `${size}px ${name}`;
+        const style = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}`;
+        this.font = `${style}${size}px ${name}`;
         this.ctx.font = this.font;
     }
 

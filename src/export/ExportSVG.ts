@@ -341,7 +341,7 @@ export class ExportSVG implements ExportInterface {
         }
         this.buffer.push(` scale(${xscale},${yscale})">`);
         this.buffer.push(
-            `<text x="0" y="0" font-family="${fontname}" font-size="${sizex * 2}" ` +
+            `<text x="0" y="0" font-family="${this.escapeXml(fontname)}" font-size="${sizex * 2}" ` +
             `fill="${this.currentColor}" style="font-weight:${isBold ? 'bold' : 'normal'};` +
             `font-style:${isItalic ? 'italic' : 'normal'}">${this.escapeXml(text)}</text>`
         );

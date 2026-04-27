@@ -110,10 +110,14 @@ export class CircuitPanel {
 
         // Create canvas
         this.canvas = document.createElement('canvas');
+        this.canvas.setAttribute('data-testid', 'editor-canvas');
         this.canvas.style.width = '100%';
         this.canvas.style.height = '100%';
         this.canvas.style.display = 'block';
         container.appendChild(this.canvas);
+
+        // Expose panel reference for E2E test access
+        (this.canvas as any).__circuitPanel = this;
 
         // Setup high-DPI canvas with ResizeObserver for robust sizing
         const dpr = window.devicePixelRatio || 1;

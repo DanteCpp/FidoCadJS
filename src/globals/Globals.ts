@@ -33,6 +33,22 @@ export class Globals {
     static readonly maxZoomFactor = 4000;
     static readonly minZoomFactor = 10;
 
+    // Parser safety limits — defend against malformed/hostile .fcd inputs.
+    static readonly MAX_VERTICES = 10000;
+    static readonly MAX_MACRO_DEPTH = 16;
+    static readonly MAX_COORD = 1_000_000;
+    static readonly MIN_COORD = -1_000_000;
+
+    /** Validate and clamp a parsed integer coordinate. Returns null on NaN. */
+    static parseCoord(token: string | undefined): number | null {
+        if (token === undefined) return null;
+        const v = parseInt(token, 10);
+        if (!Number.isFinite(v)) return null;
+        if (v > Globals.MAX_COORD) return Globals.MAX_COORD;
+        if (v < Globals.MIN_COORD) return Globals.MIN_COORD;
+        return v;
+    }
+
     static prettifyPath(s: string, len: number): string {
         const l = Math.max(len, 10);
         if (s.length < l) return s;

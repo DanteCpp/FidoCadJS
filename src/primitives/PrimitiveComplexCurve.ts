@@ -399,9 +399,17 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
 
         while (j < nn - 1) {
             if (j + 1 < nn - 1 && tokens[j + 1] === 'FCJ') break;
-            x1 = parseInt(tokens[j++]!, 10);
+            if (i >= Globals.MAX_VERTICES) {
+                console.warn(`CP/CV: vertex count exceeds MAX_VERTICES, truncating`);
+                while (j < nn - 1 && tokens[j + 1] !== 'FCJ') j++;
+                break;
+            }
+            const px = Globals.parseCoord(tokens[j++]);
             if (j >= nn - 1) throw new Error('Bad arguments on CP/CV');
-            y1 = parseInt(tokens[j++]!, 10);
+            const py = Globals.parseCoord(tokens[j++]);
+            if (px === null || py === null)
+                throw new Error('CP/CV: invalid coordinate');
+            x1 = px; y1 = py;
             i++;
             this.addPoint(x1, y1);
         }

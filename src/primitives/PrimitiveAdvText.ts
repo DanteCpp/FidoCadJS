@@ -371,7 +371,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         const minX = Math.min(x1, x2, x3, x4);
         const minY = Math.min(y1, y2, y3, y4);
         const maxX = Math.max(x1, x2, x3, x4);
-        const maxY = Math.max(y1, y2, Math.min(y3, y4));
+        const maxY = Math.max(y1, y2, y3, y4);
 
         const boundingBox = new RectangleG(minX, minY, maxX - minX, maxY - minY);
         return rect.intersects(boundingBox);

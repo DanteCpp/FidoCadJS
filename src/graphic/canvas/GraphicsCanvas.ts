@@ -102,7 +102,7 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.fontBold = isBold ?? false;
         const style = `${this.fontItalic ? 'italic ' : ''}${this.fontBold ? 'bold ' : ''}`;
         this.ctx.font = `${style}${size}px ${name}`;
-        this.textInterface.setFont(name, size);
+        this.textInterface.setFont(name, size, isItalic, isBold);
     }
 
     getFontSize(): number { return this.fontSize; }

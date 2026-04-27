@@ -28,6 +28,7 @@ class FidoCadJS {
     private propertiesSidebar!: HTMLElement;
     private libraryPanel!: HTMLElement;
     private macroPicker!: MacroPicker;
+    private fontFamilies: string[] | null = null;
     private libraryModel!: LibraryModel;
 
     constructor() {
@@ -54,6 +55,7 @@ class FidoCadJS {
 
         // Create toolbar (empty, will be populated after CircuitPanel is created)
         this.toolbar = document.createElement('div');
+        this.toolbar.setAttribute('data-testid', 'toolbar');
         app.appendChild(this.toolbar);
 
         // Create main workspace row: editor + properties sidebar + library panel (right)
@@ -62,10 +64,12 @@ class FidoCadJS {
 
         // Center editor container
         const editorContainer = document.createElement('div');
+        editorContainer.setAttribute('data-testid', 'editor-container');
         editorContainer.style.cssText = 'flex: 1; overflow: hidden;';
 
         // Properties sidebar (initially hidden, left of library panel)
         this.propertiesSidebar = document.createElement('div');
+        this.propertiesSidebar.setAttribute('data-testid', 'properties-sidebar');
         this.propertiesSidebar.style.cssText =
             'width: 280px; background: #f5f5f5; border-right: 1px solid #ccc; ' +
             'display: none; flex-direction: column; overflow-y: auto;';
@@ -73,6 +77,7 @@ class FidoCadJS {
 
         // Right library panel
         this.libraryPanel = document.createElement('div');
+        this.libraryPanel.setAttribute('data-testid', 'library-panel');
         this.libraryPanel.style.cssText =
             'width: 240px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden;';
 
@@ -180,6 +185,7 @@ class FidoCadJS {
         // Zoom combobox with exact FidoCadJ levels
         const zoomLevels = [25, 50, 75, 100, 150, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000, 4000];
         const zoomSelect = document.createElement('select');
+        zoomSelect.setAttribute('data-testid', 'zoom-select');
         zoomSelect.style.cssText =
             'font-size: 12px; padding: 3px 4px; border-radius: 2px; border: 1px solid #ccc; ' +
             'background: white; width: 72px;';
@@ -339,6 +345,7 @@ class FidoCadJS {
 
         // Coordinates display (right side, like ToolbarZoom)
         const coordsLabel = document.createElement('span');
+        coordsLabel.setAttribute('data-testid', 'coords-display');
         coordsLabel.textContent = 'X: 0  Y: 0';
         coordsLabel.style.cssText =
             'font-family: monospace; font-size: 11px; color: #555; min-width: 120px; text-align: right;';
@@ -426,6 +433,45 @@ class FidoCadJS {
         this.circuitPanel.onExistingTextEditRequested = (prim) => {
             this.showPropertiesPanel(prim);
         };
+    }
+
+    private async getAvailableFontFamilies(): Promise<string[]> {
+        if (this.fontFamilies) return this.fontFamilies;
+
+        const fallbackFonts = [
+            'Arial', 'Arial Black', 'Arial Narrow',
+            'Calibri', 'Cambria', 'Candara', 'Century Gothic',
+            'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel',
+            'Courier New', 'DejaVu Sans', 'DejaVu Sans Mono',
+            'DejaVu Serif', 'Franklin Gothic Medium', 'Garamond',
+            'Georgia', 'Helvetica', 'Helvetica Neue', 'Impact',
+            'Lucida Console', 'Lucida Sans Unicode', 'Menlo',
+            'Microsoft Sans Serif', 'Monaco', 'Monospace',
+            'Palatino Linotype', 'Sans-serif', 'Segoe UI',
+            'Segoe UI Mono', 'Serif', 'Tahoma', 'Times New Roman',
+            'Trebuchet MS', 'Verdana', 'Webdings', 'Wingdings',
+        ];
+
+        try {
+            if ('queryLocalFonts' in navigator) {
+                const fontData = await (navigator as any).queryLocalFonts();
+                const families = new Set<string>();
+                for (const fd of fontData) {
+                    families.add(fd.family);
+                }
+                // Merge with fallback to ensure common fonts are always present
+                for (const f of fallbackFonts) families.add(f);
+                const sorted = [...families].sort((a, b) =>
+                    a.toLowerCase().localeCompare(b.toLowerCase()));
+                this.fontFamilies = sorted;
+                return sorted;
+            }
+        } catch {
+            // Permission denied or API not supported — fall through to fallback
+        }
+
+        this.fontFamilies = fallbackFonts;
+        return fallbackFonts;
     }
 
     private showPropertiesPanel(prim: GraphicPrimitive): void {
@@ -554,7 +600,33 @@ class FidoCadJS {
             addCheck('Mirror:', () => prim.isMirrored() !== 0, v => prim.setMirrored(v ? 1 : 0));
             addCheck('Bold:', () => prim.isBold(), v => prim.setBold(v));
             addCheck('Italic:', () => prim.isItalic(), v => prim.setItalic(v));
-            addText('Font:', () => prim.getFontName(), v => prim.setFontName(v));
+            // Font dropdown — populated with fallback list immediately,
+            // then upgraded to system fonts via Font Access API if available.
+            const fontOptions = this.fontFamilies
+                ? this.fontFamilies.map(f => ({ value: f, text: f }))
+                : [
+                    'Arial', 'Calibri', 'Cambria', 'Consolas', 'Courier New',
+                    'DejaVu Sans', 'DejaVu Sans Mono', 'DejaVu Serif',
+                    'Georgia', 'Helvetica', 'Helvetica Neue', 'Menlo',
+                    'Monaco', 'Sans-serif', 'Segoe UI', 'Serif', 'Tahoma',
+                    'Times New Roman', 'Verdana',
+                  ].map(f => ({ value: f, text: f }));
+            addSelect('Font:', fontOptions, () => prim.getFontName(), v => prim.setFontName(v));
+            // Try to load full system fonts in the background
+            this.getAvailableFontFamilies().then(families => {
+                const sel = form.querySelector('select') as HTMLSelectElement;
+                if (sel && families.length > fontOptions.length) {
+                    const currentVal = sel.value;
+                    sel.innerHTML = '';
+                    for (const f of families) {
+                        const opt = document.createElement('option');
+                        opt.value = f;
+                        opt.textContent = f;
+                        sel.appendChild(opt);
+                    }
+                    sel.value = families.includes(currentVal) ? currentVal : families[0]!;
+                }
+            });
             addLayerSection();
 
         } else if (prim instanceof PrimitiveLine) {

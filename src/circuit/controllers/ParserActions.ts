@@ -17,6 +17,9 @@ import { PrimitivePolygon } from '../../primitives/PrimitivePolygon.js';
 import { MacroDesc } from '../../primitives/MacroDesc.js';
 
 const MAX_TOKENS = 10000;
+// Tracks current macro-expansion depth across the recursive parser callback
+// to defend against malformed libraries with circular or deeply nested macros.
+let macroExpansionDepth = 0;
 
 export class ParserActions {
     private readonly model: DrawingModel;
@@ -26,8 +29,17 @@ export class ParserActions {
         this.model = pp;
         // Inject the macro parser callback to break circular dependency.
         PrimitiveMacro.parserFn = (model, description) => {
-            const pa = new ParserActions(model);
-            pa.addString(description, false);
+            if (macroExpansionDepth >= Globals.MAX_MACRO_DEPTH) {
+                console.warn('Macro expansion exceeds MAX_MACRO_DEPTH; aborting branch');
+                return;
+            }
+            macroExpansionDepth++;
+            try {
+                const pa = new ParserActions(model);
+                pa.addString(description, false);
+            } finally {
+                macroExpansionDepth--;
+            }
         };
     }
 

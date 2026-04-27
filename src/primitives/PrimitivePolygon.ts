@@ -149,8 +149,17 @@ export class PrimitivePolygon extends GraphicPrimitive {
         let j = 1, i = 0, x1 = 0, y1 = 0;
         while (j < nn - 1) {
             if (j + 1 < nn - 1 && tokens[j + 1] === 'FCJ') break;
-            x1 = parseInt(tokens[j++]!, 10);
-            y1 = parseInt(tokens[j++]!, 10);
+            if (i >= Globals.MAX_VERTICES) {
+                console.warn(`PP/PV: vertex count exceeds MAX_VERTICES, truncating`);
+                // Skip the rest of vertex tokens until FCJ or end of line.
+                while (j < nn - 1 && tokens[j + 1] !== 'FCJ') j++;
+                break;
+            }
+            const px = Globals.parseCoord(tokens[j++]);
+            const py = Globals.parseCoord(tokens[j++]);
+            if (px === null || py === null)
+                throw new Error('PP/PV: invalid coordinate');
+            x1 = px; y1 = py;
             i++;
             this.addPoint(x1, y1);
         }
