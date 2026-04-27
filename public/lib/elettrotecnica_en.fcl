@@ -1,7 +1,7 @@
-[FIDOLIB Simboli Elettrotecnica]
+[FIDOLIB Electrical symbols]
 
-{Interruttori di protezione}
-[INTPR01 Differenziale puro]
+{Circuit breakers}
+[INTPR01 Residual current operated circuit breaker (RCCB)]
 LI 100 106 100 109 0
 RV 95 110 105 105 0
 EV 99 107 100 109 0
@@ -13,7 +13,7 @@ PP 97 95 95 96 96 98 98 97 98 97 0
 LI 100 100 97 94 0
 LI 99 94 101 96 0
 LI 101 94 99 96 0
-[INTPR02 Magnetotermico]
+[INTPR02 Thermal magnetic circuit breaker]
 LI 95 105 95 105 0
 MC 100 100 0 0 810
 MC 100 105 0 0 820
@@ -28,7 +28,7 @@ LI 98 104 98 104 4
 LI 96 104 96 104 4
 LI 96 104 96 104 4
 LI 96 104 96 104 4
-[INTPR03 Magnetotermico-differenziale]
+[INTPR03 Residual current operated circuit breaker with integral overcurrent protection (RCBO)]
 LI 100 111 100 114 0
 LI 100 115 100 120 0
 LI 100 100 100 95 0
@@ -142,24 +142,24 @@ LI 95 130 115 130 0
 LI 100 140 100 130 0
 LI 110 140 110 130 0
 
-{Fusibili}
-[FUS01 Fusibile]
+{Fuses and fuse switches}
+[FUS01 Fuse]
 LI 100 90 100 95 0
 LI 100 110 100 105 0
 MC 100 95 0 0 890
-[FUS02 Fusibile con percussore]
+[FUS02 Striker fuse]
 LI 100 90 100 95 0
 LI 100 110 100 105 0
 LI 104 100 102 100 0
 LI 105 100 107 100 0
 LI 108 100 110 100 0
 MC 100 95 0 0 890
-[FUS03 Fus. con indicazione dell'estremo sotto tensione]
+[FUS03 Fuse with indication of the side that remains live after blowing]
 LI 100 90 100 95 0
 LI 100 110 100 105 0
 RP 98 101 102 103 0
 MC 100 95 0 0 890
-[FUS04 Fus. con percussore e segnalazione a 3 morsetti]
+[FUS04 Fuse with alarm contact, three terminals]
 LI 100 90 100 95 0
 LI 100 110 100 105 0
 LI 105 100 102 100 0
@@ -169,7 +169,7 @@ LI 102 103 115 103 0
 LI 115 103 110 95 0
 LI 115 90 115 95 0
 MC 100 95 0 0 890
-[FUS05 Fus. con percussore e segnalazione separata]
+[FUS05 Fuse with separate alarm]
 LI 102 100 105 100 0
 LI 106 100 109 100 0
 LI 110 100 113 100 0
@@ -186,7 +186,7 @@ LI 98 97 102 97 0
 LI 102 97 102 103 0
 LI 102 103 98 103 0
 LI 98 103 98 97 0
-[FUS06 Interruttore di manovra con fus. incorporato]
+[FUS06 Fuse-switch]
 LI 92 99 95 96 0
 LI 95 96 99 100 0
 LI 99 100 96 103 0
@@ -195,7 +195,7 @@ LI 92 99 92 99 0
 LI 91 95 100 104 0
 LI 100 104 100 110 0
 LI 100 93 100 90 0
-[FUS07 Sezionatore con fus. incorporato]
+[FUS07 Fuse disconnector; Fuse isolator]
 LI 92 99 95 96 0
 LI 95 96 99 100 0
 LI 99 100 96 103 0
@@ -205,7 +205,7 @@ LI 91 95 100 104 0
 LI 100 104 100 110 0
 LI 100 93 100 90 0
 LI 98 93 102 93 0
-[FUS08 Interruttore di manovra-sezionatore con fus. incorporato]
+[FUS08 Fuse switch-disconnector; On-load isolating fuse switch]
 LI 92 99 95 96 0
 LI 95 96 99 100 0
 LI 99 100 96 103 0
@@ -216,7 +216,7 @@ LI 100 104 100 110 0
 LI 100 93 100 90 0
 LI 98 93 102 93 0
 EV 99 93 101 95 0
-[FUS09 Interruttore di manovra ad apertura automatica comandata da uno dei fus. con percussore]
+[FUS09 Three-pole switch with striker fuses]
 LI 75 75 75 75 0
 LI 87 90 90 90 0
 LI 91 90 95 90 0
@@ -284,8 +284,8 @@ LI 89 105 86 105 0
 LI 85 105 82 105 0
 LI 93 105 90 105 0
 
-{Scaricatori}
-[SCA01 Scaricatore]
+{Spark gaps and arresters}
+[SCA01 Surge diverter; Lightning arrester]
 LI 102 97 102 103 0
 LI 102 97 98 97 0
 LI 98 103 98 97 0
@@ -294,8 +294,8 @@ LI 100 110 100 103 0
 LI 100 98 100 90 0
 PP 99 98 101 98 100 101 0
 
-{Comandi}
-[COM01 Comando con tirante]
+{Actuators}
+[COM01 Actuator (operated by pulling)]
 LI 83 96 86 96 0
 LI 86 96 86 104 0
 LI 83 104 86 104 0
@@ -307,7 +307,7 @@ LI 96 100 98 100 0
 LI 100 100 102 100 0
 LI 106 100 104 100 0
 LI 108 100 110 100 0
-[COM02 Comando rotativo]
+[COM02 Actuator (operated by turning)]
 LI 86 96 89 96 0
 LI 86 96 86 104 0
 LI 83 104 86 104 0
@@ -319,7 +319,7 @@ LI 96 100 98 100 0
 LI 100 100 102 100 0
 LI 106 100 104 100 0
 LI 108 100 110 100 0
-[COM03 Comando con pulsante]
+[COM03 Actuator (operated by pushing)]
 LI 83 96 87 96 0
 LI 83 96 83 104 0
 LI 83 104 87 104 0
@@ -331,7 +331,7 @@ LI 96 100 98 100 0
 LI 100 100 102 100 0
 LI 106 100 104 100 0
 LI 108 100 110 100 0
-[COM04 Comando per effetto di prossimità]
+[COM04 Actuator (operated by proximity effect)]
 LI 88 100 90 100 0
 LI 90 100 90 100 0
 LI 92 100 94 100 0
@@ -347,7 +347,7 @@ LI 83 105 78 100 0
 LI 78 100 78 100 0
 LI 82 96 82 104 0
 LI 84 96 84 104 0
-[COM05 Comando a sfioramento]
+[COM05 Actuator (operated by touching)]
 LI 88 100 90 100 0
 LI 90 100 90 100 0
 LI 92 100 94 100 0
@@ -365,7 +365,7 @@ LI 83 97 83 103 0
 LI 85 97 85 103 0
 LI 80 96 80 104 0
 LI 79 103 79 103 0
-[COM06 Comando a fungo]
+[COM06 Emergency actuator]
 LI 88 100 90 100 0
 LI 90 100 90 100 0
 LI 92 100 94 100 0
@@ -378,7 +378,7 @@ LI 86 96 86 104 0
 LI 86 100 87 100 0
 LI 87 100 87 100 0
 BE 86 96 81 97 81 103 86 104 0
-[COM07 Comando a chiave]
+[COM07 Actuator (operated by key)]
 LI 88 100 90 100 0
 LI 90 100 90 100 0
 LI 92 100 94 100 0
@@ -393,7 +393,7 @@ BE 86 100 88 96 82 96 84 100 0
 LI 84 100 83 103 0
 LI 83 103 87 103 0
 LI 87 103 86 100 0
-[COM08 Comando a camma]
+[COM08 Actuator (operated by cam)]
 LI 93 100 95 100 0
 LI 95 100 95 100 0
 LI 97 100 99 100 0
@@ -409,7 +409,7 @@ BE 87 95 80 95 80 105 87 105 0
 BE 87 105 90 105 92 103 92 100 0
 LI 87 100 91 100 0
 LI 91 100 91 100 0
-[COM09 Comando elettromagnetico]
+[COM09 Actuator (actuated by electromagnetic effect)]
 RV 80 97 90 103 0
 LI 85 95 85 97 0
 LI 85 105 85 103 0
@@ -421,7 +421,7 @@ LI 96 100 98 100 0
 LI 100 100 102 100 0
 LI 106 100 104 100 0
 LI 108 100 110 100 0
-[COM10 Comando da prot. magnetica]
+[COM10 Actuator (actuated by electromagnetic device)]
 LI 88 100 90 100 0
 LI 90 100 90 100 0
 LI 92 100 94 100 0
@@ -434,7 +434,7 @@ LI 80 95 80 97 0
 LI 83 100 86 100 0
 BE 80 103 84 103 84 97 80 97 0
 LI 80 103 80 105 0
-[COM11 Comando da prot. termica]
+[COM11 Actuator (actuated by thermal device)]
 LI 93 100 95 100 0
 LI 95 100 95 100 0
 LI 97 100 99 100 0
@@ -450,7 +450,7 @@ LI 85 97 88 97 0
 LI 88 97 88 103 0
 LI 88 103 85 103 0
 LI 85 103 85 103 0
-[COM12 Comando a motore elettrico]
+[COM12 Actuator (operated by electric motor)]
 LI 93 100 95 100 0
 LI 97 100 99 100 0
 LI 101 100 103 100 0
@@ -464,7 +464,7 @@ LI 83 97 83 103 0
 LI 83 97 85 101 0
 LI 85 101 87 97 0
 LI 87 97 87 103 0
-[COM13 Comando a orologio]
+[COM13 Actuator (operated by electric clock)]
 LI 93 100 95 100 0
 LI 95 100 95 100 0
 LI 97 100 99 100 0
@@ -478,7 +478,7 @@ EV 80 105 90 95 0
 LI 82 100 85 100 0
 LI 85 100 85 100 0
 LI 85 100 85 96 0
-[COM14 Comando dal livello di un fluido]
+[COM14 Actuator (actuated by liquid level)]
 LI 85 95 85 98 0
 LI 89 100 91 100 0
 LI 93 100 95 100 0
@@ -489,7 +489,7 @@ LI 105 100 107 100 0
 LI 111 100 109 100 0
 LI 113 100 115 100 0
 EV 89 98 81 102 0
-[COM15 Comando da portata fluida (gas, acqua)]
+[COM15 Actuator (actuated by fluid flow)]
 LI 88 100 91 100 0
 LI 93 100 95 100 0
 LI 97 100 99 100 0
@@ -504,7 +504,7 @@ LI 83 104 83 104 0
 BE 82 98 82 97 83 97 84 97 0
 LI 82 98 82 103 0
 LI 89 97 84 97 0
-[COM16 Interblocco meccanico tra due apparecchi]
+[COM16 Mechanical interlock]
 LI 101 100 103 100 0
 LI 107 100 105 100 0
 LI 109 100 111 100 0
@@ -514,7 +514,7 @@ LI 97 100 99 100 0
 LI 100 101 103 96 0
 LI 103 96 97 96 0
 LI 97 96 100 101 0
-[COM17 Disp. di aggancio libero]
+[COM17 Latching device, disengaged]
 LI 101 100 103 100 0
 LI 107 100 105 100 0
 LI 109 100 111 100 0
@@ -524,7 +524,7 @@ LI 97 100 99 100 0
 LI 100 99 100 95 0
 LI 98 100 94 97 0
 LI 94 100 94 97 0
-[COM18 Disp. di aggancio in presa]
+[COM18 Latching device, engaged]
 LI 101 100 103 100 0
 LI 107 100 105 100 0
 LI 109 100 111 100 0
@@ -534,24 +534,24 @@ LI 97 100 99 100 0
 LI 100 99 100 95 0
 LI 106 100 102 97 0
 LI 102 100 102 97 0
-[COM19 tratteggio]
+[COM19 Dashed line]
 LI 95 100 97 100 0
 LI 101 100 99 100 0
 LI 103 100 105 100 0
 
-{Avviatori}
-[AVV01 Avviatore per motore]
+{Motor starters}
+[AVV01 Motor starter]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 100 95 110 90 0
 LI 110 90 110 90 0
-[AVV02 Avv. con ritorno automatico]
+[AVV02 Starter with automatic release]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 90 90 90 90 0
 LI 100 95 110 90 0
 RP 110 93 113 90 0
-[AVV03 Avv. regolatore]
+[AVV03 Starter-regulator]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 90 90 90 90 0
@@ -560,7 +560,7 @@ LI 110 90 110 90 0
 LI 97 97 107 87 0
 LI 107 87 105 88 0
 LI 106 89 107 87 0
-[AVV04 Avv. a gradini]
+[AVV04 Starter operating in steps]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 90 90 90 90 0
@@ -571,7 +571,7 @@ LI 95 106 95 103 0
 LI 95 103 105 103 0
 LI 105 103 105 100 0
 LI 105 100 105 100 0
-[AVV05 Avv. stella-triangolo]
+[AVV05 Star-delta starter]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 100 95 110 90 0
@@ -583,7 +583,7 @@ LI 100 102 105 105 0
 LI 105 105 105 105 0
 LI 100 102 100 98 0
 LI 100 98 100 98 0
-[AVV06 Avv. dir. mediante contattore]
+[AVV06 Direct-on-line starter, reversing]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 100 95 110 90 0
@@ -598,7 +598,7 @@ LI 107 103 107 103 0
 LI 103 103 99 106 0
 LI 97 103 93 103 0
 EV 97 104 99 102 0
-[AVV07 Avv. mediante autotrasformatore]
+[AVV07 Starter with auto-transformer]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 90 90 90 90 0
@@ -610,7 +610,7 @@ LI 93 103 96 103 0
 BE 99 106 101 106 103 105 104 103 0
 LI 104 103 107 103 0
 LI 98 106 98 106 0
-[AVV08 Avv.- regolatore a tiristori]
+[AVV08 Starter-regulator with thyristors]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 90 90 90 90 0
@@ -626,7 +626,7 @@ LI 103 103 97 99 0
 LI 103 99 103 107 0
 LI 100 105 100 107 0
 LI 100 107 100 107 0
-[AVV09 Avv. reostatico]
+[AVV09 Rheostatic starter]
 RV 90 90 110 110 0
 LI 100 95 90 90 0
 LI 90 90 90 90 0
@@ -635,15 +635,15 @@ LI 110 90 110 90 0
 LI 92 103 108 103 0
 RV 105 101 95 105 0
 
-{Trasformatori unifilari}
-[TRAF01 Trasformatore unif.]
+{Transformers (single-line representation)}
+[TRAF01 Transformer with two windings]
 EV 90 106 102 94 0
 EV 98 106 110 94 0
 LI 85 100 90 100 0
 LI 90 100 90 100 0
 LI 110 100 115 100 0
 LI 116 100 116 100 0
-[TRAF02 Trasf. con schermo]
+[TRAF02 Transformer with two windings and screen]
 EV 90 106 102 94 0
 EV 98 106 110 94 0
 LI 85 100 90 100 0
@@ -652,13 +652,13 @@ LI 110 100 115 100 0
 LI 100 108 100 108 0
 LI 100 108 100 92 0
 LI 100 92 100 92 0
-[TRAF03 Autotrasformatore]
+[TRAF03 Auto-transformer]
 EV 91 106 103 94 0
 LI 85 100 91 100 0
 LI 91 100 91 100 0
 BE 97 94 102 93 107 98 107 100 0
 LI 107 100 115 100 0
-[TRAF04 Trasf. di sicurezza]
+[TRAF04 Safety isolating transformer]
 EV 103 102 97 97 0
 EV 103 105 97 100 0
 LI 96 101 104 101 0
@@ -669,8 +669,8 @@ LI 95 105 95 95 0
 LI 95 95 105 95 0
 LI 105 95 105 105 0
 
-{Convertitori}
-[CONV01 Raddrizzatore]
+{Power converters}
+[CONV01 Rectifier in full wave (bridge) connection]
 LI 90 100 100 90 0
 LI 100 90 110 100 0
 LI 110 100 100 110 0
@@ -680,7 +680,7 @@ LI 98 97 98 103 0
 LI 98 103 103 100 0
 LI 103 100 98 97 0
 LI 103 97 103 103 0
-[CONV02 Alimentatore]
+[CONV02 Rectifier]
 LI 90 95 90 95 0
 RV 90 105 90 105 0
 RV 90 90 110 110 0
@@ -695,8 +695,8 @@ LI 90 110 110 90 0
 MC 92 92 0 0 060
 MC 98 106 0 0 070
 
-{Apparecchi vari}
-[APP01 Elettroserratura]
+{Miscellaneous devices}
+[APP01 Electric lock]
 LI 95 105 95 95 0
 LI 95 95 110 95 0
 LI 110 95 110 105 0
@@ -705,18 +705,18 @@ LI 110 95 120 105 0
 LI 120 105 110 105 0
 BE 98 102 98 98 102 98 102 102 0
 BE 102 102 102 98 106 98 106 102 0
-[APP02 Ventilatore]
+[APP02 Fan]
 RV 95 94 107 106 0
 BE 101 100 108 96 108 104 101 100 0
 BE 101 100 94 96 94 104 101 100 0
-[APP04 Interfono/Citofono]
+[APP04 Audio intercommunication equipment]
 RV 95 105 107 95 0
 LI 102 102 107 105 0
 LI 102 98 107 95 0
 RV 102 98 100 102 0
 MC 106 100 0 0 074
 MC 109 100 2 0 074
-[APP05 Videocitofono]
+[APP05 Video intercommunication equipment]
 RV 85 105 117 95 0
 LI 112 102 117 105 0
 LI 112 98 117 95 0
@@ -730,7 +730,7 @@ LI 89 102 103 102 0
 LI 103 102 105 104 0
 MC 116 100 0 0 074
 MC 119 100 2 0 074
-[APP06 Telecamera]
+[APP06 Camera]
 RV 95 105 109 95 0
 RV 109 98 111 102 0
 LI 98 102 102 97 0
@@ -745,7 +745,7 @@ LI 89 98 89 102 0
 LI 89 102 103 102 0
 LI 103 102 105 104 0
 RV 110 105 85 95 0
-[APP08 Elemento riscaldante]
+[APP08 Heater element]
 RV 95 99 105 101 0
 LI 97 99 97 101 0
 LI 99 99 99 101 0
@@ -753,7 +753,7 @@ LI 101 99 101 101 0
 LI 103 99 103 101 0
 LI 105 100 110 100 0
 LI 95 100 90 100 0
-[APP09 Starter per lampada fluorescente]
+[APP09 Gas discharge tube with thermal element; Starter for fluorescent lamp]
 EV 95 105 105 95 0
 SA 102 102 0
 LI 100 97 100 90 0
@@ -763,13 +763,13 @@ LI 99 101 97 102 0
 LI 97 102 96 100 0
 LI 96 100 98 99 0
 LI 98 99 97 97 0
-[APP10 Presa]
+[APP10 Contact, female]
 BE 103 103 99 103 99 97 103 97 0
 LI 100 100 90 100 0
-[APP11 Spina]
+[APP11 Contact, male]
 RP 96 101 105 99 0
 LI 103 100 110 100 0
-[APP12 Scalda acqua]
+[APP12 Water heater]
 EV 95 107 109 93 0
 LI 96 97 96 103 0
 LI 97 96 97 104 0
@@ -784,7 +784,7 @@ LI 105 94 105 106 0
 LI 106 105 106 95 0
 LI 107 96 107 104 0
 LI 108 103 108 97 0
-[APP13 Elettrovalvola vert.]
+[APP13 Electromechanical valve, vertical]
 RV 99 96 106 110 0
 LI 102 96 102 92 0
 LI 103 92 103 96 0
@@ -794,7 +794,7 @@ LI 107 94 98 90 0
 LI 98 90 98 94 0
 LI 99 100 95 100 0
 LI 99 105 95 105 0
-[APP14 Elettrovalvola orizz.]
+[APP14 Electromechanical valve, horizontal]
 LI 93 100 89 100 0
 LI 89 99 93 99 0
 LI 91 105 86 95 0
@@ -804,27 +804,27 @@ LI 86 105 91 105 0
 RV 107 96 93 104 0
 LI 100 96 100 90 0
 LI 100 104 100 110 0
-[APP15 Telefono]
+[APP15 Telephone set]
 BE 109 100 108 93 92 93 91 100 0
 RV 95 105 105 98 0
 LI 91 100 95 100 0
 LI 105 100 109 100 0
 
-{Strumenti e relè di misura, disp. analoghi}
-[MEAS00 Contatore energia attiva(kWh)]
+{Measuring instruments and relays}
+[MEAS00 Watt-hour meter (kWh), measuring energy transmitted in one direction only]
 RV 90 85 110 110 0
 LI 90 90 110 90 0
 TY 92 96 6 5 0 1 0 Calibri kWh
 LI 93 88 108 88 0
 FCJ 2 0 3 2 0 0
-[MEAS01 Contatore energia attiva (Wh)]
+[MEAS01 Watt-hour meter]
 RV 90 85 110 110 0
 LI 90 90 110 90 0
 TY 94 96 6 5 0 1 0 Calibri Wh
-[MEAS02 Strumento contatore]
+[MEAS02 Integrating instrument, general symbol]
 RV 90 85 110 110 0
 LI 90 90 110 90 0
-[MEAS03 Relè Buchholz (a sviluppo di gas)]
+[MEAS03 Buchholz protective device; Gas relay]
 RV 90 90 106 100 0
 RV 90 100 106 110 0
 LI 98 92 98 94 0
@@ -834,49 +834,49 @@ LI 100 107 95 107 0
 BE 95 104 95 103 96 103 97 103 0
 LI 95 104 95 107 0
 LI 102 103 97 103 0
-[MEAS04 Relè mancanza di tensione]
+[MEAS04 No voltage relay]
 RV 90 90 110 105 0
 LI 93 94 92 98 0
 LI 96 94 95 98 0
 BE 92 98 91 101 94 103 95 98 0
 TY 97 92 8 6 0 0 0 * =0
-[MEAS05 Relè di minima tensione]
+[MEAS05 Undervoltage relay]
 RV 90 90 110 105 0
 LI 95 94 94 99 0
 LI 98 94 97 99 0
 BE 94 99 94 102 96 102 97 99 0
 TY 101 93 5 5 0 1 0 * <
-[MEAS06 Relè di massima corrente]
+[MEAS06 Overcurrent relay]
 RV 90 90 110 105 0
 LI 97 94 95 101 0
 TY 101 93 5 5 0 1 0 * >
 LI 94 101 96 101 0
 LI 96 94 98 94 0
-[MEAS07 Voltmetro]
+[MEAS07 Voltmeter]
 EV 90 110 110 90 0
 TY 96 93 8 8 0 1 0 * V
-[MEAS08 Amperometro]
+[MEAS08 Ammeter]
 EV 90 110 110 90 0
 TY 96 93 8 8 0 1 0 * A
-[MEAS09 Trasformatore di corrente (TA)]
+[MEAS09 Current transformer]
 EV 93 99 102 90 0
 LI 95 98 95 105 0
 LI 100 105 100 98 0
-[MEAS11 Trasformatore di tensione (TV)]
+[MEAS11 Voltage transformer]
 EV 94 104 102 96 0
 LI 94 100 90 100 0
 LI 106 100 110 100 0
 EV 98 104 106 96 0
 
-{Segnalazioni}
-[SGN01 Lampada]
+{Signalling devices}
+[SGN01 Lamp]
 EV 96 104 104 96 0
 LI 97 102 103 98 0
 LI 103 98 103 98 0
 LI 97 98 103 102 0
 LI 90 100 96 100 0
 LI 104 100 110 100 0
-[SGN02 Lampada lampeggiante]
+[SGN02 Signal lamp, flashing type]
 EV 96 104 104 96 0
 LI 97 102 103 98 0
 LI 103 98 103 98 0
@@ -888,26 +888,26 @@ LI 98 95 98 92 0
 LI 98 92 102 92 0
 LI 102 92 102 95 0
 LI 102 95 104 95 0
-[SGN03 Indicatore luminoso  a comando elettromagn.]
+[SGN03 Indicator, electromechanical; Annunciator element]
 EV 96 104 104 96 0
 RP 96 99 104 101 0
 PP 98 97 102 97 100 96 0
 PP 102 103 98 103 100 104 0
-[SGN04 Tromba-clacson]
+[SGN04 Horn]
 RV 98 103 102 97 0
 LI 102 99 110 98 0
 LI 110 98 113 103 0
 LI 113 103 102 101 0
 LI 100 97 100 90 0
 LI 100 110 100 103 0
-[SGN05 Suoneria]
+[SGN05 Bell]
 BE 108 99 106 93 99 93 97 99 0
 LI 108 99 108 100 0
 LI 108 100 97 100 0
 LI 97 100 97 99 0
 LI 100 100 100 105 0
 LI 105 100 105 105 0
-[SGN06 Suoneria ad un colpo]
+[SGN06 Single-stroke bell]
 BE 108 99 106 93 99 93 97 99 0
 LI 108 100 108 99 0
 LI 108 100 97 100 0
@@ -915,20 +915,20 @@ LI 97 100 97 99 0
 LI 100 100 100 105 0
 LI 105 100 105 105 0
 LI 103 100 103 95 0
-[SGN07 Ronzatore-cicala]
+[SGN07 Buzzer]
 BE 97 96 99 102 106 102 108 96 0
 LI 97 96 97 95 0
 LI 97 95 108 95 0
 LI 108 95 108 96 0
 LI 100 100 100 105 0
 LI 105 100 105 105 0
-[SGN08 Sirena]
+[SGN08 Siren]
 LI 97 100 108 100 0
 LI 108 100 103 94 0
 LI 103 94 97 100 0
 LI 100 105 100 100 0
 LI 105 105 105 100 0
-[SGN09 Fischio]
+[SGN09 Whistle, electrically operated]
 LI 98 100 107 100 0
 LI 107 100 107 98 0
 LI 107 98 104 98 0
@@ -939,38 +939,38 @@ LI 98 85 98 100 0
 LI 100 105 100 100 0
 LI 105 105 105 100 0
 
-{Masse}
-[MS01 Terra]
+{Earth symbols}
+[MS01 Earth]
 MC 100 100 0 0 040
-[MS02 Terra di protezione]
+[MS02 Protective earthing]
 MC 100 100 0 0 040
 EV 96 109 104 102 0
-[MS03 Terra senza rumore]
+[MS03 Earth noiseless]
 MC 100 100 0 0 040
 BE 95 107 95 101 105 101 105 107 0
-[MS04 Massa-telaio]
+[MS04 Frame; Chassis]
 LI 100 100 100 105 0
 LI 98 105 102 105 0
 LI 98 105 97 107 0
 LI 100 105 99 107 0
 LI 102 105 101 107 0
-[MS05 Equipotenzialità]
+[MS05 Protective equipotential bonding]
 LI 100 100 100 105 0
 PV 97 105 103 105 102 106 100 108 98 106 0
 
-{Interruttori}
-[IP Interruttore di potenza] 
+{Switches, disconnectors}
+[IP Circuit breaker] 
 LI 100 115 100 110 0
 LI 100 100 100 105 0
 LI 99 104 101 106 0
 LI 101 104 99 106 0
 LI 100 110 97 105 0
-[IAUT Interruttore automatico]
+[IAUT Switch, automatic]
 LI 100 100 100 95 0
 LI 100 85 100 90 0
 LI 100 95 98 90 0
 PP 96 92 98 91 99 93 97 94 0
-[IMS Interruttore di manovra-sezionatore]
+[IMS Switch-disconnector; On-load isolating switch]
 LI 104 100 103 100 0
 LI 104 100 107 100 0
 EV 104 100 106 102 0
@@ -978,7 +978,7 @@ LI 105 95 105 100 0
 LI 105 105 105 105 0
 LI 105 107 105 115 0
 LI 105 107 102 102 0
-[IMSAA Interruttore di manovra-sezionatore ad apertura autom.]
+[IMSAA Switch-disconnector, automatic release; On-load isolating switch, automatic release]
 LI 99 105 98 105 0
 LI 99 105 102 105 0
 EV 99 105 101 107 0
@@ -987,24 +987,24 @@ LI 100 110 100 110 0
 LI 100 112 100 120 0
 LI 100 112 96 106 0
 PP 96 107 94 108 96 111 98 110 0
-[IAP Interruttore automatico di potenza]
+[IAP Circuit breaker, automatic release]
 LI 100 115 100 110 0
 LI 100 100 100 105 0
 PP 97 105 95 106 96 108 98 107 98 107 0
 LI 100 110 97 104 0
 LI 99 104 101 106 0
 LI 101 104 99 106 0
-[CAA Contattore ad apertura autom. (associato ad un relè di protezione]
+[CAA Contactor with automatic tripping]
 BE 100 102 97 104 100 105 100 105 0
 LI 100 115 100 110 0
 PP 98 106 96 107 97 109 99 108 99 108 0
 LI 100 110 98 105 0
 LI 100 105 100 100 0
-[SZ Sezionatore]
+[SZ Disconnector; Isolator]
 MC 105 100 0 0 750
 LI 105 105 104 105 0
 LI 105 105 106 105 0
-[SURDI Sezionatore unipolare rotativo, doppia interruzione]
+[SURDI Double break rotating disconnector]
 LI 100 105 96 105 0
 LI 100 105 104 105 0
 LI 100 100 100 105 0
@@ -1015,30 +1015,30 @@ EV 99 109 101 111 0
 LI 99 109 96 106 0
 LI 104 114 101 111 0
 
-{Contatti}
-[CNA Contatto NA]
+{Contacts}
+[CNA Make contact; Switch]
 LI 100 115 100 110 0
 LI 100 105 100 100 0
 LI 100 110 97 105 0
-[CNC Contatto NC]
+[CNC Break contact]
 LI 100 115 100 110 0
 LI 100 105 100 100 0
 LI 100 105 104 105 0
 LI 100 110 103 104 0
-[CPONA Contatto di potenza NA (Contattore)]
+[CPONA Contactor; Main make contact of a contactor]
 LI 100 100 100 100 0
 LI 100 100 100 105 0
 BE 100 102 97 104 100 105 100 105 0
 LI 100 115 100 110 0
 LI 100 110 97 105 0
-[CPONC Contatto di potenza NC (Contattore)]
+[CPONC Contactor; Main break contact of a contactor]
 LI 100 115 100 110 0
 LI 100 100 100 105 0
 LI 100 105 104 105 0
 BE 100 102 103 104 100 105 100 105 0
 LI 100 100 100 100 0
 LI 100 110 103 104 0
-[CNACP Contatto NA con comando a pulsante (ritorno automatico)]
+[CNACP Switch, make contact, manually operated, push-button, automatic return]
 LI 100 116 100 111 0
 LI 100 100 100 106 0
 LI 100 111 98 106 0
@@ -1047,7 +1047,7 @@ LI 93 109 93 111 0
 LI 93 109 93 107 0
 LI 93 107 95 107 0
 LI 93 111 95 111 0
-[CNCCP Contatto NC con comando a pulsante (ritorno automatico)]
+[CNCCP Switch, break contact, manually operated, push-button, automatic return]
 LI 100 115 100 110 0
 LI 100 100 100 105 0
 LI 100 105 104 105 0
@@ -1057,7 +1057,7 @@ LI 95 108 95 110 0
 LI 95 110 97 110 0
 LI 95 108 95 106 0
 LI 97 106 95 106 0
-[CCOMROTNA Contatto NA con comando rotativo (senza ritorno automatico)]
+[CCOMROTNA Switch, make contact, manually operated, turning, stay-put]
 LI 100 116 100 111 0
 LI 100 100 100 106 0
 LI 100 111 98 106 0
@@ -1066,7 +1066,7 @@ LI 93 109 93 111 0
 LI 93 111 95 111 0
 LI 93 109 93 107 0
 LI 93 107 91 107 0
-[CCOMROTNC Contatto NC con comando rotativo (senza ritorno automatico)]
+[CCOMROTNC Switch, break contact, manually operated, turning, stay-put]
 LI 100 115 100 110 0
 LI 100 100 100 105 0
 LI 100 105 104 105 0
@@ -1076,48 +1076,48 @@ LI 95 108 95 110 0
 LI 95 110 97 110 0
 LI 95 108 95 106 0
 LI 95 106 93 106 0
-[CNARC Contatto NA ritardato alla chiusura]
+[CNARC Make contact, delayed closing]
 MC 105 95 0 0 750
 LI 99 102 103 102 0
 LI 99 103 104 103 0
 BE 100 100 96 103 100 105 100 105 0
-[CNCRC Contatto NC ritardato alla chiusura]
+[CNCRC Break contact, delayed closing]
 MC 100 100 0 0 780
 LI 102 107 108 107 0
 LI 101 108 108 108 0
 BE 107 105 111 108 107 110 107 110 0
-[CNARCA Contatto NA ritardato alla chiusura ed all'apertura]
+[CNARCA Make contact, delayed]
 MC 105 95 0 0 750
 LI 104 103 110 103 0
 LI 103 102 110 102 0
 BE 109 100 113 103 109 105 109 105 0
 BE 113 100 109 103 113 105 113 105 0
-[CNAR Contatto NA ritardato]
+[CNAR Make contact, late closing]
 MC 105 95 0 0 750
 LI 102 100 101 101 0
-[CNAA Contatto NA anticipato]
+[CNAA Make contact, early closing]
 MC 105 95 0 0 750
 LI 102 100 103 99 0
-[CPCMDA Contatto di passaggio con chiusura momentanea durante l'azione]
+[CPCMDA Passing make contact when actuated]
 MC 100 100 0 0 750
 LI 100 105 99 103 0
-[CPCMDR Contatto di passaggio con chiusura momentanea durante il rilascio]
+[CPCMDR Passing make contact when released]
 MC 100 100 0 0 750
 LI 101 103 100 105 0
-[CSIM Contatto di scambio con interruzione momentanea]
+[CSIM Change-over break before make contact]
 LI 105 100 105 105 0
 LI 105 110 105 115 0
 LI 105 110 102 104 0
 LI 100 100 100 105 0
 LI 100 105 103 105 0
-[CSSI Contatto di scambio, senza interruzione]
+[CSSI Change-over make before break contact, both ways]
 LI 105 100 105 105 0
 LI 105 110 105 115 0
 LI 105 110 102 104 0
 LI 100 100 100 105 0
 LI 100 105 103 105 0
 LI 101 104 103 103 0
-[CDC Contatto a due chiusure]
+[CDC Contact with two makes]
 LI 100 90 100 95 0
 LI 100 100 100 105 0
 LI 100 100 96 94 0
@@ -1127,7 +1127,7 @@ LI 100 95 99 95 0
 LI 105 90 105 95 0
 LI 105 94 105 98 0
 LI 105 98 100 98 0
-[CDA Contatto a due aperture]
+[CDA Contact with two breaks]
 LI 100 100 100 105 0
 LI 105 100 105 105 0
 LI 105 105 108 105 0
@@ -1135,31 +1135,31 @@ LI 105 110 105 115 0
 LI 105 110 108 104 0
 LI 108 107 100 107 0
 LI 100 107 100 105 0
-[CNCR Contatto NC ritardato]
+[CNCR Break contact, late opening]
 LI 100 115 100 110 0
 LI 100 100 100 105 0
 LI 100 105 104 105 0
 LI 100 110 104 103 0
 LI 104 103 103 102 0
-[CNCA Contatto NC anticipato]
+[CNCA Break contact, early opening]
 LI 100 115 100 110 0
 LI 100 100 100 105 0
 LI 100 105 104 105 0
 LI 100 110 104 103 0
 LI 105 104 104 103 0
-[CNARA Contatto NA a ritorno automatico]
+[CNARA Make contact, automatic return]
 LI 105 110 105 105 0
 LI 105 105 101 100 0
 LI 105 95 105 96 0
 LI 105 96 105 101 0
 LI 105 99 103 100 0
 LI 103 100 105 101 0
-[CNAPM Contatto NA a posizione mantenuta]
+[CNAPM Make contact, stay put]
 LI 105 94 105 99 0
 EV 104 99 106 101 0
 LI 105 105 105 110 0
 LI 105 105 102 100 0
-[CNCRA Contatto NC a ritorno automatico]
+[CNCRA Make contact, automatic return]
 LI 105 100 105 101 0
 LI 105 101 105 106 0
 LI 105 104 107 105 0
@@ -1167,35 +1167,35 @@ LI 107 105 105 106 0
 LI 105 106 105 103 0
 LI 105 110 105 115 0
 LI 105 110 107 104 0
-[CNACM Contatto NA con comando manuale]
+[CNACM Switch, make contact, manually operated]
 LI 100 116 100 111 0
 LI 100 100 100 106 0
 LI 100 111 98 106 0
 LI 99 109 93 109 0
 LI 93 109 93 111 0
 LI 93 109 93 107 0
-[CNACT Contatto NA, con comando a tirante(ritorno automatico)]
+[CNACT Switch, make contact, manually operated, pulling, automatic return]
 MC 105 95 0 0 750
 LI 104 103 110 103 0
 LI 110 105 110 101 0
 LI 110 105 112 105 0
 LI 110 101 112 101 0
 
-{Finecorsa}
-[FINA Finecorsa NA]
+{Position switches}
+[FINA Position switch, make contact]
 LI 100 105 100 100 0
 LI 100 95 100 90 0
 LI 100 100 97 95 0
 LI 99 99 97 98 0
 LI 97 98 98 97 0
-[FINC Finecorsa NC]
+[FINC Position switch, break contact]
 LI 100 100 100 95 0
 LI 100 90 100 85 0
 LI 100 90 104 90 0
 LI 100 95 103 89 0
 LI 101 92 100 92 0
 LI 100 92 100 95 0
-[CPFDCAMNDS Contatto di posiz.(fc) due circ.separati, azionat. mecc. nei due sensi]
+[CPFDCAMNDS Position switch assembly]
 LI 95 115 95 110 0
 LI 95 105 95 100 0
 LI 95 105 99 105 0
@@ -1213,8 +1213,8 @@ LI 98 108 100 108 0
 LI 101 108 103 108 0
 LI 104 108 106 108 0
 
-{Contatti a due e tre vie}
-[SZDVTP Sezionatore due vie tre pos. con pos. centr. di apertura]
+{Contacts, switches, disconnectors (two-, three-ways)}
+[SZDVTP Two-way disconnector; Two-way isolator]
 LI 95 95 95 104 0
 LI 105 95 105 104 0
 LI 100 109 100 103 0
@@ -1222,7 +1222,7 @@ EV 99 109 101 111 0
 LI 100 115 100 111 0
 LI 104 104 106 104 0
 LI 94 104 96 104 0
-[SZDVTPPCS Sezionatore due vie tre pos. con pos. di chiusura sx]
+[SZDVTPPCS Two-way disconnector with on-position to the left]
 LI 105 100 105 109 0
 LI 95 100 95 109 0
 LI 96 109 94 109 0
@@ -1230,7 +1230,7 @@ LI 106 109 104 109 0
 LI 99 114 95 110 0
 EV 99 114 101 116 0
 LI 105 120 101 116 0
-[SZDVTPPCD Sezionatore due vie tre pos. con pos. di chiusura dx]
+[SZDVTPPCD Two-way disconnector with on-position to the right]
 LI 95 95 95 104 0
 LI 105 95 105 104 0
 LI 104 104 106 104 0
@@ -1238,26 +1238,26 @@ LI 94 104 96 104 0
 LI 101 109 105 105 0
 EV 101 109 99 111 0
 LI 95 115 99 111 0
-[CDVTP Contatto a due vie e tre posizioni, con posizione centrale di apertura]
+[CDVTP Two-way contact with center-off position]
 LI 95 95 95 104 0
 LI 105 95 105 104 0
 LI 100 109 100 103 0
 EV 99 109 101 111 0
 LI 100 115 100 111 0
-[CDTPCS Contatto due vie tre pos. con posiz. di chiusura sx]
+[CDTPCS Two-way three-position contact with on-position to the left]
 LI 95 90 95 99 0
 LI 105 90 105 99 0
 LI 99 104 95 100 0
 EV 99 104 101 106 0
 LI 105 110 101 106 0
-[CDTPCD Contatto due vie tre pos. con posiz. di chiusura dx]
+[CDTPCD Two-way three-position contact with on-position to the right]
 LI 90 100 90 100 0
 LI 105 95 105 104 0
 LI 95 95 95 104 0
 LI 101 109 105 105 0
 EV 101 109 99 111 0
 LI 95 115 99 111 0
-[CDTPCIRAPSPMPD Contatto due vie tre pos. pos centr. interruz. rit. auto. pos sx e pos. manten.per pos. dx]
+[CDTPCIRAPSPMPD Change-over contact with off-position, automatic return and stay put]
 LI 105 95 105 103 0
 LI 100 109 100 103 0
 EV 99 109 101 111 0
@@ -1268,7 +1268,7 @@ LI 95 103 97 104 0
 LI 97 104 95 105 0
 LI 95 105 95 102 0
 EV 104 103 106 105 0
-[CBDVTPPCA Commut. bipolare due vie tre pos. con pos. centr. di apertura]
+[CBDVTPPCA Two-pole two-way switch with center off-position]
 LI 120 125 120 125 0
 LI 115 100 115 106 0
 LI 110 114 110 107 0
@@ -1285,7 +1285,7 @@ EV 104 106 106 108 0
 LI 90 100 90 106 0
 EV 89 106 91 108 0
 LI 95 110 110 110 0
-[CBDVTPPCS Commut. bipolare due vie tre pos. con pos. di chiusura sx]
+[CBDVTPPCS Two-pole two-way three-position switch with on-position to the left]
 LI 115 100 115 107 0
 EV 114 107 116 109 0
 LI 100 100 100 107 0
@@ -1301,7 +1301,7 @@ LI 109 114 105 110 0
 EV 109 114 111 116 0
 LI 115 120 111 116 0
 LI 92 112 107 112 0
-[CBDVTPPCD Commut. bipolare due vie tre pos. con pos. di chiusura dx]
+[CBDVTPPCD Two-pole two-way three-position switch with on-position to the right]
 LI 90 100 90 107 0
 EV 91 107 89 109 0
 LI 105 100 105 107 0
@@ -1317,7 +1317,7 @@ LI 96 114 100 110 0
 EV 96 114 94 116 0
 LI 90 120 94 116 0
 LI 113 112 98 112 0
-[CUTVPII Commut. unipolare tre vie, con pos. di interruzioni intermedie]
+[CUTVPII Three-way switch with intermediate off-positions]
 LI 95 100 95 106 0
 EV 94 106 96 108 0
 LI 100 100 100 104 0
@@ -1327,7 +1327,7 @@ EV 104 106 106 108 0
 EV 99 114 101 116 0
 LI 97 106 100 114 0
 LI 100 125 100 116 0
-[CBTVPII Commut. bipolare tre vie, con pos. di interruzioni intermedie]
+[CBTVPII Two-pole three-way switch with intermediate off-positions]
 LI 85 100 85 106 0
 EV 84 106 86 108 0
 LI 90 100 90 104 0
@@ -1347,7 +1347,7 @@ EV 104 114 106 116 0
 LI 102 106 105 114 0
 LI 105 125 105 116 0
 LI 88 109 103 109 0
-[CUDVSI Commut. unipolare due vie, senza interruzione]
+[CUDVSI Two-way switch]
 LI 95 95 95 103 0
 EV 94 103 96 105 0
 LI 105 95 105 103 0
@@ -1356,7 +1356,7 @@ EV 99 114 101 116 0
 LI 100 125 100 116 0
 LI 95 105 100 114 0
 LI 94 106 96 105 0
-[CBDVSI Commut. bipolare due vie, senza interruzione]
+[CBDVSI Two-pole two-way switch]
 LI 100 100 100 108 0
 EV 101 108 99 110 0
 LI 90 100 90 108 0
@@ -1375,9 +1375,8 @@ LI 115 110 110 119 0
 LI 116 111 114 110 0
 LI 99 112 114 112 0
 
-
-{Tabelle}
-[TSC Tabella per schemi con coordinate]
+{Sheet frames}
+[TSC Sheet frame with markers]
 LI 25 15 575 15 0
 LI 575 15 575 365 0
 LI 575 365 25 365 0
@@ -1460,8 +1459,8 @@ LI 490 325 490 340 0
 LI 515 340 515 355 0
 LI 205 45 205 45 0
 
-{Trasformatori}
-[TRTDA Trasformatore trifase a due avvolgimenti]
+{Transformers}
+[TRTDA Transformer with two windings, three-phase]
 EV 87 105 113 130 0
 EV 87 120 113 145 0
 LI 90 109 90 100 0
@@ -1470,7 +1469,7 @@ LI 110 109 110 100 0
 LI 90 141 90 150 0
 LI 100 145 100 150 0
 LI 110 141 110 150 0
-[TRTTA Trasformatore trifase a tre avvolgimenti]
+[TRTTA Transformer with three windings, three-phase]
 LI 100 97 100 90 0
 LI 110 90 110 97 0
 LI 105 90 105 96 0
@@ -1483,7 +1482,7 @@ LI 95 135 95 140 0
 LI 110 134 110 140 0
 LI 115 135 115 140 0
 LI 120 134 120 140 0
-[TRTTACSST Trasformatore trifase a tre avvolgimenti, coll. stella stella triangolo]
+[TRTTACSST Three-phase transformer, connection star-star-delta]
 LI 95 102 95 95 0
 LI 105 95 105 102 0
 LI 100 95 100 101 0
@@ -1507,21 +1506,21 @@ LI 90 130 90 135 0
 LI 105 131 115 131 0
 LI 115 131 110 126 0
 LI 110 126 105 131 0
-[TMDA Trasformatore monofase due avvolgimenti]
+[TMDA Transformer with two windings, single-phase]
 EV 87 90 113 115 0
 EV 87 105 113 130 0
 LI 95 91 95 85 0
 LI 105 91 105 85 0
 LI 95 129 95 135 0
 LI 105 129 105 135 0
-[ATM Autostrasformatore monofase]
+[ATM Autotransformer, single-phase]
 EV 87 110 113 135 0
 LI 90 96 90 90 0
 LI 110 111 110 90 0
 LI 90 131 90 140 0
 LI 110 131 110 140 0
 BE 90 96 116 107 113 122 113 122 0
-[ATT Autotrasformatore trifase]
+[ATT Autotransformer, three-phase]
 EV 87 115 113 140 0
 LI 90 101 90 95 0
 LI 100 106 100 95 0
@@ -1531,8 +1530,8 @@ LI 100 140 100 145 0
 LI 110 136 110 145 0
 BE 90 101 116 112 113 127 113 127 0
 
-{Generatori elettrici}
-[GST Generatore sincrono trifase]
+{Generators}
+[GST Synchronous generator, three-phase]
 EV 90 105 120 135 0
 TY 98 111 6 6 0 0 0 * GS
 MC 103 124 0 0 070
@@ -1540,7 +1539,7 @@ TY 95 120 5 5 0 0 0 * 3
 LI 95 108 95 95 0
 LI 105 105 105 95 0
 LI 115 108 115 95 0
-[GSTMP Generatore sincrono trifase, a magneti permanenti]
+[GSTMP Synchronous generator, three-phase with permanent magnet]
 EV 90 100 120 130 0
 TY 98 106 6 6 0 0 0 * GS
 MC 103 119 0 0 070
@@ -1551,7 +1550,7 @@ LI 115 103 115 90 0
 RP 100 136 110 138 0
 RP 98 133 100 138 0
 RP 110 133 112 138 0
-[GSTICSNA Generatore sincrono trifase, con indotto col. a stella e neutro access.]
+[GSTICSNA Synchronous generator, three-phase, star connected, neutral brought out]
 EV 85 110 115 140 0
 LI 120 130 120 130 0
 TY 93 115 6 6 0 0 0 * GS
@@ -1572,7 +1571,7 @@ LI 105 129 100 129 0
 LI 100 110 100 100 0
 LI 125 100 125 114 0
 LI 125 114 114 119 0
-[GCC Generatore a corrente continua]
+[GCC Generator, DC]
 LI 120 85 120 85 0
 EV 90 90 120 120 0
 TY 101 97 6 6 0 0 0 * G
@@ -1580,14 +1579,14 @@ LI 95 93 95 80 0
 LI 115 93 115 80 0
 LI 99 110 111 110 0
 
-{Motori elettrici}
-[MCC Motore a corrente continua]
+{Motors}
+[MCC Motor, DC]
 EV 85 105 115 135 0
 TY 95 110 7 7 0 0 0 * M
 LI 90 109 90 95 0
 LI 110 109 110 95 0
 LI 94 125 106 125 0
-[MCCES Motore a corrente continua con ecc. serie]
+[MCCES Series motor, DC]
 EV 90 95 120 125 0
 LI 120 125 120 125 0
 TY 100 100 7 7 0 0 0 * M
@@ -1600,7 +1599,7 @@ BE 125 95 118 98 125 100 125 100 0
 BE 125 90 118 93 125 95 125 95 0
 LI 125 75 125 90 0
 LI 99 115 111 115 0
- [MCCED Motore a corrente continua con ecc. derivata]
+[MCCED Shunt motor, DC]
 BE 100 125 97 118 95 125 95 125 0
 EV 85 90 115 120 0
 LI 115 120 115 120 0
@@ -1620,14 +1619,14 @@ BE 90 125 87 118 85 125 85 125 0
 BE 110 125 107 118 105 125 105 125 0
 BE 105 125 102 118 100 125 100 125 0
 BE 115 125 112 118 110 125 110 125 0
-[MAM Motore asincrono monofase]
+[MAM Induction motor, single-phase, squirrel cage]
 EV 85 105 115 135 0
 TY 95 110 7 7 0 0 0 * M
 MC 97 124 0 0 070
 TY 90 120 5 5 0 0 0 * 1
 LI 90 109 90 95 0
 LI 110 109 110 95 0
-[MAMRCCTFAE Motore asincrono monofase, con rotore in corto c. con cavi aus.esterni]
+[MAMRCCTFAE Induction motor, single-phase, squirrel-cage, with ends of split-phase winding brought out]
 EV 85 105 115 135 0
 TY 95 110 7 7 0 0 0 * M
 MC 98 124 0 0 070
@@ -1636,7 +1635,7 @@ LI 95 106 95 95 0
 LI 105 106 105 95 0
 LI 114 115 125 115 0
 LI 114 125 125 125 0
-[MAMES Motore asincrono monofase, a commutatore con eccit. in serie]
+[MAMES Series motor, single-phase]
 EV 85 95 115 125 0
 LI 115 125 115 125 0
 TY 95 100 7 7 0 0 0 * M
@@ -1651,7 +1650,7 @@ BE 120 95 113 98 120 100 120 100 0
 BE 120 90 113 93 120 95 120 95 0
 LI 120 75 120 90 0
 LI 70 115 70 115 0
-[MSM Motore sincrono monofase]
+[MSM Synchronous motor, single-phase]
 LI 85 125 85 125 0
 EV 90 105 120 135 0
 TY 98 110 6 6 0 0 0 * MS
@@ -1666,7 +1665,7 @@ BE 115 140 112 133 110 140 110 140 0
 LI 95 150 95 140 0
 LI 115 150 115 140 0
 LI 100 145 110 145 0
-[MAT Motore asincrono trifase]
+[MAT Induction motor, three-phase, squirrel cage]
 EV 85 85 115 115 0
 TY 95 90 7 7 0 0 0 * M
 MC 98 104 0 0 070
@@ -1674,7 +1673,7 @@ TY 90 100 5 5 0 0 0 * 3
 LI 90 89 90 75 0
 LI 100 85 100 75 0
 LI 110 89 110 75 0
-[MATCES Motore asincrono trifase, a commutatore con eccit. in serie]
+[MATCES Series motor, three-phase]
 BE 115 70 108 73 115 75 115 75 0
 BE 95 70 88 73 95 75 95 75 0
 BE 75 70 68 73 75 75 75 75 0
@@ -1698,7 +1697,7 @@ BE 95 60 88 63 95 65 95 65 0
 LI 75 55 75 60 0
 LI 95 55 95 60 0
 LI 115 55 115 60 0
-[MATRCGS Motore asincrono trifase, rot in corto c. (gabbia di scoiattolo)]
+[MATRCGS Induction motor, three-phase, with wound rotor]
 LI 120 95 120 95 0
 TY 95 80 7 7 0 0 0 * M
 MC 98 94 0 0 070
@@ -1708,7 +1707,7 @@ LI 90 72 90 60 0
 LI 100 70 100 60 0
 LI 110 72 110 60 0
 EV 85 75 115 105 0
-[MATRAA Motore asincrono trifase, con rotore avvolto (ad anelli)]
+[MATRAA Induction motor, three-phase, with wound rotor ]
 TY 95 75 7 7 0 0 0 * M
 MC 98 89 0 0 070
 TY 90 85 5 5 0 0 0 * 3
@@ -1722,7 +1721,7 @@ LI 110 97 110 115 0
 LI 80 120 80 120 0
 EV 85 70 115 100 0
 LI 80 120 80 120 0
-[MATSCSAAR Motore asincrono trifase, stat. coll. stella e avviat. aut. sul rot.]
+[MATSCSAAR Induction motor, three-phase, star-connected, with built-in automatic starter]
 RV 105 126 105 126 0
 RV 105 126 105 126 0
 EV 85 105 115 135 0
@@ -1739,14 +1738,14 @@ SA 97 129 0
 SA 103 129 0
 LI 96 131 104 131 0
 
-{Conduttori}
-[CCF Conduttore o cavo flessibile]
+{Conductors}
+[CCF Flexible connection]
 LI 80 105 93 105 0
 BE 93 105 96 95 100 105 100 105 0
 BE 106 105 103 114 100 105 100 105 0
 BE 106 105 110 95 113 105 113 105 0
 LI 113 105 125 105 0
-[CICTCI Conduttori in cavo:tre conduttori in cavo]
+[CICTCI Conductors in a cable, three conductors]
 LI 80 95 130 95 0
 LI 80 100 130 100 0
 LI 80 105 130 105 0
@@ -1754,55 +1753,55 @@ BE 103 95 105 91 107 95 107 95 0
 BE 107 105 105 109 103 105 103 105 0
 LI 103 95 103 105 0
 LI 107 95 107 105 0
-[ECCNC Estremità conduttore o cavo,non collegata]
+[ECCNC End of a conductor or cable, not connected]
 LI 75 100 120 100 0
 BE 120 100 128 95 120 90 120 90 0
-[ECCNCAI estremità conduttore o cavo non colleg. e appositamente isolata]
+[ECCNCAI End of a conductor or cable, not connected and specially insulated]
 LI 80 100 125 100 0
 BE 125 100 130 95 126 91 122 91 0
 BE 122 91 116 92 118 97 110 96 0
-[GC Giunzione di un conduttore]
+[GC Conductor joint; In-line splice]
 EV 105 99 107 101 0
 EV 118 99 120 101 0
 LI 120 100 125 100 0
 LI 100 100 105 100 0
 RP 107 99 118 101 0
-[CI Conduttore in cavo]
+[CI Conductor in a cable]
 LI 80 100 130 100 0
 BE 103 95 105 91 107 95 107 95 0
 BE 107 105 105 109 103 105 103 105 0
 LI 103 95 103 105 0
 LI 107 95 107 105 0
-[CN Conduttore neutro]
+[CN Neutral conductor]
 LI 75 100 125 100 0
 SA 102 95 0
 LI 102 95 98 105 0
-[CP Conduttore di protezione]
+[CP Protective conductor]
 LI 75 100 125 100 0
 LI 102 95 98 105 0
 LI 100 95 104 95 0
-[CNP Conduttore neutro avente anche funz. di cond. di protezione]
+[CNP Combined protective and neutral conductor]
 LI 75 100 125 100 0
 LI 102 95 98 105 0
 LI 100 95 104 95 0
 SA 101 97 0
-[CA Conduttura ascendente]
+[CA Wiring going upwards]
 LI 75 100 117 100 0
 SA 117 100 0
 PP 123 90 126 93 127 89 127 89 0
 LI 125 91 117 100 0
-[CD Conduttura discendente]
+[CD Wiring going downwards]
 LI 80 100 122 100 0
 SA 122 100 0
 PP 132 106 129 109 133 110 133 110 0
 LI 131 108 122 100 0
 
-{Bobine di comando}
-[BC Bobina di comando]
+{Operating devices}
+[BC Operating device; Relay coil]
 MC 100 105 0 0 830
 LI 100 100 100 105 0
 LI 100 125 100 120 0
-[BCDAS Bobina di comando con due avvolgimenti separati (rappr. raggruppata)]
+[BCDAS Operating device; Relay coil (attached representation)]
 LI 90 100 90 104 0
 LI 80 104 100 104 0
 LI 80 104 80 111 0
@@ -1819,7 +1818,7 @@ LI 90 95 90 100 0
 LI 110 95 110 100 0
 LI 90 120 90 115 0
 LI 110 120 110 115 0
-[BCRRR Bobina di comando relè con ritardo alla ricaduta]
+[BCRRR Relay coil of a slow-releasing relay]
 MC 100 105 0 0 830
 LI 93 116 90 116 0
 RP 90 109 93 116 0
@@ -1827,7 +1826,7 @@ LI 93 109 90 109 0
 LI 100 100 100 105 0
 LI 100 125 100 120 0
 LI 90 109 90 116 0
-[BCRRA Bobina di comando relè con ritardo all'attrazione]
+[BCRRA Relay coil of a slow-operating relay]
 MC 105 100 0 0 830
 LI 98 104 95 111 0
 LI 98 111 95 104 0
@@ -1836,7 +1835,7 @@ LI 98 111 95 111 0
 LI 95 104 95 111 0
 LI 105 95 105 100 0
 LI 105 120 105 115 0
-[BCRRRA Bobina di comando relè con rit. all'attrazione e alla ricaduta]
+[BCRRRA Relay coil of a slow-operating and slow-releasing relay]
 MC 105 100 0 0 830
 LI 98 104 95 111 0
 LI 98 111 95 104 0
@@ -1847,7 +1846,7 @@ RP 90 104 93 111 0
 LI 90 104 90 111 0
 LI 105 95 105 100 0
 LI 105 120 105 115 0
-[BCRR Bobina di comando relè a rimanenza]
+[BCRR Relay coil of a remanent relay]
 MC 105 100 0 0 830
 LI 96 106 95 109 0
 LI 98 104 93 104 0
@@ -1857,7 +1856,7 @@ LI 96 106 97 106 0
 LI 95 109 94 109 0
 LI 105 95 105 100 0
 LI 105 120 105 115 0
-[EVDV Elettrovalvola a due vie]
+[EVDV Electromechanical valve, two-way]
 MC 105 100 0 0 830
 LI 98 107 94 107 0
 LI 98 108 94 108 0
@@ -1869,7 +1868,7 @@ LI 94 107 93 111 0
 LI 93 111 95 111 0
 LI 105 95 105 100 0
 LI 105 120 105 115 0
-[BCRP Bobina di comando relè polarizzato]
+[BCRP Relay coil of a polarized relay]
 MC 105 100 0 0 830
 LI 98 104 93 104 0
 LI 98 111 93 111 0
@@ -1877,7 +1876,7 @@ LI 93 104 93 111 0
 LI 105 95 105 100 0
 LI 105 120 105 115 0
 TY 94 106 3 3 0 0 0 * P
-[BCRCA Bobina di comando relè a corrente alternata]
+[BCRCA Relay coil of an alternating current relay]
 MC 105 100 0 0 830
 LI 98 104 92 104 0
 LI 98 111 92 111 0
@@ -1886,13 +1885,11 @@ LI 105 95 105 100 0
 LI 105 120 105 115 0
 BE 93 108 94 105 95 108 95 108 0
 BE 97 108 96 111 95 108 95 108 0
-[DCRT Dispositivo comando relè termico]
+[DCRT Operating device of a thermal relay]
 MC 100 105 0 0 810
 LI 100 100 100 105 0
 LI 100 110 100 115 0
-[DCRE Dispositivo comando relè elettromagnetico]
+[DCRE Operating device of an electromagnetic relay]
 MC 100 105 0 0 820
 LI 100 100 100 105 0
 LI 100 115 100 110 0
-
-

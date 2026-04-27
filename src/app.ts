@@ -32,16 +32,12 @@ class FidoCadJS {
     private libraryModel!: LibraryModel;
 
     constructor() {
-        const mgr = SettingsManager.getInstance();
-        const settings = mgr.getSettings();
-
-        // Load locale bundle before any UI is built
-        loadLocale(settings.locale).then(() => {
-            Globals.messages = new AccessResources();
+        // Load the English locale bundle before any UI is built
+        Globals.messages = new AccessResources();
+        loadLocale('en').then(() => {
             this.initUI();
         }).catch((e) => {
             console.error('Failed to load locale:', e);
-            Globals.messages = new AccessResources();
             this.initUI();
         });
     }

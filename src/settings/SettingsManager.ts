@@ -28,16 +28,6 @@ export interface AppSettings {
     gridColor: string;
     selectionLTRColor: string;
     selectionRTLColor: string;
-
-    // Locale
-    locale: string;
-}
-
-function getDefaultLocale(): string {
-    const nav = (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'en';
-    const lang = nav.split('-')[0].toLowerCase();
-    const supported = ['cs', 'de', 'el', 'en', 'es', 'fr', 'it', 'ja', 'nl', 'ru', 'zh'];
-    return supported.includes(lang) ? lang : 'en';
 }
 
 const DEFAULTS: AppSettings = {
@@ -55,11 +45,9 @@ const DEFAULTS: AppSettings = {
     gridColor: '#6464c8',
     selectionLTRColor: '#008000',
     selectionRTLColor: '#0000ff',
-    locale: getDefaultLocale(),
 };
 
 const STORAGE_KEY = 'fidocadts.settings.v1';
-const SUPPORTED_LOCALES = ['cs', 'de', 'el', 'en', 'es', 'fr', 'it', 'ja', 'nl', 'ru', 'zh'] as const;
 const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 function isFiniteNumberInRange(v: unknown, min: number, max: number): v is number {
@@ -89,10 +77,6 @@ function sanitize(parsed: unknown): Partial<AppSettings> {
     if (isValidColor(p.gridColor)) out.gridColor = p.gridColor;
     if (isValidColor(p.selectionLTRColor)) out.selectionLTRColor = p.selectionLTRColor;
     if (isValidColor(p.selectionRTLColor)) out.selectionRTLColor = p.selectionRTLColor;
-    if (typeof p.locale === 'string'
-        && (SUPPORTED_LOCALES as readonly string[]).includes(p.locale)) {
-        out.locale = p.locale;
-    }
     return out;
 }
 
