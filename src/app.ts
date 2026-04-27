@@ -19,6 +19,14 @@ import { loadLocale } from './i18n/i18n.js';
 import { AccessResources } from './i18n/AccessResources.js';
 import { SettingsManager } from './settings/SettingsManager.js';
 import { Globals } from './globals/Globals.js';
+import { UserLibraryStorage } from './librarymodel/UserLibraryStorage.js';
+import { ConfirmDialog } from './ui/ConfirmDialog.js';
+import { PromptDialog } from './ui/PromptDialog.js';
+import { LibUtils } from './librarymodel/LibUtils.js';
+import { Library } from './librarymodel/Library.js';
+import { Category } from './librarymodel/Category.js';
+import { MacroDesc } from './primitives/MacroDesc.js';
+import type { ContextMenuAction } from './macropicker/MacroPicker.js';
 // import { getString } from './i18n/i18n.js'; // currently unused
 
 class FidoCadJS {
@@ -91,7 +99,8 @@ class FidoCadJS {
         SettingsManager.getInstance().applyToPanel(this.circuitPanel);
 
         // Create menu bar after CircuitPanel is ready
-        this.menuBar = new MenuBar(this.circuitPanel, () => this.newCircuit());
+        this.menuBar = new MenuBar(this.circuitPanel, () => this.newCircuit(),
+            (content, fileName) => this.importLibrary(content, fileName));
         this.circuitPanel.setMenuBar(this.menuBar);
         app.insertBefore(this.menuBar.getElement(), this.toolbar);
 
@@ -115,10 +124,15 @@ class FidoCadJS {
 
     private async initLibraries(): Promise<void> {
         await loadStandardLibraries(this.circuitPanel.getParserActions());
+        // Load user-created libraries from localStorage
+        UserLibraryStorage.loadUserLibraries(this.circuitPanel.getParserActions());
         this.libraryModel = new LibraryModel(this.circuitPanel.getModel());
         this.macroPicker.refresh(this.libraryModel);
         this.macroPicker.onMacroSelected = (key) => {
             this.circuitPanel.setMacroTool(key);
+        };
+        this.macroPicker.onContextMenuAction = (action, node) => {
+            this.handleMacroPickerContextAction(action, node);
         };
         console.log(`Libraries loaded: ${this.libraryModel.getAllLibraries().length} libraries, ` +
             `${this.libraryModel.getAllMacros().size} macros`);
@@ -158,11 +172,6 @@ class FidoCadJS {
             });
             toolButtons.set(toolId, btn);
         }
-
-        // Macro tool button (no icon — activated by library selection)
-        const macroBtn = this.addButtonToRow(firstRow, 'Macro', () => {});
-        macroBtn.title = 'Select a component from the Library panel to activate';
-        toolButtons.set(ElementsEdtActions.MACRO, macroBtn);
 
         this.circuitPanel.onToolChange = (toolId) => {
             for (const [id, btn] of toolButtons) {
@@ -364,6 +373,142 @@ class FidoCadJS {
 
     private newCircuit(): void {
         this.circuitPanel.clearCircuit();
+    }
+
+    private importLibrary(content: string, fileName: string): void {
+        // 1. Derive a safe prefix from the filename
+        let prefix = fileName.replace(/\.(?:fcl|txt)$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+        if (!prefix) prefix = 'imported_lib';
+
+        // 2. Check for collision with standard library prefixes
+        const stdNames = LibUtils.getStdFilenames();
+        const originalPrefix = prefix;
+        let attempt = 0;
+        while (stdNames.has(prefix) && attempt < 100) {
+            attempt++;
+            prefix = originalPrefix + '_' + attempt;
+        }
+
+        // 3. Confirm overwrite if user library with same prefix exists
+        const existingPrefixes = UserLibraryStorage.getUserLibraryPrefixes();
+        if (existingPrefixes.includes(prefix)) {
+            if (!confirm(`A user library with prefix "${prefix}" already exists. Overwrite it?`)) {
+                return;
+            }
+        }
+
+        // 4. Parse the FCL content into the drawing model's library
+        this.circuitPanel.loadLibraryString(content, prefix);
+
+        // 5. Rebuild LibraryModel (reads newly parsed macros from DrawingModel)
+        this.libraryModel.forceUpdate();
+
+        // 6. Extract the library display name from parsed macros
+        const libName = LibUtils.getLibName(this.libraryModel.getAllMacros(), prefix) ?? prefix;
+
+        // 7. Persist to localStorage
+        try {
+            UserLibraryStorage.saveUserLibrary(prefix, this.libraryModel.getAllMacros(), libName);
+        } catch (e) {
+            alert('Failed to save library: storage may be full.');
+            console.error(e);
+            return;
+        }
+
+        // 8. Refresh the MacroPicker tree
+        this.macroPicker.refresh(this.libraryModel);
+
+        console.log(`Imported library "${libName}" (prefix: ${prefix}) from ${fileName}`);
+    }
+
+    private async handleMacroPickerContextAction(action: ContextMenuAction, node: Library | Category | MacroDesc): Promise<void> {
+        switch (action) {
+            case 'rename': {
+                const name = node instanceof MacroDesc ? node.name :
+                    node instanceof Category ? node.getName() :
+                        node.getName();
+                const title = node instanceof MacroDesc ? 'Rename macro' :
+                    node instanceof Category ? 'Rename category' : 'Rename library';
+                const newName = await PromptDialog.show(title,
+                    node instanceof MacroDesc ? 'Please input new macro name.' :
+                        node instanceof Category ? 'Please input new category name.' :
+                            'Please input new library name.',
+                    name,
+                    (v) => v.trim().length === 0 ? 'Name must not be empty.' : null
+                );
+                if (newName !== null && newName !== name) {
+                    try {
+                        this.libraryModel.rename(node, newName);
+                        this.macroPicker.refresh(this.libraryModel);
+                    } catch (ex: any) {
+                        alert(ex.message);
+                    }
+                }
+                break;
+            }
+            case 'remove': {
+                let confirmMsg: string;
+                if (node instanceof MacroDesc) confirmMsg = `Really remove macro ${node.name}?`;
+                else if (node instanceof Category) confirmMsg = `Really remove category ${node.getName()}?`;
+                else confirmMsg = `Really remove library ${node.getName()}?`;
+                const ok = await ConfirmDialog.show('Delete', confirmMsg);
+                if (ok) {
+                    try {
+                        this.libraryModel.remove(node);
+                        this.macroPicker.refresh(this.libraryModel);
+                    } catch (ex: any) {
+                        alert(ex.message);
+                    }
+                }
+                break;
+            }
+            case 'changeKey': {
+                if (!(node instanceof MacroDesc)) return;
+                const oldKey = LibraryModel.getPlainMacroKey(node);
+                const ok = await ConfirmDialog.show('Change Key',
+                    'Warning: the macro could not be visualized correctly if it is already in use in your drawing. Continue?');
+                if (!ok) return;
+                const newKey = await PromptDialog.show('Change Key', 'Key:', oldKey,
+                    (v) => {
+                        if (v.trim().length === 0) return 'Key must not be empty.';
+                        if (LibUtils.checkKeyInvalidChars(v)) return 'The key must not contain spaces or "."';
+                        const fullKey = `${node.filename}.${v}`.toLowerCase();
+                        if (LibUtils.checkKeyDuplicate(this.libraryModel.getAllMacros(), node.filename, fullKey))
+                            return 'Key already exists.';
+                        return null;
+                    }
+                );
+                if (newKey !== null && newKey !== oldKey) {
+                    try {
+                        this.libraryModel.changeKey(node, newKey);
+                        this.macroPicker.refresh(this.libraryModel);
+                    } catch (ex: any) {
+                        alert(ex.message);
+                    }
+                }
+                break;
+            }
+            case 'copy': {
+                // Copy target was already set by MacroPicker
+                this.macroPicker.copyTarget = node;
+                // Show a subtle hint
+                break;
+            }
+            case 'paste': {
+                if (!this.macroPicker.copyTarget) return;
+                const dest = node;
+                const src = this.macroPicker.copyTarget;
+                if (src instanceof MacroDesc && dest instanceof Category) {
+                    this.libraryModel.copy(src, dest);
+                    this.macroPicker.refresh(this.libraryModel);
+                } else if (src instanceof Category && dest instanceof Library) {
+                    this.libraryModel.copy(src, dest);
+                    this.macroPicker.refresh(this.libraryModel);
+                }
+                this.macroPicker.copyTarget = null;
+                break;
+            }
+        }
     }
 
     private setToggleActive(btn: HTMLButtonElement, active: boolean): void {

@@ -1139,6 +1139,8 @@ export class CircuitPanel {
         const hasCb = this.clipboard.length > 0;
         const isNodePrim = this.selectionActions.isUniquePrimitiveSelected() &&
             (first instanceof PrimitivePolygon || first instanceof PrimitiveComplexCurve);
+        const isMacroPrim = this.selectionActions.isUniquePrimitiveSelected() &&
+            first instanceof PrimitiveMacro;
 
         this.contextMenu.show(clientX, clientY, [
             {
@@ -1191,6 +1193,12 @@ export class CircuitPanel {
                 enabled: somethingSelected,
                 action: () => this.mirrorSelected(),
             },
+            {
+                label: 'Vectorize',
+                enabled: isMacroPrim,
+                visible: isMacroPrim,
+                action: () => this.vectorizeSelectedMacro(),
+            },
             { separator: true },
             {
                 label: 'Add Node',
@@ -1230,6 +1238,66 @@ export class CircuitPanel {
             return;
         }
         this.undoActions.saveUndoState();
+        this.render();
+    }
+
+    /** Convert a selected macro instance back into individual primitives. */
+    vectorizeSelectedMacro(): void {
+        const first = this.selectionActions.getFirstSelectedPrimitive();
+        if (!(first instanceof PrimitiveMacro)) return;
+
+        const macroDesc = first.getMacroDesc();
+        if (!macroDesc) return;
+
+        // Get the macro's position, orientation and mirror state
+        const posX = first.virtualPoint[0]!.x;
+        const posY = first.virtualPoint[0]!.y;
+        const orientation = first.getOrientation();
+        const mirrored = first.isMirrored();
+        const layer = first.getLayer();
+
+        // Parse the macro description into a temp DrawingModel
+        const tempModel = new DrawingModel();
+        tempModel.setLibrary(this.model.getLibrary());
+        tempModel.setLayers(this.model.getLayers());
+        const tempParser = new ParserActions(tempModel);
+        tempParser.addString(macroDesc, false);
+
+        // Move and transform each primitive from the macro to the canvas position
+        const saved = this.undoActions.saveUndoState.bind(this.undoActions);
+        for (const prim of tempModel.getPrimitiveVector()) {
+            // Apply orientation transformations before positioning
+            let px = prim.virtualPoint[0]?.x ?? 0;
+            let py = prim.virtualPoint[0]?.y ?? 0;
+
+            // Apply mirror if needed
+            if (mirrored) {
+                px = -px;
+            }
+
+            // Apply orientation rotation (0=0°, 1=90°, 2=180°, 3=270°)
+            switch (orientation) {
+                case 1:
+                    [px, py] = [-py, px];
+                    break;
+                case 2:
+                    px = -px; py = -py;
+                    break;
+                case 3:
+                    [px, py] = [py, -px];
+                    break;
+            }
+
+            prim.virtualPoint; // ensure virtual point array initialized
+            prim.movePrimitive(posX - 100, posY - 100);
+            prim.setLayer(layer);
+            this.model.addPrimitive(prim, false, null);
+        }
+
+        // Remove the original macro primitive
+        const idx = this.model.getPrimitiveVector().indexOf(first);
+        if (idx >= 0) this.model.getPrimitiveVector().splice(idx, 1);
+        saved();
         this.render();
     }
 

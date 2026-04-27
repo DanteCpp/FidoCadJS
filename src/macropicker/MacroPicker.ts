@@ -1,17 +1,18 @@
 /**
  * @file MacroPicker.ts
  * @author Dante Loi
- * @date 2026-04-23
- * @brief HTML-based component library tree browser for macro selection.
+ * @date 2026-04-27
+ * @brief HTML-based component library tree browser with context menu for library management.
  * @copyright Copyright 2026 Dante Loi - GPL v3
  *
  * Browser port of fidocadj.macropicker.MacroTree (Swing). Renders a collapsible
- * tree: Library → Category → Macro. Clicking a macro fires onMacroSelected.
+ * tree: Library → Category → Macro. Supports right-click context menus for
+ * rename, remove, copy, paste, and change-key operations on user libraries.
  */
 
 import type { LibraryModel } from '../librarymodel/LibraryModel.js';
-import type { Library } from '../librarymodel/Library.js';
-import type { Category } from '../librarymodel/Category.js';
+import { Library } from '../librarymodel/Library.js';
+import { Category } from '../librarymodel/Category.js';
 import { MacroDesc } from '../primitives/MacroDesc.js';
 import { DrawingModel } from '../circuit/model/DrawingModel.js';
 import { ParserActions } from '../circuit/controllers/ParserActions.js';
@@ -19,10 +20,15 @@ import { Drawing, registerDrawingHooks } from '../circuit/views/Drawing.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
 import { DrawingSize } from '../geom/DrawingSize.js';
 import { StandardLayers } from '../layers/StandardLayers.js';
+import { OperationPermissions } from './OperationPermissions.js';
+import { LibUtils } from '../librarymodel/LibUtils.js';
+
+export type ContextMenuAction = 'rename' | 'remove' | 'copy' | 'paste' | 'changeKey';
 
 export class MacroPicker {
     readonly element: HTMLElement;
     onMacroSelected: ((macroKey: string, macroName: string) => void) | null = null;
+    onContextMenuAction: ((action: ContextMenuAction, node: Library | Category | MacroDesc) => void) | null = null;
 
     private treeContainer: HTMLElement;
     private searchInput: HTMLInputElement;
@@ -35,6 +41,11 @@ export class MacroPicker {
     private previewDrawing: Drawing;
     private libraryMacros: Map<string, MacroDesc> = new Map();
     private resizeObserver: ResizeObserver;
+
+    // Context menu state
+    private contextMenuEl: HTMLElement | null = null;
+    private contextNode: Library | Category | MacroDesc | null = null;
+    copyTarget: Library | Category | MacroDesc | null = null;
 
     constructor() {
         this.element = document.createElement('div');
@@ -67,6 +78,8 @@ export class MacroPicker {
         this.treeContainer = document.createElement('div');
         this.treeContainer.style.cssText =
             'flex: 1; overflow-y: auto; padding-bottom: 8px;';
+        this.treeContainer.addEventListener('contextmenu', (e) => this.onTreeContextMenu(e));
+        this.treeContainer.addEventListener('click', (e) => this.dismissContextMenu(e));
         this.element.appendChild(this.treeContainer);
 
         // Preview container (fixed height at bottom)
@@ -79,6 +92,13 @@ export class MacroPicker {
             'display: block; width: 100%; height: 100%;';
         previewContainer.appendChild(this.previewCanvas);
         this.element.appendChild(previewContainer);
+
+        // Dismiss context menu on outside click
+        document.addEventListener('click', (e) => {
+            if (this.contextMenuEl && !this.contextMenuEl.contains(e.target as Node)) {
+                this.dismissContextMenu();
+            }
+        });
 
         // Initialize preview rendering infrastructure
         this.previewModel = new DrawingModel();
@@ -118,17 +138,59 @@ export class MacroPicker {
         this.applyFilter();
     }
 
+    isSearchMode(): boolean {
+        return this.filterText.length > 0;
+    }
+
+    getOperationPermissions(): OperationPermissions {
+        const perm = new OperationPermissions();
+        const node = this.contextNode;
+        if (!node || this.isSearchMode()) return perm;
+
+        if (node instanceof MacroDesc) {
+            perm.copyAvailable = true;
+            if (!LibUtils.isStdLib(node)) {
+                perm.renameAvailable = true;
+                perm.removeAvailable = true;
+                perm.renKeyAvailable = true;
+            }
+        } else if (node instanceof Category) {
+            perm.copyAvailable = true;
+            if (!node.getParentLibrary().isStdLib()) {
+                perm.renameAvailable = true;
+                perm.removeAvailable = true;
+            }
+        } else if (node instanceof Library) {
+            if (!node.isStdLib()) {
+                perm.renameAvailable = true;
+                perm.removeAvailable = true;
+            }
+        }
+
+        // Paste availability: destination must be user library
+        if (this.copyTarget) {
+            if (this.copyTarget instanceof MacroDesc && node instanceof Category && !node.getParentLibrary().isStdLib()) {
+                perm.pasteAvailable = true;
+            } else if (this.copyTarget instanceof Category && node instanceof Library && !node.isStdLib()) {
+                perm.pasteAvailable = true;
+            }
+        }
+
+        return perm;
+    }
+
     // ── Private builders ──────────────────────────────────────────────────────
 
     private buildLibrarySection(lib: Library, expanded: boolean): HTMLElement {
         const section = document.createElement('div');
 
-        const header = this.buildCollapseHeader(lib.getName(), 0, expanded);
+        const header = this.buildCollapseHeader(lib.getName(), 0, expanded, lib);
         section.appendChild(header);
 
         const body = document.createElement('div');
         body.style.display = expanded ? 'block' : 'none';
-        header.addEventListener('click', () => {
+        header.addEventListener('click', (e) => {
+            if ((e.target as HTMLElement).closest('.macro-picker-context-trigger')) return;
             const open = body.style.display !== 'none';
             body.style.display = open ? 'none' : 'block';
             this.setArrow(header, !open);
@@ -145,12 +207,13 @@ export class MacroPicker {
 
     private buildCategorySection(cat: Category): HTMLElement {
         const section = document.createElement('div');
-        const header = this.buildCollapseHeader(cat.getName(), 1, false);
+        const header = this.buildCollapseHeader(cat.getName(), 1, false, cat);
         section.appendChild(header);
 
         const body = document.createElement('div');
         body.style.display = 'none';
-        header.addEventListener('click', () => {
+        header.addEventListener('click', (e) => {
+            if ((e.target as HTMLElement).closest('.macro-picker-context-trigger')) return;
             const open = body.style.display !== 'none';
             body.style.display = open ? 'none' : 'block';
             this.setArrow(header, !open);
@@ -190,7 +253,8 @@ export class MacroPicker {
         row.addEventListener('mouseleave', () => {
             if (row !== this.selectedRow) row.style.background = '';
         });
-        row.addEventListener('click', () => {
+        row.addEventListener('click', (e) => {
+            if ((e.target as HTMLElement).closest('.macro-picker-context-trigger')) return;
             if (this.selectedRow) {
                 this.selectedRow.style.background = '';
                 this.selectedRow.style.fontWeight = '';
@@ -205,7 +269,7 @@ export class MacroPicker {
         return row;
     }
 
-    private buildCollapseHeader(label: string, depth: number, expanded: boolean): HTMLElement {
+    private buildCollapseHeader(label: string, depth: number, expanded: boolean, modelObj: unknown): HTMLElement {
         const header = document.createElement('div');
         const indent = depth === 0 ? 6 : 18;
         const bgColor = depth === 0 ? '#e4e4e4' : '#ececec';
@@ -213,6 +277,9 @@ export class MacroPicker {
             `padding: 5px 6px 5px ${indent}px; cursor: pointer; user-select: none; ` +
             `background: ${bgColor}; font-weight: ${depth === 0 ? 'bold' : 'normal'}; ` +
             `border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 4px; color: #333;`;
+
+        // Store model reference for context menu lookups
+        (header as any)._macroPickerModel = modelObj;
 
         const arrow = document.createElement('span');
         arrow.textContent = expanded ? '▾' : '▸';
@@ -230,6 +297,127 @@ export class MacroPicker {
     private setArrow(header: HTMLElement, expanded: boolean): void {
         const arrow = header.querySelector('span') as HTMLElement;
         if (arrow) arrow.textContent = expanded ? '▾' : '▸';
+    }
+
+    // ── Context menu ──────────────────────────────────────────────────────────
+
+    private onTreeContextMenu(e: MouseEvent): void {
+        e.preventDefault();
+        this.dismissContextMenu();
+
+        // Walk up from the target to find a node with _macroPickerModel
+        let el = e.target as HTMLElement | null;
+        while (el && el !== this.treeContainer) {
+            const model = (el as any)._macroPickerModel;
+            if (model) {
+                this.contextNode = model;
+                const perm = this.getOperationPermissions();
+                this.showContextMenu(e.clientX, e.clientY, perm);
+                return;
+            }
+            el = el.parentElement;
+        }
+    }
+
+    private showContextMenu(x: number, y: number, perm: OperationPermissions): void {
+        this.dismissContextMenu();
+
+        const menu = document.createElement('div');
+        menu.className = 'macro-picker-context-menu';
+        menu.style.cssText =
+            'position:fixed; z-index:10002; background:white; border:1px solid #ccc; ' +
+            'border-radius:4px; box-shadow:2px 4px 12px rgba(0,0,0,0.18); ' +
+            'font-family:sans-serif; font-size:12px; min-width:150px; padding:4px 0;';
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.addEventListener('click', (e) => e.stopPropagation());
+
+        const addItem = (label: string, enabled: boolean, action: () => void): void => {
+            const item = document.createElement('div');
+            item.textContent = label;
+            item.style.cssText =
+                `padding:6px 12px; cursor:${enabled ? 'pointer' : 'default'}; ` +
+                `color:${enabled ? '#222' : '#bbb'}; white-space:nowrap;`;
+            item.addEventListener('mouseenter', () => {
+                if (enabled) item.style.background = '#e8eef6';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.background = '';
+            });
+            item.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                if (enabled) {
+                    this.dismissContextMenu();
+                    action();
+                }
+            });
+            menu.appendChild(item);
+        };
+
+        addItem('Copy', perm.copyAvailable, () => {
+            if (this.contextNode instanceof MacroDesc || this.contextNode instanceof Category) {
+                this.copyTarget = this.contextNode;
+            }
+        });
+
+        addItem('Paste', perm.pasteAvailable, () => {
+            this.pasteIntoSelectedNode();
+        });
+
+        menu.appendChild(this.makeMenuSeparator());
+
+        addItem('Rename', perm.renameAvailable, () => {
+            if (this.contextNode) {
+                this.onContextMenuAction?.('rename', this.contextNode as Library | Category | MacroDesc);
+            }
+        });
+
+        addItem('Delete', perm.removeAvailable, () => {
+            if (this.contextNode) {
+                this.onContextMenuAction?.('remove', this.contextNode as Library | Category | MacroDesc);
+            }
+        });
+
+        addItem('Change Key', perm.renKeyAvailable, () => {
+            if (this.contextNode) {
+                this.onContextMenuAction?.('changeKey', this.contextNode as MacroDesc);
+            }
+        });
+
+        document.body.appendChild(menu);
+        this.contextMenuEl = menu;
+
+        // Adjust position if menu goes offscreen
+        const rect = menu.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight) {
+            menu.style.top = `${Math.max(0, y - rect.height)}px`;
+        }
+        if (rect.right > window.innerWidth) {
+            menu.style.left = `${Math.max(0, x - rect.width)}px`;
+        }
+    }
+
+    private pasteIntoSelectedNode(): void {
+        if (!this.copyTarget || !this.contextNode) return;
+
+        if (this.copyTarget instanceof MacroDesc && this.contextNode instanceof Category) {
+            this.onContextMenuAction?.('paste', this.copyTarget);
+        } else if (this.copyTarget instanceof Category && this.contextNode instanceof Library) {
+            this.onContextMenuAction?.('paste', this.copyTarget);
+        }
+    }
+
+    private makeMenuSeparator(): HTMLElement {
+        const sep = document.createElement('div');
+        sep.style.cssText = 'height:1px; background:#ddd; margin:4px 0;';
+        return sep;
+    }
+
+    private dismissContextMenu(_e?: MouseEvent): void {
+        if (this.contextMenuEl) {
+            this.contextMenuEl.remove();
+            this.contextMenuEl = null;
+        }
     }
 
     // ── Preview rendering ──────────────────────────────────────────────────────
@@ -251,7 +439,6 @@ export class MacroPicker {
         this.previewCanvas.height = Math.floor(h * dpr);
         this.previewGraphics.setZoom(dpr);
 
-        // Calculate zoom-to-fit with 85% viewport margin (matches Java behavior)
         const mc = DrawingSize.calculateZoomToFit(
             this.previewModel,
             Math.floor(w * 0.85),
@@ -259,12 +446,9 @@ export class MacroPicker {
             true
         );
 
-        // Center adjustment: TS calculateZoomToFit already negates center,
-        // so we just add 10px margin (matching Java: -center + 10 with center already negated)
         mc.setXCenter(mc.getXCenter() + 10);
         mc.setYCenter(mc.getYCenter() + 10);
 
-        // Clear with white background
         const ctx = this.previewCanvas.getContext('2d');
         if (ctx) {
             ctx.fillStyle = '#ffffff';
@@ -273,7 +457,6 @@ export class MacroPicker {
         this.previewGraphics.clearDirtyRect();
         this.previewGraphics.markDirtyFull(this.previewCanvas.width, this.previewCanvas.height);
 
-        // Apply inverse transform for HiDPI canvas
         ctx?.save();
         if (ctx && dpr !== 1) {
             ctx.scale(dpr, dpr);
@@ -299,7 +482,6 @@ export class MacroPicker {
             const rect = container.getBoundingClientRect();
             if (rect.width <= 0 || rect.height <= 0) return;
 
-            // Re-render current macro or placeholder
             if (this.selectedRow && this.selectedRow.dataset.macroKey) {
                 const macro = this.libraryMacros.get(this.selectedRow.dataset.macroKey);
                 if (macro) {
@@ -349,7 +531,6 @@ export class MacroPicker {
 
         const words = this.filterText.split(/\s+/).filter(Boolean);
 
-        // Walk all library sections
         for (const libSection of this.treeContainer.children) {
             const libHeader = libSection.children[0] as HTMLElement;
             const libBody = libSection.children[1] as HTMLElement;
