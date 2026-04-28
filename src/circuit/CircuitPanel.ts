@@ -230,6 +230,7 @@ export class CircuitPanel {
 
         this.mapCoordinates.setXCenter(mx - (mx - this.mapCoordinates.getXCenter()) * scale);
         this.mapCoordinates.setYCenter(my - (my - this.mapCoordinates.getYCenter()) * scale);
+        this.clampCenter();
         this.mapCoordinates.setXMagnitudeNoCheck(newZ);
         this.mapCoordinates.setYMagnitudeNoCheck(newZ);
         this.render();
@@ -365,6 +366,7 @@ export class CircuitPanel {
             const panDy = (e.clientY - this.panStartY) * dpr;
             this.mapCoordinates.setXCenter(this.panStartCX + panDx);
             this.mapCoordinates.setYCenter(this.panStartCY + panDy);
+            this.clampCenter();
             this.render();
             return;
         }
@@ -562,6 +564,7 @@ export class CircuitPanel {
                 this.mapCoordinates.getYCenter() * (newH / oldH)
             );
         }
+        this.clampCenter();
         this.canvas.width = newW;
         this.canvas.height = newH;
         this.render();
@@ -626,6 +629,7 @@ export class CircuitPanel {
 
         this.mapCoordinates.setXCenter(sx - (sx - this.mapCoordinates.getXCenter()) * scale);
         this.mapCoordinates.setYCenter(sy - (sy - this.mapCoordinates.getYCenter()) * scale);
+        this.clampCenter();
         this.mapCoordinates.setXMagnitudeNoCheck(newZ);
         this.mapCoordinates.setYMagnitudeNoCheck(newZ);
         this.render();
@@ -806,8 +810,17 @@ export class CircuitPanel {
         this.mapCoordinates.setYMagnitudeNoCheck(newCs.getYMagnitude());
         this.mapCoordinates.setXCenter(newCs.getXCenter() + margin);
         this.mapCoordinates.setYCenter(newCs.getYCenter() + margin);
+        this.clampCenter();
         this.render();
         this.onZoomChange?.();
+    }
+
+    /** Clamp the viewport center so the top-left corner (pixel 0,0) never
+     *  maps to a negative logical coordinate (north-west of the origin).
+     */
+    private clampCenter(): void {
+        this.mapCoordinates.setXCenter(Math.min(this.mapCoordinates.getXCenter(), 0));
+        this.mapCoordinates.setYCenter(Math.min(this.mapCoordinates.getYCenter(), 0));
     }
 
     render(): void {
