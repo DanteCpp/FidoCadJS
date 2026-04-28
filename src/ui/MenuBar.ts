@@ -13,12 +13,15 @@ export class MenuBar {
     private readonly el: HTMLElement;
     private readonly panel: CircuitPanel;
     private readonly onNewCircuit: () => void;
+    private readonly onImportLibrary: ((content: string, fileName: string) => void) | undefined;
     private undoMenuItem: HTMLElement | null = null;
     private redoMenuItem: HTMLElement | null = null;
 
-    constructor(panel: CircuitPanel, onNewCircuit: () => void) {
+    constructor(panel: CircuitPanel, onNewCircuit: () => void,
+                onImportLibrary: ((content: string, fileName: string) => void) | undefined) {
         this.panel = panel;
         this.onNewCircuit = onNewCircuit;
+        this.onImportLibrary = onImportLibrary;
 
         this.el = document.createElement('div');
         this.el.style.cssText =
@@ -141,6 +144,11 @@ export class MenuBar {
                 label: 'Export SVG',
                 shortcut: 'Ctrl+E',
                 action: () => this.exportSVG(),
+            },
+            {
+                kind: 'action',
+                label: 'Import Library...',
+                action: () => this.importLibraryFile(),
             },
             { kind: 'separator' },
             {
@@ -279,6 +287,24 @@ export class MenuBar {
             reader.onload = (event) => {
                 const text = event.target?.result as string;
                 this.panel.loadCircuit(text);
+            };
+            reader.readAsText(file);
+        });
+        input.click();
+    }
+
+    private importLibraryFile(): void {
+        if (!this.onImportLibrary) return;
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.fcl,.txt';
+        input.addEventListener('change', (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const text = event.target?.result as string;
+                this.onImportLibrary!(text, file.name);
             };
             reader.readAsText(file);
         });

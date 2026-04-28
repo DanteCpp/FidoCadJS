@@ -298,5 +298,10 @@
   "Open_webpage": "Do you want to open the download page?",
   "Update_Available": "Update Available",
   "Please_visit": "Please visit:",
-  "Open_Browser": "Open Browser"
+  "Open_Browser": "Open Browser",
+  "NothingSelected": "No primitives have been selected for the creation of a symbol.",
+  "SymbolCreated": "Symbol created successfully.",
+  "StorageError": "Could not save library. Browser storage might be full.",
+  "NewLibrary": "New Library",
+  "Paste_btn": "Paste"
 }
