@@ -58,6 +58,7 @@ export class DialogSymbolize {
     show(): void {
         registerDrawingHooks();
         this.buildUI();
+        this.populateDefaults();
         document.body.appendChild(this.overlay);
 
         // Initialize preview after DOM attachment

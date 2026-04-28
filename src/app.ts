@@ -21,6 +21,7 @@ import { SettingsManager } from './settings/SettingsManager.js';
 import { Globals } from './globals/Globals.js';
 import { UserLibraryStorage } from './librarymodel/UserLibraryStorage.js';
 import { ConfirmDialog } from './ui/ConfirmDialog.js';
+import { DialogSymbolize } from './ui/DialogSymbolize.js';
 import { PromptDialog } from './ui/PromptDialog.js';
 import { LibUtils } from './librarymodel/LibUtils.js';
 import { Library } from './librarymodel/Library.js';
@@ -133,6 +134,15 @@ class FidoCadJS {
         };
         this.macroPicker.onContextMenuAction = (action, node) => {
             this.handleMacroPickerContextAction(action, node);
+        };
+        this.circuitPanel.onSymbolizeRequested = () => {
+            const dlg = new DialogSymbolize(
+                this.circuitPanel,
+                this.circuitPanel.getModel(),
+                this.libraryModel,
+                () => this.macroPicker.refresh(this.libraryModel)
+            );
+            dlg.show();
         };
         console.log(`Libraries loaded: ${this.libraryModel.getAllLibraries().length} libraries, ` +
             `${this.libraryModel.getAllMacros().size} macros`);

@@ -83,6 +83,7 @@ export class CircuitPanel {
     onPropertiesRequested: ((prim: GraphicPrimitive) => void) | null = null;
     onTextEditRequested: ((prim: PrimitiveAdvText, sx: number, sy: number) => void) | null = null;
     onExistingTextEditRequested: ((prim: PrimitiveAdvText) => void) | null = null;
+    onSymbolizeRequested: (() => void) | null = null;
 
     private pendingDblClick = false;
 
@@ -1192,6 +1193,12 @@ export class CircuitPanel {
                 label: 'Mirror',
                 enabled: somethingSelected,
                 action: () => this.mirrorSelected(),
+            },
+            {
+                label: 'Symbolize',
+                enabled: somethingSelected,
+                visible: somethingSelected && !isMacroPrim,
+                action: () => this.onSymbolizeRequested?.(),
             },
             {
                 label: 'Vectorize',
