@@ -46,6 +46,18 @@ export class LibUtils {
         return sb;
     }
 
+    /** Filter the master map to only macros belonging to the given library prefix. */
+    static getLibrary(macros: Map<string, MacroDesc>, prefix: string): Map<string, MacroDesc> {
+        const filtered = new Map<string, MacroDesc>();
+        const target = prefix.trim().toLowerCase();
+        for (const [key, md] of macros) {
+            if (md.filename.trim().toLowerCase() === target) {
+                filtered.set(key, md);
+            }
+        }
+        return filtered;
+    }
+
     /** Returns true if the key already exists or contains ']'. */
     static checkKey(libref: Map<string, MacroDesc>, tlib: string, key: string): boolean {
         for (const md of libref.values()) {

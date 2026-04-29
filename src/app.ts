@@ -652,7 +652,7 @@ class FidoCadJS {
         };
 
         // --- Common helpers ---
-        const addText = (label: string, get: () => string, set: (v: string) => void): void => {
+        const addText = (label: string, get: () => string, set: (v: string) => void): HTMLInputElement => {
             const row = this.createPropertyRow(label);
             const inp = document.createElement('input');
             inp.type = 'text';
@@ -661,6 +661,7 @@ class FidoCadJS {
             inp.addEventListener('input', () => { set(inp.value); redraw(); });
             row.appendChild(inp);
             form.appendChild(row);
+            return inp;
         };
 
         const addNumber = (label: string, get: () => number, set: (v: number) => void,
@@ -827,7 +828,11 @@ class FidoCadJS {
 
         if (prim instanceof PrimitiveAdvText) {
             addSection('Text');
-            addText('Content:', () => prim.getString(), v => prim.setString(v));
+            const contentInput = addText('Content:', () => prim.getString(), v => prim.setString(v));
+            requestAnimationFrame(() => {
+                contentInput.focus();
+                contentInput.select();
+            });
             addNumber('Font size:', () => prim.getFontDimension(), v => prim.setFontDimension(v), 1, 2000);
             addNumber('Font width:', () => prim.getFontWidth(), v => prim.setFontWidth(v), 1, 2000);
             addNumber('Orientation:', () => prim.getOrientation(), v => prim.setOrientation(v), -360, 360, 1);
