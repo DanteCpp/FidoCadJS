@@ -38,7 +38,8 @@ export class UserLibraryStorage {
     /** Save a user library to localStorage. */
     static saveUserLibrary(prefix: string, macros: Map<string, MacroDesc>, libName: string): void {
         try {
-            const fclText = LibUtils.prepareText(macros, libName);
+            const filtered = LibUtils.getLibrary(macros, prefix);
+            const fclText = LibUtils.prepareText(filtered, libName);
             localStorage.setItem(LIB_PREFIX + prefix, fclText);
             UserLibraryStorage.addPrefix(prefix);
         } catch (e) {

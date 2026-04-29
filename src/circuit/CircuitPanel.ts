@@ -23,6 +23,7 @@ import { PrimitivePCBLine } from '../primitives/PrimitivePCBLine.js';
 import { PrimitiveMacro } from '../primitives/PrimitiveMacro.js';
 import { PrimitivePolygon } from '../primitives/PrimitivePolygon.js';
 import { PrimitiveComplexCurve } from '../primitives/PrimitiveComplexCurve.js';
+import { PrimitiveBezier } from '../primitives/PrimitiveBezier.js';
 import { InPlaceTextEditor } from '../ui/InPlaceTextEditor.js';
 import { ContextMenu } from '../ui/ContextMenu.js';
 import { AddElements } from './controllers/AddElements.js';
@@ -658,11 +659,21 @@ export class CircuitPanel {
                 break;
 
             case ElementsEdtActions.BEZIER:
-                if (clickNum >= 1 && clickNum < 4) {
-                    this.ghostPrimitive = new PrimitiveLine(
-                        xpoly[clickNum], ypoly[clickNum], lx, ly, layer,
-                        false, false, 0, 3, 2, 0, font, fontSize
+                if (clickNum === 3) {
+                    this.ghostPrimitive = new PrimitiveBezier(
+                        xpoly[1], ypoly[1],
+                        xpoly[2], ypoly[2],
+                        xpoly[3], ypoly[3],
+                        lx, ly,
+                        layer, false, false, 0, 3, 2, 0, font, fontSize
                     );
+                } else if (clickNum >= 1 && clickNum < 3) {
+                    const ctrlPoly = new PrimitivePolygon(false, layer, 0, font, fontSize);
+                    for (let i = 1; i <= clickNum; i++) {
+                        ctrlPoly.addPoint(xpoly[i], ypoly[i]);
+                    }
+                    ctrlPoly.addPoint(lx, ly);
+                    this.ghostPrimitive = ctrlPoly;
                 }
                 break;
 
@@ -684,19 +695,27 @@ export class CircuitPanel {
 
             case ElementsEdtActions.POLYGON:
                 if (clickNum >= 1) {
-                    this.ghostPrimitive = new PrimitiveLine(
-                        xpoly[clickNum], ypoly[clickNum], lx, ly, layer,
-                        false, false, 0, 3, 2, 0, font, fontSize
-                    );
+                    const poly = new PrimitivePolygon(false, layer, 0, font, fontSize);
+                    for (let i = 1; i <= clickNum; i++) {
+                        poly.addPoint(xpoly[i], ypoly[i]);
+                    }
+                    poly.addPoint(lx, ly);
+                    this.ghostPrimitive = poly;
                 }
                 break;
 
             case ElementsEdtActions.COMPLEXCURVE:
                 if (clickNum >= 1) {
-                    this.ghostPrimitive = new PrimitiveLine(
-                        xpoly[clickNum], ypoly[clickNum], lx, ly, layer,
-                        false, false, 0, 3, 2, 0, font, fontSize
+                    const cc = new PrimitiveComplexCurve(
+                        false, false, layer,
+                        false, false, 0, 3, 2, 0,
+                        font, fontSize
                     );
+                    for (let i = 1; i <= clickNum; i++) {
+                        cc.addPoint(xpoly[i], ypoly[i]);
+                    }
+                    cc.addPoint(lx, ly);
+                    this.ghostPrimitive = cc;
                 }
                 break;
 
@@ -1325,7 +1344,32 @@ export class CircuitPanel {
 
     addKeyboardListeners(): void {
         this.canvas.addEventListener('keydown', (e) => this.onKeyDown(e));
+        document.addEventListener('keydown', this._handleDocumentEscape);
     }
+
+    removeKeyboardListeners(): void {
+        document.removeEventListener('keydown', this._handleDocumentEscape);
+    }
+
+    private _handleDocumentEscape = (e: KeyboardEvent): void => {
+        if (e.key !== 'Escape') return;
+
+        // Already handled by the canvas-level listener
+        if (e.target === this.canvas) return;
+
+        // In-place text editor handles its own Escape
+        if (this.textEditDialog.isActive()) return;
+
+        // Don't steal Escape from text inputs, search fields, or contentEditable
+        const target = e.target as HTMLElement;
+        const tagName = target.tagName.toLowerCase();
+        if (tagName === 'input' || tagName === 'textarea' ||
+            tagName === 'select' || target.isContentEditable) {
+            return;
+        }
+
+        this.onKeyDown(e);
+    };
 
     private onKeyDown(e: KeyboardEvent): void {
         // Don't process canvas shortcuts while in-place text editor is active
