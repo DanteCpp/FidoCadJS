@@ -1432,9 +1432,22 @@ export class CircuitPanel {
 
         if (key === 'escape') {
             e.preventDefault();
-            this.setTool(ElementsEdtActions.SELECTION);
+
+            // Cancel in-progress operations
+            this.isMovingSelected = false;
+            this.isMoveAllDrag = false;
+            this.mouseDownPrimHit = null;
+            this.dragHandleIndex = GraphicPrimitive.NO_DRAG;
+            this.dragHandlePrim = null;
             this.ghostPrimitive = null;
             this.selRectActive = false;
+
+            // Deselect all objects
+            this.selectionActions.setSelectionAll(false);
+
+            // Switch to Selection tool (resets clickNumber, successiveMove, primEdit)
+            this.setTool(ElementsEdtActions.SELECTION);
+
             this.render();
             return;
         }
