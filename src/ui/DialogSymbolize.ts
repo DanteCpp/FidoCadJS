@@ -43,11 +43,12 @@ export class DialogSymbolize {
     private previewDrawing!: Drawing;
     private previewMapCoords!: MapCoordinates;
 
-    // Draggable origin state
-    private originLx: number = 100;
-    private originLy: number = 100;
+    // Draggable origin state (logical coords; initialized by buildPreviewModel())
+    private originLx: number = 0;
+    private originLy: number = 0;
     private gridVisible: boolean = false;
     private isDragging: boolean = false;
+    private resizeObserver: ResizeObserver | null = null;
 
     constructor(_circuitPanel: CircuitPanel, drawingModel: DrawingModel, libraryModel: LibraryModel, onSaved: () => void) {
         this.drawingModel = drawingModel;
@@ -64,6 +65,7 @@ export class DialogSymbolize {
         // Initialize preview after DOM attachment
         requestAnimationFrame(() => {
             this.initPreview();
+            this.buildPreviewModel();
             this.refreshPreview();
         });
     }
@@ -250,6 +252,7 @@ export class DialogSymbolize {
             if (e.button === 0) {
                 this.isDragging = true;
                 this.updateOriginFromMouse(e);
+                this.refreshPreview();
             }
         });
         this.previewCanvas.addEventListener('mousemove', (e) => {
@@ -265,6 +268,54 @@ export class DialogSymbolize {
             this.isDragging = false;
         });
         this.previewCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Re-fit when the container is resized.
+        const container = this.previewCanvas.parentElement;
+        if (container && typeof ResizeObserver !== 'undefined') {
+            this.resizeObserver = new ResizeObserver(() => {
+                this.buildPreviewModel();
+                this.refreshPreview();
+            });
+            this.resizeObserver.observe(container);
+        }
+    }
+
+    /**
+     * Builds the preview model and computes zoom-to-fit ONCE.
+     *
+     * Mirrors fidocadj.dialogs.DialogSymbolize init flow: the preview macro
+     * is built with origin (100, 100) and the origin marker is reset to the
+     * logical coords corresponding to canvas pixel (10, 10). The marker is
+     * then dragged independently — without rebuilding the model or re-fitting.
+     * Name/key/group/lib are metadata-only (MacroDesc), so editing those
+     * fields never invalidates the preview.
+     */
+    private buildPreviewModel(): void {
+        const container = this.previewCanvas.parentElement;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const w = Math.floor(rect.width);
+        const h = Math.floor(rect.height);
+        if (w <= 0 || h <= 0) return;
+
+        this.previewModel.getPrimitiveVector().length = 0;
+        const tmp = this.buildMacro('temp', 'temp', 'temp', 'temp', 'temp', { x: 100, y: 100 });
+        if (!tmp) return;
+        this.previewParser.addString(tmp.description, false);
+
+        const mc = DrawingSize.calculateZoomToFit(
+            this.previewModel,
+            Math.floor(w * 0.8),
+            Math.floor(h * 0.8),
+            true
+        );
+        mc.setXCenter(mc.getXCenter() + 10);
+        mc.setYCenter(mc.getYCenter() + 10);
+        this.previewMapCoords = mc;
+
+        // Mirrors OriginCircuitPanel.resetOrigin(): place marker near pixel (10, 10).
+        this.originLx = mc.unmapXsnap(10);
+        this.originLy = mc.unmapYsnap(10);
     }
 
     private updateOriginFromMouse(e: MouseEvent): void {
@@ -282,20 +333,6 @@ export class DialogSymbolize {
     }
 
     private refreshPreview(): void {
-        // Build preview macro text from current settings
-        const tmpMacro = this.buildMacro(
-            this.macroNameInput.value || 'name',
-            this.keyInput.value || '000',
-            this.libNameInput.value || 'User Library',
-            this.groupInput.value || 'group',
-            this.libFilenameInput.value || 'user_lib',
-            { x: this.originLx, y: this.originLy }
-        );
-        if (!tmpMacro) return;
-
-        this.previewModel.getPrimitiveVector().length = 0;
-        this.previewParser.addString(tmpMacro.description, false);
-
         const container = this.previewCanvas.parentElement;
         if (!container) return;
 
@@ -308,56 +345,48 @@ export class DialogSymbolize {
         this.previewCanvas.width = Math.floor(w * dpr);
         this.previewCanvas.height = Math.floor(h * dpr);
 
-        // Calculate zoom-to-fit for the preview
-        const mc = DrawingSize.calculateZoomToFit(
-            this.previewModel,
-            Math.floor(w * 0.8),
-            Math.floor(h * 0.8),
-            true
-        );
-        mc.setXCenter(mc.getXCenter() + 10);
-        mc.setYCenter(mc.getYCenter() + 10);
-        this.previewMapCoords = mc;
-
-        // Render
-        this.previewGraphics.setZoom(dpr);
+        const mc = this.previewMapCoords;
         const ctx = this.previewCanvas.getContext('2d');
-        if (ctx) {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-        }
+        if (!ctx) return;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+
+        this.previewGraphics.setZoom(dpr);
         this.previewGraphics.clearDirtyRect();
         this.previewGraphics.markDirtyFull(this.previewCanvas.width, this.previewCanvas.height);
 
-        ctx?.save();
-        if (ctx && dpr !== 1) ctx.scale(dpr, dpr);
+        ctx.save();
+        if (dpr !== 1) ctx.scale(dpr, dpr);
 
-        // Draw grid if enabled
-        if (this.gridVisible && ctx && dpr !== 1 === false) {
-            this.drawGrid(ctx!, w, h, dpr);
+        if (this.gridVisible) {
+            this.drawGrid(ctx, w, h, dpr);
         }
 
         this.previewDrawing.draw(this.previewGraphics, mc);
 
-        // Draw crosshair at origin
-        if (ctx) {
-            const ox = mc.mapXi(this.originLx, this.originLy, false);
-            const oy = mc.mapYi(this.originLx, this.originLy, false);
-            ctx.strokeStyle = '#ff0000';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(ox! - 20, oy);
-            ctx.lineTo(ox! + 20, oy);
-            ctx.moveTo(ox, oy! - 20);
-            ctx.lineTo(ox, oy! + 20);
-            ctx.stroke();
-            ctx.fillStyle = '#ff0000';
-            ctx.beginPath();
-            ctx.arc(ox!, oy!, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        const ox = mc.mapXi(this.originLx, this.originLy, false);
+        const oy = mc.mapYi(this.originLx, this.originLy, false);
+        ctx.save();
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, oy);
+        ctx.lineTo(w, oy);
+        ctx.moveTo(ox, 0);
+        ctx.lineTo(ox, h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(ox, oy, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = '11px sans-serif';
+        ctx.fillText('Origin', ox + 5, oy - 5);
+        ctx.restore();
 
-        if (ctx && dpr !== 1) ctx.restore();
+        ctx.restore();
     }
 
     private drawGrid(ctx: CanvasRenderingContext2D, w: number, h: number, _dpr: number): void {
@@ -512,7 +541,7 @@ export class DialogSymbolize {
             this.libNameInput.value.trim() || 'User Library',
             this.groupInput.value.trim() || 'group',
             prefix,
-            { x: this.originLx, y: this.originLy }
+            { x: 200 - this.originLx, y: 200 - this.originLy }
         );
 
         if (!macro) {
@@ -539,6 +568,8 @@ export class DialogSymbolize {
     }
 
     private close(): void {
+        this.resizeObserver?.disconnect();
+        this.resizeObserver = null;
         this.overlay.remove();
     }
 }
