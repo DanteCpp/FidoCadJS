@@ -17,7 +17,6 @@ const BASE = import.meta.env.BASE_URL;
 
 const STANDARD_LIBRARIES: LibraryEntry[] = [
     { url: `${BASE}lib/FCDstdlib_en.fcl`,       prefix: '' },
-    { url: `${BASE}lib/PCB_en.fcl`,             prefix: 'PCB' },
     { url: `${BASE}lib/elettrotecnica_en.fcl`,  prefix: 'elettrotecnica' },
     { url: `${BASE}lib/EY_Libraries.fcl`,       prefix: 'EY_Libraries' },
     { url: `${BASE}lib/IHRAM_en.FCL`,           prefix: 'IHRAM' },
