@@ -23,7 +23,7 @@ beforeAll(() => {
 
     // Provide a stub 2D context so GraphicsCanvas can construct
     const origGetContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (contextId: string, ...args: any[]) {
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, contextId: string, ...args: any[]) {
         if (contextId === '2d') {
             return createStub2DContext();
         }
