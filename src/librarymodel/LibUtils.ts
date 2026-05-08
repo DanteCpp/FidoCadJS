@@ -10,7 +10,7 @@
 
 import { MacroDesc } from '../primitives/MacroDesc.js';
 
-const STD_FILENAMES = new Set(['', 'FCDstdlib', 'PCB', 'elettrotecnica', 'EY_Libraries', 'IHRAM']);
+const STD_FILENAMES = new Set(['', 'FCDstdlib', 'elettrotecnica', 'EY_Libraries', 'IHRAM']);
 
 export class LibUtils {
 

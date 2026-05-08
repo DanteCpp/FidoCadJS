@@ -171,8 +171,7 @@ class FidoCadJS {
             ['E: Place an ellipse (hold Control for a circle).',                    'ellipse.png',     ElementsEdtActions.ELLIPSE],
             ['R: Place a rectangle.',                                               'rectangle.png',   ElementsEdtActions.RECTANGLE],
             ['C: Place an electrical connection.',                                  'connection.png',  ElementsEdtActions.CONNECTION],
-            ['I: Place a Printed Circuit Board line.',                              'pcbline.png',     ElementsEdtActions.PCB_LINE],
-            ['Z: Place a Printed Circuit Board pad.',                               'pcbpad.png',      ElementsEdtActions.PCB_PAD],
+
         ];
 
         const toolButtons = new Map<number, HTMLButtonElement>();
