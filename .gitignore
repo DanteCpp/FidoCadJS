@@ -1,3 +1,6 @@
+# Test artifacts
+test/TESTS.html
+
 # Dependencies
 node_modules/
 
