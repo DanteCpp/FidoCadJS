@@ -1,3 +1,11 @@
+/**
+ * @file CircuitPanel.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Main editor panel controller coordinating input, model, and views
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { DrawingModel } from './model/DrawingModel.js';
 import { ParserActions } from './controllers/ParserActions.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
@@ -85,8 +93,14 @@ export class CircuitPanel {
     onTextEditRequested: ((prim: PrimitiveAdvText, sx: number, sy: number) => void) | null = null;
     onExistingTextEditRequested: ((prim: PrimitiveAdvText) => void) | null = null;
     onSymbolizeRequested: (() => void) | null = null;
+    onCancelTextEdit: (() => void) | null = null;
 
+    private lastMouseDownTime: number = 0;
+    private lastMouseDownSx: number = 0;
+    private lastMouseDownSy: number = 0;
     private pendingDblClick = false;
+    private static readonly DBLCLICK_TIME_MS = 400;
+    private static readonly DBLCLICK_DIST_PX = 5;
 
     private clipboard: string = '';
     private contextMenu!: ContextMenu;
@@ -246,8 +260,18 @@ export class CircuitPanel {
         const lx = this.mapCoordinates.unmapXsnap(sx);
         const ly = this.mapCoordinates.unmapYsnap(sy);
 
-        // Reset pendingDblClick on mousedown
-        this.pendingDblClick = false;
+        // Detect potential double-click: if two mousedowns happen within
+        // the double-click window at close screen positions, flag the
+        // upcoming mouseup so we skip element creation (dblclick handler
+        // will deal with it instead).
+        const now = performance.now();
+        const timeClose = now - this.lastMouseDownTime < CircuitPanel.DBLCLICK_TIME_MS;
+        const posClose = Math.abs(sx - this.lastMouseDownSx) <= CircuitPanel.DBLCLICK_DIST_PX &&
+                         Math.abs(sy - this.lastMouseDownSy) <= CircuitPanel.DBLCLICK_DIST_PX;
+        this.pendingDblClick = timeClose && posClose;
+        this.lastMouseDownTime = now;
+        this.lastMouseDownSx = sx;
+        this.lastMouseDownSy = sy;
 
         // Handle move mode - start dragging selected elements
         if (this.isMovingSelected && e.button === 0) {
@@ -532,9 +556,6 @@ export class CircuitPanel {
         const rect = this.canvas.getBoundingClientRect();
         const sx = (e.clientX - rect.left) * dpr;
         const sy = (e.clientY - rect.top) * dpr;
-
-        // Set flag to skip the next mouseup
-        this.pendingDblClick = true;
 
         const repaint = this.elementsEdt.handleClick(
             this.mapCoordinates, sx, sy, false, e.ctrlKey || e.metaKey, true
@@ -1336,28 +1357,43 @@ export class CircuitPanel {
     // ─── Keyboard ─────────────────────────────────────────────────────────────
 
     addKeyboardListeners(): void {
-        this.canvas.addEventListener('keydown', (e) => this.onKeyDown(e));
-        document.addEventListener('keydown', this._handleDocumentEscape);
+        document.addEventListener('keydown', this._handleDocumentKeyDown);
     }
 
     removeKeyboardListeners(): void {
-        document.removeEventListener('keydown', this._handleDocumentEscape);
+        document.removeEventListener('keydown', this._handleDocumentKeyDown);
     }
 
-    private _handleDocumentEscape = (e: KeyboardEvent): void => {
-        if (e.key !== 'Escape') return;
-
-        // Already handled by the canvas-level listener
-        if (e.target === this.canvas) return;
-
-        // In-place text editor handles its own Escape
-        if (this.textEditDialog.isActive()) return;
-
-        // Don't steal Escape from text inputs, search fields, or contentEditable
+    // Central document-level key handler.
+    // When focus is on a text input / textarea / contentEditable element,
+    // only global app shortcuts (Ctrl+N/O/S/E/P/W) are forwarded;
+    // tool shortcuts and clipboard operations are suppressed so the
+    // user can type normally.  Otherwise every keystroke goes through.
+    private _handleDocumentKeyDown = (e: KeyboardEvent): void => {
         const target = e.target as HTMLElement;
         const tagName = target.tagName.toLowerCase();
-        if (tagName === 'input' || tagName === 'textarea' ||
-            tagName === 'select' || target.isContentEditable) {
+        const isInput = tagName === 'input' || tagName === 'textarea' ||
+            tagName === 'select' || target.isContentEditable;
+
+        if (isInput) {
+            const key = e.key.toLowerCase();
+            const isCtrlOrMeta = e.ctrlKey || e.metaKey;
+
+            // Global file-level shortcuts that should work app-wide
+            if (isCtrlOrMeta && (key === 'n' || key === 'o' || key === 's' ||
+                key === 'e' || key === 'p' || key === 'w')) {
+                this.onKeyDown(e);
+                return;
+            }
+
+            // Escape cancels the TEXT tool even while focus is in a text
+            // input (user just placed text and is editing it).
+            if (e.key === 'Escape' && !this.textEditDialog.isActive() &&
+                this.currentTool === ElementsEdtActions.TEXT) {
+                this.onKeyDown(e);
+                return;
+            }
+
             return;
         }
 
@@ -1457,8 +1493,8 @@ export class CircuitPanel {
         }
 
         // ===== TOOL SELECTION (single key, case-insensitive) =====
-        // A or Space or Escape: Selection tool
-        if ((key === 'a' || key === ' ') && !isCtrlOrMeta) {
+        // A or Escape: Selection tool
+        if (key === 'a' && !isCtrlOrMeta) {
             e.preventDefault();
             this.setTool(ElementsEdtActions.SELECTION);
             this.ghostPrimitive = null;
@@ -1467,8 +1503,18 @@ export class CircuitPanel {
             return;
         }
 
+        // Space: Fit to view
+        if (key === ' ' && !isCtrlOrMeta) {
+            e.preventDefault();
+            this.zoomToFit();
+            return;
+        }
+
         if (key === 'escape') {
             e.preventDefault();
+
+            // Close any open text-editing UI (properties sidebar, etc.)
+            this.onCancelTextEdit?.();
 
             // Cancel in-progress operations
             this.isMovingSelected = false;

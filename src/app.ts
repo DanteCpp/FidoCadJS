@@ -1,3 +1,11 @@
+/**
+ * @file app.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Application entry point & UI bootstrap
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { CircuitPanel } from './circuit/CircuitPanel.js';
 import { ElementsEdtActions } from './circuit/controllers/ElementsEdtActions.js';
 import { loadStandardLibraries } from './circuit/controllers/LibraryLoader.js';
@@ -160,16 +168,16 @@ class FidoCadJS {
 
         // Tool group — icon buttons in original FidoCadJ order
         const toolDefs: Array<[string, string, number]> = [
-            ['A or space: Select and move an object. Type R to rotate, S to swap.', 'arrow.png',       ElementsEdtActions.SELECTION],
+            ['A: Select and move an object. Space: fit to view. Type R to rotate, S to swap.', 'arrow.png',       ElementsEdtActions.SELECTION],
             ['Left click: increase zoom, right click: decrease zoom.',              'magnifier.png',   ElementsEdtActions.ZOOM],
             ['Scroll through a big drawing.',                                       'move.png',        ElementsEdtActions.HAND],
             ['L: Draw a line.',                                                     'line.png',        ElementsEdtActions.LINE],
             ['T: Place a text.',                                                    'text.png',        ElementsEdtActions.TEXT],
             ['B: Draw a four-point Bézier primitive.',                              'bezier.png',      ElementsEdtActions.BEZIER],
             ['P: Place a polygon.',                                                 'polygon.png',     ElementsEdtActions.POLYGON],
-            ['V: Open or closed curve.',                                            'complexcurve.png',ElementsEdtActions.COMPLEXCURVE],
+            ['O: Open or closed curve.',                                            'complexcurve.png',ElementsEdtActions.COMPLEXCURVE],
             ['E: Place an ellipse (hold Control for a circle).',                    'ellipse.png',     ElementsEdtActions.ELLIPSE],
-            ['R: Place a rectangle.',                                               'rectangle.png',   ElementsEdtActions.RECTANGLE],
+            ['G: Place a rectangle.',                                               'rectangle.png',   ElementsEdtActions.RECTANGLE],
             ['C: Place an electrical connection.',                                  'connection.png',  ElementsEdtActions.CONNECTION],
 
         ];
@@ -582,6 +590,11 @@ class FidoCadJS {
 
         this.circuitPanel.onExistingTextEditRequested = (prim) => {
             this.showPropertiesPanel(prim);
+        };
+
+        // Close properties sidebar when Escape switches tool away from TEXT
+        this.circuitPanel.onCancelTextEdit = () => {
+            this.propertiesSidebar.style.display = 'none';
         };
     }
 
