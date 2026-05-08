@@ -851,16 +851,9 @@ export class CircuitPanel {
         this.ctx.clearDirtyRect();
         this.ctx.markDirtyFull(width, height);
 
-        // Clear canvas
+        // Clear canvas with background color
         ctx.fillStyle = this.backgroundColor;
         ctx.fillRect(0, 0, width, height);
-
-        // Reset transform, clipping and alpha
-        ctx.save();
-        ctx.resetTransform();
-        ctx.globalAlpha = 1.0;
-        ctx.clearRect(0, 0, width, height);
-        ctx.restore();
 
         // Draw grid
         if (this.gridVisible) {
