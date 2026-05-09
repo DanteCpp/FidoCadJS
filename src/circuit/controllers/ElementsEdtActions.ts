@@ -1,3 +1,11 @@
+/**
+ * @file ElementsEdtActions.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Element editing action dispatcher for tool-specific behaviour
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { DrawingModel } from '../model/DrawingModel.js';
 import { UndoActions } from './UndoActions.js';
 import { SelectionActions } from './SelectionActions.js';
@@ -137,9 +145,10 @@ export class ElementsEdtActions {
             this.primEdit = null;
         }
 
-        // Right-click cancels macro insertion
-        if (button3 && this.actionSelected === ElementsEdtActions.MACRO) {
+        // Right-click cancels any active drawing tool and returns to selection
+        if (button3 && this.actionSelected > ElementsEdtActions.HAND) {
             this.actionSelected = ElementsEdtActions.SELECTION;
+            this.clickNumber = 0;
             this.primEdit = null;
             return true;
         }

@@ -3,6 +3,7 @@
  * @author Dante Loi
  * @date 2026-04-24
  * @brief Tests for DrawingModel — the core data model
+ * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';

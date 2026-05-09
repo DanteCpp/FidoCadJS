@@ -1,3 +1,11 @@
+/**
+ * @file MapCoordinates.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Logical-to-screen coordinate mapping, zoom, snap, and orientation
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 export class MapCoordinates {
     private xCenter: number = 0;
     private yCenter: number = 0;

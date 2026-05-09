@@ -3,6 +3,7 @@
  * @author Dante Loi
  * @date 2026-04-23
  * @brief Persistent app settings with localStorage backing
+ * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
 import type { CircuitPanel } from '../circuit/CircuitPanel.js';

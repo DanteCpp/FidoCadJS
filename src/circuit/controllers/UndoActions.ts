@@ -1,3 +1,11 @@
+/**
+ * @file UndoActions.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Undo/redo action interface for editor controllers
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { ParserActions } from './ParserActions.js';
 
 /**

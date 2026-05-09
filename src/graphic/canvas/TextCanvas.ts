@@ -1,3 +1,11 @@
+/**
+ * @file TextCanvas.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief HTML Canvas text rendering implementation
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { TextInterface } from '../TextInterface.js';
 
 export class TextCanvas implements TextInterface {

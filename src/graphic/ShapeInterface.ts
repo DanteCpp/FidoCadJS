@@ -1,3 +1,11 @@
+/**
+ * @file ShapeInterface.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Shape drawing interface
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { RectangleG } from './RectangleG.js';
 
 export interface ShapeInterface {

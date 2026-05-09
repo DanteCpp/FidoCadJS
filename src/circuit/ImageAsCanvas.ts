@@ -1,3 +1,11 @@
+/**
+ * @file ImageAsCanvas.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Image-to-canvas rendering utility
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 
 export class ImageAsCanvas {

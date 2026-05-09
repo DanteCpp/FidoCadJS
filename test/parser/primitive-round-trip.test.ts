@@ -1,5 +1,9 @@
 /**
- * Round-trip parse/serialize tests for all 11 primitive types and ParserActions.
+ * @file primitive-round-trip.test.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Round-trip parse/serialize tests for all 11 primitive types and ParserActions.
+ * @copyright Copyright 2026 Dante Loi - GPL v3
  *
  * Strategy: parse a string S, call getText(false) → T1, parse T1, call getText(false) → T2.
  * Assert T1 === T2 (stability). This proves the serialized form is self-consistent without

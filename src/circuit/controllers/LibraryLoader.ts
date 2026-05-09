@@ -23,18 +23,14 @@ const STANDARD_LIBRARIES: LibraryEntry[] = [
 ];
 
 export async function loadStandardLibraries(parserActions: ParserActions): Promise<void> {
-    const results = await Promise.allSettled(
-        STANDARD_LIBRARIES.map(async ({ url, prefix }) => {
+    for (const { url, prefix } of STANDARD_LIBRARIES) {
+        try {
             const response = await fetch(url);
-            if (!response.ok) return;
+            if (!response.ok) continue;
             const text = await response.text();
             parserActions.readLibraryString(text, prefix);
-        }),
-    );
-
-    for (const result of results) {
-        if (result.status === 'rejected') {
-            console.warn('Failed to load library:', result.reason);
+        } catch (e) {
+            console.warn('Failed to load library:', url, e);
         }
     }
 }

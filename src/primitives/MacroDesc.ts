@@ -1,3 +1,11 @@
+/**
+ * @file MacroDesc.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Macro descriptor holding the FCD source of a library component
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 export class MacroDesc {
     name: string;
     key: string;

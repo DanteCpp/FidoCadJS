@@ -1,3 +1,11 @@
+/**
+ * @file ParserActions.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief FCD/FCL format parser and serializer
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { DrawingModel } from '../model/DrawingModel.js';
 import { Globals } from '../../globals/Globals.js';
 import { LayerDesc } from '../../layers/LayerDesc.js';

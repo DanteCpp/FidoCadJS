@@ -198,12 +198,13 @@ export class CircuitPanel {
         // Prevent browser default context menu; show custom one in SELECTION mode
         this.canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            // Right-click may have cancelled macro insertion in onMouseDown — sync tool state
-            if (this.currentTool === ElementsEdtActions.MACRO &&
-                this.elementsEdt.getSelectionState() === ElementsEdtActions.SELECTION) {
+            // If a drawing tool is active, right-click cancels it (already dispatched
+            // via onMouseDown to handleClick). Sync the UI toolbar state and do NOT
+            // show the context menu.
+            if (this.currentTool !== ElementsEdtActions.SELECTION) {
                 this.setTool(ElementsEdtActions.SELECTION);
-            }
-            if (this.currentTool === ElementsEdtActions.SELECTION) {
+                this.render();
+            } else {
                 this.showContextMenu(e.clientX, e.clientY);
             }
         });

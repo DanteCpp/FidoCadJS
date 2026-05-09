@@ -1,3 +1,11 @@
+/**
+ * @file LayerDesc.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Layer descriptor model (colour, visibility, alpha, description)
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { ColorInterface } from '../graphic/ColorInterface.js';
 
 export class LayerDesc {

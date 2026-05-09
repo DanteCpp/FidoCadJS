@@ -1,3 +1,11 @@
+/**
+ * @file ExportInterface.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Abstract export interface
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { DimensionG } from '../graphic/DimensionG.js';
 import type { PointDouble } from '../graphic/PointDouble.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';

@@ -1,3 +1,11 @@
+/**
+ * @file SelectionActions.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Selection query and bulk-mutation helpers
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { DrawingModel } from '../model/DrawingModel.js';
 import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import { PrimitiveMacro } from '../../primitives/PrimitiveMacro.js';

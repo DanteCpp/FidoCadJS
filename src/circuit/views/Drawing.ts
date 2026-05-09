@@ -1,3 +1,11 @@
+/**
+ * @file Drawing.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Canvas rendering view dispatching per-primitive draw hooks
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { GraphicsInterface } from '../../graphic/GraphicsInterface.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import { DrawingModel } from '../model/DrawingModel.js';
