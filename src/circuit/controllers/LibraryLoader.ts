@@ -19,7 +19,8 @@ const STANDARD_LIBRARIES: LibraryEntry[] = [
     { url: `${BASE}lib/FCDstdlib_en.fcl`,       prefix: '' },
     { url: `${BASE}lib/elettrotecnica_en.fcl`,  prefix: 'elettrotecnica' },
     { url: `${BASE}lib/EY_Libraries.fcl`,       prefix: 'EY_Libraries' },
-    { url: `${BASE}lib/IHRAM_en.FCL`,           prefix: 'IHRAM' },
+    { url: `${BASE}lib/IHRAM_en.fcl`,           prefix: 'IHRAM' },
+    { url: `${BASE}lib/PCB_en.fcl`,             prefix: 'PCB' },
 ];
 
 export async function loadStandardLibraries(parserActions: ParserActions): Promise<void> {

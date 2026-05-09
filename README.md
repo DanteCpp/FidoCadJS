@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.4-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-browser-lightgrey.svg)
-![Tests](https://img.shields.io/badge/tests-10%20suites-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-14%20suites-brightgreen.svg)
 
 **A browser-based electronic schematic editor fully compatible with the FidoCad (fdc) format.**
 
@@ -131,7 +131,8 @@ FidoCadJS bundles the standard FidoCadJ libraries under `public/lib/`:
 | Standard library | `FCDstdlib_en.fcl` | Original FidoCad standard symbols (resistors, capacitors, ICs, ...) |
 | Electrical symbols | `elettrotecnica_en.fcl` | Power and electrotechnical symbols |
 | EY Libraries | `EY_Libraries.fcl` | ElectroYou community symbols |
-| IHRAM | `IHRAM_en.fcl` | Specialty / amateur radio symbols |
+| IHRAM 3.1 | `IHRAM_en.fcl` | Specialty / amateur radio symbols (version 3.1) |
+| PCB library | `PCB_en.fcl` | PCB footprints and layout symbols |
 
 Users can also load additional `.fcl` files into the User Library from the macro picker; these persist across reloads in `localStorage`.
 
@@ -151,11 +152,11 @@ It works on desktop, tablet, and mobile; pointer events are handled uniformly so
 
 FidoCadJS targets feature parity with FidoCadJ for editing and `.fcd` interoperability, but a few things from the Java upstream are not (yet) ported:
 
-- **Export formats** — SVG only at the moment. PDF, EPS, PGF/TikZ, PNG, and JPG export from FidoCadJ are not yet implemented.
+- **Export formats** — PNG, SVG, PGF/TikZ (LaTeX), and FCD. PDF, EPS, and JPG export from FidoCadJ are not yet implemented.
 - **Locales** — the i18n framework is in place but currently only the English bundle ships. FidoCadJ has 10+ translations.
 - **Platform integrations** — there is no Android-specific build; the browser version covers mobile via touch events.
 - **Print** — native print dialog is delegated to the browser's built-in print.
-- **LaTeX** — LaTeX parsing and rendering has not been implemented yet. 
+- **LaTeX** — PGF and TikZ export for LaTeX documents is implemented. Live KaTeX math rendering in text primitives is also available.
 
 If you need any of the missing pieces, FidoCadJ remains fully supported and can read/write the same `.fcd` files.
 
@@ -265,6 +266,9 @@ npm run test:run
 | `test/circuit/controllers/selection-actions.test.ts` | Selection queries, multi-select, get-text |
 | `test/circuit/keyboard-shortcuts.test.ts` | All keyboard shortcuts: tools, transforms, zoom, clipboard, nudge, input blocking |
 | `test/export/export-svg.test.ts` | SVG export produces correct XML for all primitive types |
+| `test/export/export-pgf.test.ts` | PGF export for LaTeX — state tracking, arrows, dashes, layers, all primitives |
+| `test/export/export-tikz.test.ts` | TikZ export for LaTeX — all primitives, dash patterns, arrows |
+| `test/graphic/tex-renderer.test.ts` | KaTeX math rendering: inline, display, mixed, edge cases |
 | `test/geom/map-coordinates.test.ts` | Coordinate system mapping, zoom, orientation, snap |
 | `test/undo/undo-manager.test.ts` | Undo/redo stack, eviction, library state |
 | `test/globals/globals.test.ts` | Path/extension utilities, coordinate parsing |

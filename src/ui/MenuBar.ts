@@ -8,6 +8,7 @@
 
 import { CircuitPanel } from '../circuit/CircuitPanel.js';
 import { showOptionsDialog } from './OptionsDialog.js';
+import { showExportDialog, executeExport } from './ExportDialog.js';
 
 interface MenuItem {
     kind: 'action' | 'separator';
@@ -141,6 +142,7 @@ export class MenuBar {
                 shortcut: 'Ctrl+O',
                 action: () => this.importCircuit(),
             },
+            { kind: 'separator' },
             {
                 kind: 'action',
                 label: 'Save FCD',
@@ -149,21 +151,16 @@ export class MenuBar {
             },
             {
                 kind: 'action',
-                label: 'Export SVG',
+                label: 'Export...',
                 shortcut: 'Ctrl+E',
-                action: () => this.exportSVG(),
-            },
-            {
-                kind: 'action',
-                label: 'Import Library...',
-                action: () => this.importLibraryFile(),
+                action: () => this.exportFile(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Options...',
-                shortcut: 'Ctrl+,',
-                action: () => showOptionsDialog(this.panel),
+                label: 'Close',
+                shortcut: 'Ctrl+W',
+                action: () => this.closeFile(),
             },
         ];
     }
@@ -270,6 +267,13 @@ export class MenuBar {
                 shortcut: 'Home',
                 action: () => this.panel.zoomToFit(),
             },
+            { kind: 'separator' },
+            {
+                kind: 'action',
+                label: 'Options...',
+                shortcut: 'Ctrl+,',
+                action: () => showOptionsDialog(this.panel),
+            },
         ];
     }
 
@@ -280,6 +284,11 @@ export class MenuBar {
                 label: 'View code',
                 shortcut: 'Ctrl+G',
                 action: () => this.showDefineDialog(),
+            },
+            {
+                kind: 'action',
+                label: 'Import Library...',
+                action: () => this.importLibraryFile(),
             },
         ];
     }
@@ -330,16 +339,6 @@ export class MenuBar {
         URL.revokeObjectURL(url);
     }
 
-    private exportSVG(): void {
-        const svgText = this.panel.exportSVG();
-        const blob = new Blob([svgText], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'circuit.svg';
-        a.click();
-        URL.revokeObjectURL(url);
-    }
 
     private showDefineDialog(): void {
         const dialog = document.createElement('dialog');
@@ -423,8 +422,11 @@ export class MenuBar {
         this.exportCircuit();
     }
 
-    exportFile(): void {
-        this.exportSVG();
+    async exportFile(): Promise<void> {
+        const selection = await showExportDialog(this.panel);
+        if (selection) {
+            executeExport(this.panel, selection);
+        }
     }
 
     printFile(): void {

@@ -159,6 +159,8 @@ function buildAppearancePanel(s: AppSettings): HTMLElement {
     p.appendChild(colorRow('Grid color', 'gridColor', s.gridColor));
     p.appendChild(colorRow('Selection L→R', 'selectionLTRColor', s.selectionLTRColor));
     p.appendChild(colorRow('Selection R→L', 'selectionRTLColor', s.selectionRTLColor));
+    p.appendChild(document.createElement('hr'));
+    p.appendChild(checkRow('Render LaTeX math in editor', 'renderTeX', s.renderTeX));
     return p;
 }
 

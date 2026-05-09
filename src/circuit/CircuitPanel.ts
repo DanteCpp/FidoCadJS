@@ -17,6 +17,11 @@ import { LayerDesc } from '../layers/LayerDesc.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
 import { Export, registerExportHooks } from './views/Export.js';
 import { ExportSVG } from '../export/ExportSVG.js';
+import { ExportPGF } from '../export/ExportPGF.js';
+import { ExportTikZ } from '../export/ExportTikZ.js';
+import { TeXMode } from '../graphic/TeXMode.js';
+import { renderMixedText } from '../graphic/TeXRenderer.js';
+import '../vendor/katex/katex.min.css';
 import { DrawingSize } from '../geom/DrawingSize.js';
 import { SelectionActions } from './controllers/SelectionActions.js';
 import { UndoActions } from './controllers/UndoActions.js';
@@ -49,6 +54,8 @@ export class CircuitPanel {
     private gridColor: string = '#6464c8';
     private selectionLTRColor: string = '#008000';
     private selectionRTLColor: string = '#0000ff';
+    private renderTeX: boolean = false;
+    private texOverlay: HTMLDivElement;
     private drawing: Drawing;
     private isPanning: boolean = false;
     private panStartX: number = 0;
@@ -221,6 +228,15 @@ export class CircuitPanel {
         this.canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
         this.canvas.addEventListener('mouseleave', (e) => this.onMouseUp(e));
         this.canvas.addEventListener('dblclick', (e) => this.onDoubleClick(e));
+
+        // TeX overlay — positioned on top of canvas for crisp math rendering
+        this.texOverlay = document.createElement('div');
+        this.texOverlay.style.cssText =
+            'position: absolute; top: 0; left: 0; width: 100%; height: 100%; ' +
+            'pointer-events: none; overflow: hidden; z-index: 1; display: none;';
+        this.texOverlay.setAttribute('aria-hidden', 'true');
+        container.style.position = 'relative';
+        container.appendChild(this.texOverlay);
     }
 
     private onMouseWheel(e: WheelEvent): void {
@@ -791,6 +807,7 @@ export class CircuitPanel {
     getParserActions(): ParserActions { return this.parserActions; }
     getMapCoordinates(): MapCoordinates { return this.mapCoordinates; }
     getAddElements(): AddElements { return this.elementsEdt.getAddElements(); }
+    getCanvasElement(): HTMLCanvasElement { return this.canvas; }
 
     setGridVisible(visible: boolean): void {
         this.gridVisible = visible;
@@ -807,6 +824,15 @@ export class CircuitPanel {
     setGridColor(c: string): void { this.gridColor = c; }
     setSelectionLTRColor(c: string): void { this.selectionLTRColor = c; }
     setSelectionRTLColor(c: string): void { this.selectionRTLColor = c; }
+
+    setRenderTeX(enabled: boolean): void {
+        this.renderTeX = enabled;
+        this.texOverlay.style.display = enabled ? 'block' : 'none';
+        if (!enabled) {
+            this.texOverlay.innerHTML = '';
+        }
+        this.render();
+    }
 
     setSelectedColor(c: ColorInterface): void {
         this.ctx.setSelectedColor(c);
@@ -864,6 +890,51 @@ export class CircuitPanel {
         this.mapCoordinates.setYCenter(Math.min(this.mapCoordinates.getYCenter(), 0));
     }
 
+    /** Populate the TeX overlay div with KaTeX-rendered math from text primitives. */
+    private syncTeXOverlay(dpr: number): void {
+        if (!this.renderTeX) return;
+
+        const htmlParts: string[] = [];
+
+        for (const prim of this.model.getPrimitiveVector()) {
+            if (!(prim instanceof PrimitiveAdvText)) continue;
+
+            const text = prim.getString();
+            // Quick skip: if no $ delimiter, no math to render
+            if (!text.includes('$')) continue;
+
+            const lx = prim.virtualPoint[0]!.x;
+            const ly = prim.virtualPoint[0]!.y;
+            const sx = this.mapCoordinates.mapX(lx, ly);
+            const sy = this.mapCoordinates.mapY(lx, ly);
+
+            // Convert canvas pixels to CSS pixels for overlay positioning
+            const cssX = sx / dpr;
+            const cssY = sy / dpr;
+
+            const segments = renderMixedText(text);
+            const segmentHtml = segments.map(seg => {
+                if (seg.type === 'text') {
+                    // Escape HTML in plain text segments
+                    const escaped = seg.content
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                    return `<span style="white-space: pre;">${escaped}</span>`;
+                }
+                // Math segments already contain safe KaTeX HTML
+                return seg.content;
+            }).join('');
+
+            htmlParts.push(
+                `<div style="position:absolute; left:${cssX}px; top:${cssY}px; ` +
+                `white-space: nowrap;">${segmentHtml}</div>`
+            );
+        }
+
+        this.texOverlay.innerHTML = htmlParts.join('');
+    }
+
     render(): void {
         const ctx = this.ctx.getCtx();
         const width = this.canvas.width;
@@ -886,6 +957,7 @@ export class CircuitPanel {
 
         // Draw primitives via the Drawing view (correct layer ordering, macro support)
         this.mapCoordinates.resetMinMax();
+        TeXMode.active = this.renderTeX;
         this.drawing.draw(this.ctx, this.mapCoordinates);
 
         // Draw handles for selected elements
@@ -916,6 +988,9 @@ export class CircuitPanel {
             ctx.restore();
         }
 
+        // Sync TeX overlay when LaTeX rendering is enabled
+        this.syncTeXOverlay(window.devicePixelRatio || 1);
+
         this.model.setChanged(false);
         this.ctx.clearDirtyRect();
     }
@@ -942,6 +1017,28 @@ export class CircuitPanel {
         exportView.exportDrawing(svg, false, mp);
         svg.exportEnd();
         return svg.getSvgString();
+    }
+
+    exportPGF(): string {
+        const mp = new MapCoordinates();
+        mp.setMagnitudes(1, 1);
+        const pgf = new ExportPGF();
+        const exportView = new Export(this.model);
+        exportView.exportHeader(pgf, mp);
+        exportView.exportDrawing(pgf, false, mp);
+        pgf.exportEnd();
+        return pgf.getPgfString();
+    }
+
+    exportTikZ(): string {
+        const mp = new MapCoordinates();
+        mp.setMagnitudes(1, 1);
+        const tikz = new ExportTikZ();
+        const exportView = new Export(this.model);
+        exportView.exportHeader(tikz, mp);
+        exportView.exportDrawing(tikz, false, mp);
+        tikz.exportEnd();
+        return tikz.getTikZString();
     }
 
     setTool(toolId: number): void {

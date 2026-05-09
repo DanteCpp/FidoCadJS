@@ -9,6 +9,7 @@
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
+import { TeXMode } from '../graphic/TeXMode.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
@@ -83,6 +84,10 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         if (this.txt.length === 0) return;
+
+        // When TeX overlay is active, skip canvas rendering for text with math
+        // (the overlay renders these via KaTeX instead)
+        if (TeXMode.active && this.txt.includes('$')) return;
 
         this.changed = true;
         this.ymagnitude = coordSys.getYMagnitude();
