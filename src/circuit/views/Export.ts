@@ -1,3 +1,11 @@
+/**
+ * @file Export.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Export view dispatching per-primitive export hooks
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { ExportInterface } from '../../export/ExportInterface.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import { DrawingModel } from '../model/DrawingModel.js';

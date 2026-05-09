@@ -1,3 +1,11 @@
+/**
+ * @file GraphicsInterface.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Graphics abstraction layer interface
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { ColorInterface } from './ColorInterface.js';
 import type { TextInterface } from './TextInterface.js';
 import type { ShapeInterface } from './ShapeInterface.js';

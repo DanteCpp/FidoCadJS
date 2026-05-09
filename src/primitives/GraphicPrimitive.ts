@@ -1,3 +1,11 @@
+/**
+ * @file GraphicPrimitive.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Abstract base class for all graphic primitives
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { ExportInterface } from '../export/ExportInterface.js';

@@ -3,6 +3,7 @@
  * @author Dante Loi
  * @date 2026-04-24
  * @brief Tests for LayerDesc — layer description model
+ * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
 import { describe, it, expect } from 'vitest';

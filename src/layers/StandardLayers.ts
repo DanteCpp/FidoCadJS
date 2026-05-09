@@ -1,3 +1,11 @@
+/**
+ * @file StandardLayers.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Standard layer definitions factory
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
 import { LayerDesc } from './LayerDesc.js';
 import { getString } from '../i18n/i18n.js';

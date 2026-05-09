@@ -1,3 +1,11 @@
+/**
+ * @file DrawingModel.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Core drawing data model holding primitives, layers, and macro library
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
 import type { MacroDesc } from '../../primitives/MacroDesc.js';

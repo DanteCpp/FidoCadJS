@@ -1,3 +1,11 @@
+/**
+ * @file InPlaceTextEditor.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief In-place text editing overlay for the canvas
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { PrimitiveAdvText } from '../primitives/PrimitiveAdvText.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';

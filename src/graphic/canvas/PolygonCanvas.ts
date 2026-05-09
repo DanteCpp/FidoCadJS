@@ -1,3 +1,11 @@
+/**
+ * @file PolygonCanvas.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief HTML Canvas polygon drawing implementation
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { PolygonInterface } from '../PolygonInterface.js';
 import type { PointG } from '../PointG.js';
 import { RectangleG } from '../RectangleG.js';

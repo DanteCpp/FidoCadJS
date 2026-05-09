@@ -1,3 +1,11 @@
+/**
+ * @file GraphicsCanvas.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief HTML Canvas graphics implementation
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { GraphicsInterface } from '../GraphicsInterface.js';
 import type { ColorInterface } from '../ColorInterface.js';
 import type { TextInterface } from '../TextInterface.js';
@@ -49,6 +57,8 @@ export class GraphicsCanvas implements GraphicsInterface {
 
     applyStroke(w: number, dashStyle: number): void {
         this.ctx.lineWidth = w;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
         const pattern = Globals.dash[dashStyle] ?? [10, 0];
         if (pattern[1] === 0) {
             this.ctx.setLineDash([]);

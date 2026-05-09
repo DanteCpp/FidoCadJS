@@ -1,3 +1,11 @@
+/**
+ * @file ShapeCanvas.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief HTML Canvas shape drawing implementation
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { ShapeInterface } from '../ShapeInterface.js';
 import { RectangleG } from '../RectangleG.js';
 

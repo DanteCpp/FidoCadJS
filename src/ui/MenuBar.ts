@@ -1,3 +1,11 @@
+/**
+ * @file MenuBar.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Application menu bar
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { CircuitPanel } from '../circuit/CircuitPanel.js';
 import { showOptionsDialog } from './OptionsDialog.js';
 

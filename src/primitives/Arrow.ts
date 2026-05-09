@@ -1,3 +1,11 @@
+/**
+ * @file Arrow.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Arrow line-end style definitions
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import { GeometricDistances } from '../geom/GeometricDistances.js';

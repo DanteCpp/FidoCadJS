@@ -1,3 +1,11 @@
+/**
+ * @file GraphicsNull.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Null (no-op) graphics implementation
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import type { GraphicsInterface } from '../GraphicsInterface.js';
 import type { ColorInterface } from '../ColorInterface.js';
 import type { TextInterface } from '../TextInterface.js';

@@ -1,3 +1,11 @@
+/**
+ * @file Globals.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Global constants and static utility functions
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { AccessResources } from '../i18n/AccessResources.js';
 
 export class Globals {

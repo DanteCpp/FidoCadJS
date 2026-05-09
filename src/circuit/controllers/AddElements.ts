@@ -1,3 +1,11 @@
+/**
+ * @file AddElements.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Primitive creation handlers for each drawing tool
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { DrawingModel } from '../model/DrawingModel.js';
 import { UndoActions } from './UndoActions.js';
 import { SelectionActions } from './SelectionActions.js';

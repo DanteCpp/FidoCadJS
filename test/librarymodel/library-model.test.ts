@@ -1,5 +1,9 @@
 /**
- * Tests for LibraryModel, Library, and Category.
+ * @file library-model.test.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Tests for LibraryModel, Library, and Category.
+ * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
 import { describe, it, expect, vi } from 'vitest';

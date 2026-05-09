@@ -124,12 +124,43 @@ export class MacroPicker {
         this.filterText = this.searchInput.value.toLowerCase().trim();
         this.libraryMacros = libraryModel.getAllMacros();
 
-        const libs = libraryModel.getAllLibraries();
-        libs.forEach((lib, idx) => {
+        // Sort: standard libraries first (by a predefined order), then user libraries alphabetically.
+        const libs = [...libraryModel.getAllLibraries()];
+        libs.sort((a, b) => this.compareLibraries(a, b));
+        libs.forEach((lib) => {
             if (lib.isHidden()) return;
-            const libSection = this.buildLibrarySection(lib, idx === 0);
+            // All libraries collapsed by default.
+            const libSection = this.buildLibrarySection(lib, false);
             this.treeContainer.appendChild(libSection);
         });
+    }
+
+    /**
+     * Sort comparator: standard libraries first in a fixed, human-friendly order;
+     * user libraries follow in alphabetical order.
+     */
+    private compareLibraries(a: Library, b: Library): number {
+        const aStd = a.isStdLib();
+        const bStd = b.isStdLib();
+        if (aStd && !bStd) return -1;
+        if (!aStd && bStd) return 1;
+        if (aStd && bStd) {
+            return this.stdLibraryOrder(a.getName()) - this.stdLibraryOrder(b.getName());
+        }
+        return a.getName().localeCompare(b.getName());
+    }
+
+    /** Assign a positional index to known standard library names. Unknown ones go last. */
+    private stdLibraryOrder(name: string): number {
+        const lower = name.toLowerCase();
+        const known: Record<string, number> = {
+            'standard library': 0,
+            'electrical symbols': 1,
+            'ey libraries': 2,
+            'ey_libraries': 2,
+            'ihram 3.1': 3,
+        };
+        return known[lower] ?? 99;
     }
 
     setFilter(text: string): void {

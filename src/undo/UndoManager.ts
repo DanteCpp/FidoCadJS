@@ -1,3 +1,11 @@
+/**
+ * @file UndoManager.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Generic ring-buffer undo/redo stack
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 import { UndoState } from './UndoState.js';
 
 export class UndoManager {

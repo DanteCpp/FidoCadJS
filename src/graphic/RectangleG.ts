@@ -1,3 +1,11 @@
+/**
+ * @file RectangleG.ts
+ * @author Dante Loi
+ * @date 2026-04-24
+ * @brief Integer rectangle type
+ * @copyright Copyright 2026 Dante Loi - GPL v3
+ */
+
 export class RectangleG {
     x: number;
     y: number;
