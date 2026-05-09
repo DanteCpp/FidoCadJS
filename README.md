@@ -131,7 +131,7 @@ FidoCadJS bundles the standard FidoCadJ libraries under `public/lib/`:
 | Standard library | `FCDstdlib_en.fcl` | Original FidoCad standard symbols (resistors, capacitors, ICs, ...) |
 | Electrical symbols | `elettrotecnica_en.fcl` | Power and electrotechnical symbols |
 | EY Libraries | `EY_Libraries.fcl` | ElectroYou community symbols |
-| IHRAM 3.1 | `IHRAM_en.fcl` | Specialty / amateur radio symbols (version 3.1) |
+| IHRAM 3.1 | `IHRAM_en.fcl` | it.hobby.radioamatori.moderato community library | 
 
 Users can also load additional `.fcl` files into the User Library from the macro picker; these persist across reloads in `localStorage`.
 
@@ -151,11 +151,11 @@ It works on desktop, tablet, and mobile; pointer events are handled uniformly so
 
 FidoCadJS targets feature parity with FidoCadJ for editing and `.fcd` interoperability, but a few things from the Java upstream are not (yet) ported:
 
-- **Export formats** — PNG, SVG, PGF/TikZ (LaTeX), and FCD. PDF, EPS, and JPG export from FidoCadJ are not yet implemented.
-- **Locales** — the i18n framework is in place but currently only the English bundle ships. FidoCadJ has 10+ translations.
+- **Export formats** - PNG, SVG, PGF/TikZ (LaTeX), and FCD. PDF, EPS, and JPG export from FidoCadJ are not yet implemented.
+- **Locales** - the i18n framework is in place but currently only the English bundle ships. FidoCadJ has 10+ translations.
 - **Platform integrations** — there is no Android-specific build; the browser version covers mobile via touch events.
-- **Print** — native print dialog is delegated to the browser's built-in print.
-- **LaTeX** — PGF and TikZ export for LaTeX documents is implemented. Live KaTeX math rendering in text primitives is also available.
+- **Print** - native print dialog is delegated to the browser's built-in print.
+- **PCB** — PCB drawing tools and the PCB standard library have been intentionally removed. Single-layer hand-drawn PCBs are anachronistic in 2026. Refer to FidoCadJ if you need this feature. The app still supports rendering PCB primitives for backward compatibility. 
 
 If you need any of the missing pieces, FidoCadJ remains fully supported and can read/write the same `.fcd` files.
 
