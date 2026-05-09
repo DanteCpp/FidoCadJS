@@ -132,7 +132,6 @@ FidoCadJS bundles the standard FidoCadJ libraries under `public/lib/`:
 | Electrical symbols | `elettrotecnica_en.fcl` | Power and electrotechnical symbols |
 | EY Libraries | `EY_Libraries.fcl` | ElectroYou community symbols |
 | IHRAM 3.1 | `IHRAM_en.fcl` | Specialty / amateur radio symbols (version 3.1) |
-| PCB library | `PCB_en.fcl` | PCB footprints and layout symbols |
 
 Users can also load additional `.fcl` files into the User Library from the macro picker; these persist across reloads in `localStorage`.
 
