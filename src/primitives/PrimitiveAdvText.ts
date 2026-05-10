@@ -96,15 +96,11 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         // (the overlay renders these via KaTeX instead)
         if (TeXMode.active && this.txt.includes('$')) return;
 
-        // Only invalidate cache when zoom/mirror state actually changes,
-        // not on every render frame.
-        const newYmag = coordSys.getYMagnitude();
-        const newMirror = coordSys.getMirror();
-        this.changed = this.changed
-            || this.ymagnitude !== newYmag
-            || this.coordmirroring !== newMirror;
-        this.ymagnitude = newYmag;
-        this.coordmirroring = newMirror;
+        // Always recompute font metrics when rendering — the zoom/mirror
+        // may have changed since the last draw call.
+        this.changed = true;
+        this.ymagnitude = coordSys.getYMagnitude();
+        this.coordmirroring = coordSys.getMirror();
 
         if (this.changed) {
             this.changed = false;
