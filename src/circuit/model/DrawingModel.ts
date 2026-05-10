@@ -58,11 +58,14 @@ export class DrawingModel {
 
     addPrimitive(p: GraphicPrimitive, sort: boolean,
         ua: { saveUndoState(): void; setModified(b: boolean): void } | null): void {
-        this.primitiveVector.push(p);
-        if (sort) this.sortPrimitiveLayers();
+        // Save undo state BEFORE mutation so undo can restore pre-change state
         if (ua !== null) {
             ua.saveUndoState();
             ua.setModified(true);
+        }
+        this.primitiveVector.push(p);
+        if (sort) this.sortPrimitiveLayers();
+        if (ua !== null) {
             this.changedFlag = true;
         }
     }

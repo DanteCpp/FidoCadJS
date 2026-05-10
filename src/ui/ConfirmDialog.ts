@@ -6,6 +6,11 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
+function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export class ConfirmDialog {
     static show(title: string, message: string, okLabel: string = 'OK', cancelLabel: string = 'Cancel'): Promise<boolean> {
         return new Promise((resolve) => {
@@ -23,15 +28,15 @@ export class ConfirmDialog {
             dialog.innerHTML =
                 `<div style="padding:10px 16px; background:#f0f0f0; border-bottom:1px solid #ddd; ` +
                 `display:flex; align-items:center; justify-content:space-between;">` +
-                `<span style="font-weight:bold; font-size:13px;">${title}</span>` +
+                `<span style="font-weight:bold; font-size:13px;">${escapeHtml(title)}</span>` +
                 `<button id="confirmClose" style="border:none; background:none; cursor:pointer; font-size:14px; color:#888;">✕</button>` +
                 `</div>` +
-                `<div style="padding:20px 16px; line-height:1.5;">${message}</div>` +
+                `<div style="padding:20px 16px; line-height:1.5;">${escapeHtml(message)}</div>` +
                 `<div style="padding:12px 16px; border-top:1px solid #ddd; display:flex; justify-content:flex-end; gap:8px;">` +
                 `<button id="confirmCancel" style="padding:6px 16px; border:1px solid #ccc; border-radius:3px; ` +
-                `background:#f5f5f5; cursor:pointer; font-size:12px;">${cancelLabel}</button>` +
+                `background:#f5f5f5; cursor:pointer; font-size:12px;">${escapeHtml(cancelLabel)}</button>` +
                 `<button id="confirmOk" style="padding:6px 16px; border:1px solid #5a8fc0; border-radius:3px; ` +
-                `background:#5a8fc0; color:white; cursor:pointer; font-size:12px;">${okLabel}</button>` +
+                `background:#5a8fc0; color:white; cursor:pointer; font-size:12px;">${escapeHtml(okLabel)}</button>` +
                 `</div>`;
 
             overlay.appendChild(dialog);

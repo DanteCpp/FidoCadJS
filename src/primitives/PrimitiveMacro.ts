@@ -39,6 +39,31 @@ export class PrimitiveMacro extends GraphicPrimitive {
     /** Set by Export (Phase 2). */
     static exportFn: MacroExportFn | null = null;
 
+    /** Returns true when all three injection hooks (parse, draw, export) are wired. */
+    static isReady(): boolean {
+        return PrimitiveMacro.parserFn !== null
+            && PrimitiveMacro.drawFn !== null
+            && PrimitiveMacro.exportFn !== null;
+    }
+
+    /** Asserts that the relevant injection hook is wired, throwing a descriptive error if not. */
+    private static assertReady(operation: 'parse' | 'draw' | 'export'): void {
+        switch (operation) {
+            case 'parse':
+                if (PrimitiveMacro.parserFn === null)
+                    throw new Error('PrimitiveMacro.parse: parserFn not injected. Ensure ParserActions is constructed first.');
+                break;
+            case 'draw':
+                if (PrimitiveMacro.drawFn === null)
+                    throw new Error('PrimitiveMacro.draw: drawFn not injected. Call registerDrawingHooks() before rendering.');
+                break;
+            case 'export':
+                if (PrimitiveMacro.exportFn === null)
+                    throw new Error('PrimitiveMacro.export: exportFn not injected. Call registerExportHooks() before exporting.');
+                break;
+        }
+    }
+
     private readonly library: Map<string, MacroDesc>;
     private readonly layers: LayerDesc[];
     private o: number = 0;
@@ -115,8 +140,9 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.macroModel.setLibrary(this.library);
         this.macroModel.setLayers(layerV);
         this.changed = true;
-        if (this.macroDesc !== null && PrimitiveMacro.parserFn !== null) {
-            PrimitiveMacro.parserFn(this.macroModel, this.macroDesc);
+        if (this.macroDesc !== null) {
+            PrimitiveMacro.assertReady('parse');
+            PrimitiveMacro.parserFn!(this.macroModel, this.macroDesc);
         }
     }
 
@@ -158,6 +184,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.macroModel.setDrawOnlyPads(this.drawOnlyPads);
 
         if (PrimitiveMacro.drawFn !== null) {
+            PrimitiveMacro.assertReady('draw');
             PrimitiveMacro.drawFn(this.macroModel, g, this.macroCoord);
         }
 
@@ -336,6 +363,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
 
         // Phase 2: call PrimitiveMacro.exportFn(this.macroModel, exp, this.exportInvisible, mc)
         if (PrimitiveMacro.exportFn !== null) {
+            PrimitiveMacro.assertReady('export');
             PrimitiveMacro.exportFn(this.macroModel, exp, this.exportInvisible, mc);
         }
         this.exportText(exp, cs, this.drawOnlyLayer);

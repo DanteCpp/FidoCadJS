@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.4-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-browser-lightgrey.svg)
-![Tests](https://img.shields.io/badge/tests-14%20suites-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-17%20suites-brightgreen.svg)
 
 **A browser-based electronic schematic editor fully compatible with the FidoCad (fdc) format.**
 
@@ -188,8 +188,8 @@ FidoCadJS/
     │   ├── geom/            # Coordinate mapping, geometry
     │   ├── layers/          # Layer definitions
     │   ├── macropicker/     # Library tree browser
-    │   ├── ui/              # Dialogs, menus, context menu
-    │   ├── undo/            # Undo/redo manager
+    │   ├── ui/              # Dialogs, menus, context menu, toolbar, properties panel
+    │   ├── undo/            # Undo/redo managers
     │   ├── settings/        # Persisted settings
     │   ├── i18n/            # Internationalization
     │   └── globals/         # Constants and utilities
@@ -269,7 +269,10 @@ npm run test:run
 | `test/export/export-tikz.test.ts` | TikZ export for LaTeX — all primitives, dash patterns, arrows |
 | `test/graphic/tex-renderer.test.ts` | KaTeX math rendering: inline, display, mixed, edge cases |
 | `test/geom/map-coordinates.test.ts` | Coordinate system mapping, zoom, orientation, snap |
+| `test/primitives/primitive-edge-cases.test.ts` | Per-primitive toString/parseTokens edge cases, negative coords, multi-word text |
+| `test/settings/settings-manager.test.ts` | SettingsManager validation, defaults, localStorage persistence, error handling |
 | `test/undo/undo-manager.test.ts` | Undo/redo stack, eviction, library state |
+| `test/undo/undo-actions.test.ts` | UndoActions correctness — add, move, delete, rotate, mirror undo |
 | `test/globals/globals.test.ts` | Path/extension utilities, coordinate parsing |
 | `test/layers/layer-desc.test.ts` | Layer model, StandardLayers |
 | `test/librarymodel/library-model.test.ts` | Library hierarchy, CRUD, events |

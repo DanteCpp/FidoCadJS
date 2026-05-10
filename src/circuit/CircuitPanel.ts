@@ -41,6 +41,9 @@ import { InPlaceTextEditor } from '../ui/InPlaceTextEditor.js';
 import { ContextMenu } from '../ui/ContextMenu.js';
 import { AddElements } from './controllers/AddElements.js';
 import { MenuBar } from '../ui/MenuBar.js';
+import { KeyboardController } from './controllers/KeyboardController.js';
+import type { KeyboardHost } from './controllers/KeyboardController.js';
+import { ClipboardController } from './controllers/ClipboardController.js';
 
 export class CircuitPanel {
     private container: HTMLElement;
@@ -109,7 +112,8 @@ export class CircuitPanel {
     private static readonly DBLCLICK_TIME_MS = 400;
     private static readonly DBLCLICK_DIST_PX = 5;
 
-    private clipboard: string = '';
+    private clipboardController: ClipboardController;
+    private keyboardController: KeyboardController;
     private contextMenu!: ContextMenu;
     private contextMenuLogX: number = 0;
     private contextMenuLogY: number = 0;
@@ -194,6 +198,19 @@ export class CircuitPanel {
 
         // Initialize context menu — mount on body to avoid overflow:hidden clipping
         this.contextMenu = new ContextMenu();
+
+        // Initialize clipboard controller (before keyboard, which depends on it)
+        this.clipboardController = new ClipboardController(
+            this.selectionActions, this.parserActions, this.editorActions,
+            this.undoActions, this.mapCoordinates
+        );
+        this.clipboardController.onRenderRequested = () => this.render();
+        this.clipboardController.onUndoStateChange = () => this.onUndoStateChange?.();
+
+        // Initialize keyboard controller
+        this.keyboardController = new KeyboardController(
+            this as unknown as KeyboardHost, this.clipboardController
+        );
 
         // Set initial cursor
         this.canvas.style.cursor = this.cursorForTool(this.currentTool);
@@ -1191,7 +1208,10 @@ export class CircuitPanel {
 
     clearCircuit(): void {
         this.model.getPrimitiveVector().splice(0);
-        this.undoActions = new UndoActions(this.parserActions);
+        // Reset existing undo stack rather than replacing the instance,
+        // so dependent controllers (EditorActions, AddElements, etc.) keep
+        // valid references.
+        this.undoActions.reset();
         this.selectionActions.setSelectionAll(false);
         this.ghostPrimitive = null;
         this.selRectActive = false;
@@ -1201,71 +1221,35 @@ export class CircuitPanel {
         this.onUndoStateChange?.();
     }
 
-    // ─── Clipboard ───────────────────────────────────────────────────────────
+    // ─── KeyboardHost interface implementation ───────────────────────────────
 
-    copySelected(): void {
-        const selected = this.selectionActions.getSelectedPrimitives();
-        if (selected.length === 0) return;
-        const text = this.selectionActions.getSelectedString(true, this.parserActions);
-        this.clipboard = text;
-        // Also push to the system clipboard so it can be pasted into other apps
-        if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(text).catch(() => { /* ignore permission errors */ });
-        }
+    isTextEditActive(): boolean { return this.textEditDialog.isActive(); }
+    getMenuBar(): MenuBar | null { return this.menuBar; }
+    cancelTextEdit(): void { this.onCancelTextEdit?.(); }
+    deselectAll(): void { this.selectionActions.setSelectionAll(false); }
+    clearGhostAndSelection(): void {
+        this.isMovingSelected = false;
+        this.isMoveAllDrag = false;
+        this.mouseDownPrimHit = null;
+        this.dragHandleIndex = GraphicPrimitive.NO_DRAG;
+        this.dragHandlePrim = null;
+        this.ghostPrimitive = null;
+        this.selRectActive = false;
     }
-
-    cutSelected(): void {
-        this.copySelected();
-        this.editorActions.deleteAllSelected(true);
+    nudgeSelected(dx: number, dy: number): void {
+        this.editorActions.moveAllSelected(dx, dy);
+        // moveAllSelected already saves undo state — do not double-save
         this.render();
         this.onUndoStateChange?.();
     }
 
-    async paste(): Promise<void> {
-        let text = '';
-        // Prefer system clipboard
-        if (navigator.clipboard?.readText) {
-            try {
-                text = await navigator.clipboard.readText();
-            } catch {
-                // permission denied or non-secure context – fall back
-            }
-        }
-        // Fall back to internal clipboard if system read yielded nothing
-        if (!text) {
-            text = this.clipboard;
-        }
-        if (!text) return;
+    // ─── Clipboard (delegated) ───────────────────────────────────────────────
 
-        // Deselect everything so only pasted items end up selected
-        this.selectionActions.setSelectionAll(false);
-        this.parserActions.addString(text, true);
-        // Offset pasted selection by one grid step so it doesn't overlap the original
-        const step = this.mapCoordinates.getXGridStep();
-        this.editorActions.moveAllSelected(step, step);
-        this.undoActions.saveUndoState();
-        this.render();
-        this.onUndoStateChange?.();
-    }
-
-    duplicateSelected(): void {
-        this.copySelected();
-        // duplicate should not overwrite the OS clipboard when possible, so keep
-        // internal buffer hot and let paste fall back to it.
-        void this.paste();
-    }
-
-    // Return true if the user might be able to paste (either via system clipboard
-    // or the internal fallback).
-    canPaste(): boolean {
-        if (this.clipboard.length > 0) return true;
-        try {
-            if (typeof (navigator as any).clipboard?.readText === 'function') return true;
-        } catch {
-            /* non-secure context or permission denied */
-        }
-        return false;
-    }
+    copySelected(): void { this.clipboardController.copySelected(); }
+    cutSelected(): void { this.clipboardController.cutSelected(); }
+    async paste(): Promise<void> { await this.clipboardController.paste(); }
+    duplicateSelected(): void { this.clipboardController.duplicateSelected(); }
+    canPaste(): boolean { return this.clipboardController.canPaste(); }
 
     // ─── Context Menu ─────────────────────────────────────────────────────────
 
@@ -1281,7 +1265,7 @@ export class CircuitPanel {
 
         const first = this.selectionActions.getFirstSelectedPrimitive();
         const somethingSelected = first !== null;
-        const hasCb = this.clipboard.length > 0;
+        const hasCb = this.clipboardController.canPaste();
         const isNodePrim = this.selectionActions.isUniquePrimitiveSelected() &&
             (first instanceof PrimitivePolygon || first instanceof PrimitiveComplexCurve);
         const isMacroPrim = this.selectionActions.isUniquePrimitiveSelected() &&
@@ -1417,30 +1401,45 @@ export class CircuitPanel {
         // Move and transform each primitive from the macro to the canvas position
         const saved = this.undoActions.saveUndoState.bind(this.undoActions);
         for (const prim of tempModel.getPrimitiveVector()) {
-            // Apply orientation transformations before positioning
-            let px = prim.virtualPoint[0]?.x ?? 0;
-            let py = prim.virtualPoint[0]?.y ?? 0;
+            if (!prim.virtualPoint[0]) continue;
+
+            // Macro primitives are stored in a local coordinate system with origin at (100, 100).
+            // Compute the primitive's position relative to the macro origin, apply
+            // mirror/rotation, then place it at the macro's global position.
+            let relX = prim.virtualPoint[0].x - 100;
+            let relY = prim.virtualPoint[0].y - 100;
 
             // Apply mirror if needed
             if (mirrored) {
-                px = -px;
+                relX = -relX;
             }
 
             // Apply orientation rotation (0=0°, 1=90°, 2=180°, 3=270°)
             switch (orientation) {
                 case 1:
-                    [px, py] = [-py, px];
+                    [relX, relY] = [-relY, relX];
                     break;
                 case 2:
-                    px = -px; py = -py;
+                    relX = -relX; relY = -relY;
                     break;
                 case 3:
-                    [px, py] = [py, -px];
+                    [relX, relY] = [relY, -relX];
                     break;
             }
 
-            prim.virtualPoint; // ensure virtual point array initialized
-            prim.movePrimitive(posX - 100, posY - 100);
+            // Move the primitive so its first control point lands at the transformed position.
+            // Also rotate the primitive itself if it's text (other types don't have orientation).
+            const targetX = posX + relX;
+            const targetY = posY + relY;
+            const dx = targetX - prim.virtualPoint[0].x;
+            const dy = targetY - prim.virtualPoint[0].y;
+            prim.movePrimitive(dx, dy);
+
+            // For text primitives, also apply the macro's orientation rotation to the text itself
+            if (prim instanceof PrimitiveAdvText) {
+                prim.setOrientation((prim.getOrientation() + orientation * 90) % 360);
+            }
+
             prim.setLayer(layer);
             this.model.addPrimitive(prim, false, null);
         }
@@ -1452,326 +1451,14 @@ export class CircuitPanel {
         this.render();
     }
 
-    // ─── Keyboard ─────────────────────────────────────────────────────────────
+    // ─── Keyboard (delegated) ────────────────────────────────────────────────
 
     addKeyboardListeners(): void {
-        document.addEventListener('keydown', this._handleDocumentKeyDown);
+        this.keyboardController.attach();
     }
 
     removeKeyboardListeners(): void {
-        document.removeEventListener('keydown', this._handleDocumentKeyDown);
-    }
-
-    // Central document-level key handler.
-    // When focus is on a text input / textarea / contentEditable element,
-    // only global app shortcuts (Ctrl+N/O/S/E/P/W) are forwarded;
-    // tool shortcuts and clipboard operations are suppressed so the
-    // user can type normally.  Otherwise every keystroke goes through.
-    private _handleDocumentKeyDown = (e: KeyboardEvent): void => {
-        const target = e.target as HTMLElement;
-        const tagName = target.tagName.toLowerCase();
-        const isInput = tagName === 'input' || tagName === 'textarea' ||
-            tagName === 'select' || target.isContentEditable;
-
-        if (isInput) {
-            const key = e.key.toLowerCase();
-            const isCtrlOrMeta = e.ctrlKey || e.metaKey;
-
-            // Global file-level shortcuts that should work app-wide
-            if (isCtrlOrMeta && (key === 'n' || key === 'o' || key === 's' ||
-                key === 'e' || key === 'p' || key === 'w')) {
-                this.onKeyDown(e);
-                return;
-            }
-
-            // Escape cancels the TEXT tool even while focus is in a text
-            // input (user just placed text and is editing it).
-            if (e.key === 'Escape' && !this.textEditDialog.isActive() &&
-                this.currentTool === ElementsEdtActions.TEXT) {
-                this.onKeyDown(e);
-                return;
-            }
-
-            return;
-        }
-
-        this.onKeyDown(e);
-    };
-
-    private onKeyDown(e: KeyboardEvent): void {
-        // Don't process canvas shortcuts while in-place text editor is active
-        if (this.textEditDialog.isActive()) {
-            return;
-        }
-
-        const key = e.key.toLowerCase();
-        const isCtrlOrMeta = e.ctrlKey || e.metaKey;
-        const isAlt = e.altKey;
-
-        // ===== CLIPBOARD OPERATIONS =====
-        if (key === 'x' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.cutSelected();
-            return;
-        }
-
-        if (key === 'c' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.copySelected();
-            return;
-        }
-
-        if (key === 'v' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.paste();
-            return;
-        }
-
-        if (key === 'd' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.duplicateSelected();
-            return;
-        }
-
-        // ===== FILE OPERATIONS =====
-        if (key === 'n' && isCtrlOrMeta) {
-            e.preventDefault();
-            // Trigger new file via menu bar
-            this.menuBar?.newFile();
-            return;
-        }
-
-        if (key === 'o' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.openFile();
-            return;
-        }
-
-        if (key === 's' && isCtrlOrMeta && !e.shiftKey) {
-            e.preventDefault();
-            this.menuBar?.saveFile();
-            return;
-        }
-
-        if (key === 's' && isCtrlOrMeta && e.shiftKey) {
-            e.preventDefault();
-            this.menuBar?.saveFileAs();
-            return;
-        }
-
-        if (key === 'e' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.exportFile();
-            return;
-        }
-
-        if (key === 'p' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.printFile();
-            return;
-        }
-
-        if (key === 'w' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.closeFile();
-            return;
-        }
-
-        // ===== UNDO/REDO =====
-        if (key === 'z' && isCtrlOrMeta && !e.shiftKey) {
-            e.preventDefault();
-            this.undo();
-            return;
-        }
-
-        if ((key === 'z' && isCtrlOrMeta && e.shiftKey) || (key === 'y' && isCtrlOrMeta)) {
-            e.preventDefault();
-            this.redo();
-            return;
-        }
-
-        // ===== TOOL SELECTION (single key, case-insensitive) =====
-        // A or Escape: Selection tool
-        if (key === 'a' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.SELECTION);
-            this.ghostPrimitive = null;
-            this.selRectActive = false;
-            this.render();
-            return;
-        }
-
-        // Space: Fit to view
-        if (key === ' ' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.zoomToFit();
-            return;
-        }
-
-        if (key === 'escape') {
-            e.preventDefault();
-
-            // Close any open text-editing UI (properties sidebar, etc.)
-            this.onCancelTextEdit?.();
-
-            // Cancel in-progress operations
-            this.isMovingSelected = false;
-            this.isMoveAllDrag = false;
-            this.mouseDownPrimHit = null;
-            this.dragHandleIndex = GraphicPrimitive.NO_DRAG;
-            this.dragHandlePrim = null;
-            this.ghostPrimitive = null;
-            this.selRectActive = false;
-
-            // Deselect all objects
-            this.selectionActions.setSelectionAll(false);
-
-            // Switch to Selection tool (resets clickNumber, successiveMove, primEdit)
-            this.setTool(ElementsEdtActions.SELECTION);
-
-            this.render();
-            return;
-        }
-
-        // L: Line tool
-        if (key === 'l' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.LINE);
-            return;
-        }
-
-        // T: Text tool
-        if (key === 't' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.TEXT);
-            return;
-        }
-
-        // B: Bezier curve tool
-        if (key === 'b' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.BEZIER);
-            return;
-        }
-
-        // P: Polygon tool
-        if (key === 'p' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.POLYGON);
-            return;
-        }
-
-        // O: Complex curve tool
-        if (key === 'o' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.COMPLEXCURVE);
-            return;
-        }
-
-        // E: Ellipse tool
-        if (key === 'e' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.ELLIPSE);
-            return;
-        }
-
-        // G: Rectangle tool
-        if (key === 'g' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.RECTANGLE);
-            return;
-        }
-
-        // C: Connection tool
-        if (key === 'c' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.CONNECTION);
-            return;
-        }
-
-        // I: PCB track tool
-        if (key === 'i' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.PCB_LINE);
-            return;
-        }
-
-        // Z: PCB pad tool
-        if (key === 'z' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.PCB_PAD);
-            return;
-        }
-
-        // ===== TRANSFORM OPERATIONS (when something is selected) =====
-        // M: Move selected elements
-        if (key === 'm' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.startMoveSelected();
-            return;
-        }
-
-        // R: Rotate selected elements
-        if (key === 'r' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.rotateSelected();
-            return;
-        }
-
-        // S: Mirror selected elements
-        if (key === 's' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.mirrorSelected();
-            return;
-        }
-
-        // Delete or Backspace: Delete selected objects
-        if (key === 'delete' || key === 'backspace') {
-            e.preventDefault();
-            this.deleteSelected();
-            return;
-        }
-
-        // ===== NUDGE WITH ALT + ARROW KEYS =====
-        if (isAlt) {
-            const nudgeStep = 1; // 1 logical unit
-            let dx = 0, dy = 0;
-
-            if (key === 'arrowleft') {
-                e.preventDefault();
-                dx = -nudgeStep;
-            } else if (key === 'arrowright') {
-                e.preventDefault();
-                dx = nudgeStep;
-            } else if (key === 'arrowup') {
-                e.preventDefault();
-                dy = nudgeStep;
-            } else if (key === 'arrowdown') {
-                e.preventDefault();
-                dy = -nudgeStep;
-            }
-
-            if (dx !== 0 || dy !== 0) {
-                this.editorActions.moveAllSelected(dx, dy);
-                this.undoActions.saveUndoState();
-                this.render();
-                this.onUndoStateChange?.();
-                return;
-            }
-        }
-
-        // ===== ZOOM CONTROLS =====
-        if (key === '+' || key === '=') {
-            e.preventDefault();
-            this.zoomIn();
-            return;
-        }
-
-        if (key === '-') {
-            e.preventDefault();
-            this.zoomOut();
-            return;
-        }
+        this.keyboardController.detach();
     }
 }
 
