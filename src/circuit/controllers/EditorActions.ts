@@ -51,14 +51,13 @@ export class EditorActions {
         const ix = first.getFirstPoint().x;
         const iy = first.getFirstPoint().y;
 
-        // Save undo BEFORE mutation so undo restores pre-rotation state
-        this.undoActions?.saveUndoState();
-
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 prim.rotatePrimitive(false, ix, iy);
             }
         }
+
+        this.undoActions?.saveUndoState();
     }
 
     /** Mirror all selected primitives horizontally */
@@ -68,39 +67,35 @@ export class EditorActions {
 
         const ix = first.getFirstPoint().x;
 
-        // Save undo BEFORE mutation
-        this.undoActions?.saveUndoState();
-
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 prim.mirrorPrimitive(ix);
             }
         }
+
+        this.undoActions?.saveUndoState();
     }
 
     /** Move all selected primitives by dx, dy */
     moveAllSelected(dx: number, dy: number): void {
-        // Save undo BEFORE mutation
-        this.undoActions?.saveUndoState();
-
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 prim.movePrimitive(dx, dy);
             }
         }
+        this.undoActions?.saveUndoState();
     }
 
     /** Delete all selected primitives */
     deleteAllSelected(saveState: boolean): void {
         const v = this.model.getPrimitiveVector();
-        // Save undo BEFORE mutation
-        if (saveState && this.undoActions) {
-            this.undoActions.saveUndoState();
-        }
         for (let i = v.length - 1; i >= 0; i--) {
             if (v[i].isSelected()) {
                 v.splice(i, 1);
             }
+        }
+        if (saveState && this.undoActions) {
+            this.undoActions.saveUndoState();
         }
     }
 
