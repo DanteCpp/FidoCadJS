@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.4-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-browser-lightgrey.svg)
-![Tests](https://img.shields.io/badge/tests-16%20suites-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-16%20unit%20%7C%2013%20e2e-brightgreen.svg)
 
 **A browser-based electronic schematic editor fully compatible with the FidoCad (fdc) format.**
 
@@ -245,38 +245,63 @@ npm run build
 | `npm run preview` | Preview the production build locally |
 | `npm test` | Run Vitest in watch mode |
 | `npm run test:run` | Run Vitest once |
+| `npm run test:e2e` | Run Playwright E2E tests (headless) |
+| `npm run test:e2e:ui` | Run Playwright E2E tests (interactive UI) |
 | `npm run typecheck` | TypeScript type checking (`tsc --noEmit`) |
 
 ### Testing
 
-FidoCadJS uses **Vitest** with **jsdom** for a browser-like test environment. Tests are in `test/**/*.test.ts`.
+FidoCadJS has two test suites:
 
-**Run all tests:**
+**Unit tests** — [Vitest](https://vitest.dev) with [jsdom](https://github.com/jsdom/jsdom) for browser-like DOM.
+
 ```bash
-npm run test:run
+npm run test:run        # Run once (CI)
+npm test                # Watch mode
+```
+
+**E2E tests** — [Playwright](https://playwright.dev) driving headless Chromium for real browser interaction (canvas clicks, keyboard input, export verification).
+
+```bash
+npm run test:e2e        # Run all E2E tests (headless)
+npm run test:e2e:ui     # Interactive UI mode with time-travel
 ```
 
 **Current test suites:**
-| Test | What it validates |
-|------|-------------------|
-| `test/parser/primitive-round-trip.test.ts` | FCL format: all 11 primitive types survive parse→serialize→parse with identical output |
-| `test/circuit/model/drawing-model.test.ts` | DrawingModel construction, primitive manipulation, dirty flag |
-| `test/circuit/controllers/add-elements.test.ts` | Creating all primitive types via tool handlers |
-| `test/circuit/controllers/selection-actions.test.ts` | Selection queries, multi-select, get-text |
-| `test/circuit/keyboard-shortcuts.test.ts` | All keyboard shortcuts: tools, transforms, zoom, clipboard, nudge, input blocking |
-| `test/export/export-svg.test.ts` | SVG export produces correct XML for all primitive types |
-| `test/export/export-pgf.test.ts` | PGF export for LaTeX — state tracking, arrows, dashes, layers, all primitives |
-| `test/export/export-tikz.test.ts` | TikZ export for LaTeX — all primitives, dash patterns, arrows |
-| `test/graphic/tex-renderer.test.ts` | KaTeX math rendering: inline, display, mixed, edge cases |
-| `test/geom/map-coordinates.test.ts` | Coordinate system mapping, zoom, orientation, snap |
-| `test/primitives/primitive-edge-cases.test.ts` | Per-primitive toString/parseTokens edge cases, negative coords, multi-word text |
-| `test/settings/settings-manager.test.ts` | SettingsManager validation, defaults, localStorage persistence, error handling |
-| `test/undo/undo-actions.test.ts` | UndoActions correctness — add, move, delete, rotate, mirror undo |
-| `test/globals/globals.test.ts` | Path/extension utilities, coordinate parsing |
-| `test/layers/layer-desc.test.ts` | Layer model, StandardLayers |
-| `test/librarymodel/library-model.test.ts` | Library hierarchy, CRUD, events |
 
-For more detailed testing guidelines, see [TESTS.md](test/TESTS.md).
+| Suite | Type | What it validates |
+|-------|------|-------------------|
+| `test/parser/primitive-round-trip.test.ts` | Unit | FCL format: all 11 primitive types survive parse→serialize→parse with identical output |
+| `test/circuit/model/drawing-model.test.ts` | Unit | DrawingModel construction, primitive manipulation, dirty flag |
+| `test/circuit/controllers/add-elements.test.ts` | Unit | Creating all primitive types via tool handlers |
+| `test/circuit/controllers/selection-actions.test.ts` | Unit | Selection queries, multi-select, get-text |
+| `test/circuit/keyboard-shortcuts.test.ts` | Unit | All keyboard shortcuts: tools, transforms, zoom, clipboard, nudge, input blocking |
+| `test/export/export-svg.test.ts` | Unit | SVG export produces correct XML for all primitive types |
+| `test/export/export-pgf.test.ts` | Unit | PGF export for LaTeX — state tracking, arrows, dashes, layers, all primitives |
+| `test/export/export-tikz.test.ts` | Unit | TikZ export for LaTeX — all primitives, dash patterns, arrows |
+| `test/graphic/tex-renderer.test.ts` | Unit | KaTeX math rendering: inline, display, mixed, edge cases |
+| `test/geom/map-coordinates.test.ts` | Unit | Coordinate system mapping, zoom, orientation, snap |
+| `test/primitives/primitive-edge-cases.test.ts` | Unit | Per-primitive toString/parseTokens edge cases, negative coords, multi-word text |
+| `test/settings/settings-manager.test.ts` | Unit | SettingsManager validation, defaults, localStorage persistence, error handling |
+| `test/undo/undo-actions.test.ts` | Unit | UndoActions correctness — add, move, delete, rotate, mirror undo |
+| `test/globals/globals.test.ts` | Unit | Path/extension utilities, coordinate parsing |
+| `test/layers/layer-desc.test.ts` | Unit | Layer model, StandardLayers |
+| `test/librarymodel/library-model.test.ts` | Unit | Library hierarchy, CRUD, events |
+| `test/e2e/app-loads.test.ts` | E2E | App initialisation, canvas, toolbar, libraries |
+| `test/e2e/drawing-tools.test.ts` | E2E | Drawing all 11 primitives via keyboard + mouse clicks |
+| `test/e2e/selection-and-transform.test.ts` | E2E | Click-select, rubber-band, rotate, mirror, nudge, delete, move |
+| `test/e2e/undo-redo.test.ts` | E2E | Undo/redo state tracking and keyboard shortcuts |
+| `test/e2e/clipboard.test.ts` | E2E | Copy, cut, duplicate via API + internal clipboard |
+| `test/e2e/zoom-pan.test.ts` | E2E | Zoom in/out, wheel, fit-to-view, pan |
+| `test/e2e/grid-snap.test.ts` | E2E | Grid visibility and snap-to-grid toggles |
+| `test/e2e/file-operations.test.ts` | E2E | New (Ctrl+N), load, save, view code |
+| `test/e2e/export.test.ts` | E2E | SVG, PGF, TikZ export + determinism |
+| `test/e2e/menu-bar.test.ts` | E2E | Menu bar dropdowns and keyboard file operations |
+| `test/e2e/keyboard-e2e.test.ts` | E2E | Keyboard shortcuts through full browser stack |
+| `test/e2e/macro-library.test.ts` | E2E | Library panel, macro placement via API |
+| `test/e2e/edge-cases.test.ts` | E2E | Empty/degenerate, rapid ops, long docs, negative coords, resize |
+
+For detailed test case descriptions, see [TESTS.md](test/TESTS.md).
 
 ### Coding Conventions
 

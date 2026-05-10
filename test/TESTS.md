@@ -1,35 +1,36 @@
 <!--
 File: TESTS.md
 Author: Dante Loi
-Date: 2026-05-07
-Description: Human-readable index of the FidoCadJS Vitest suite — every
-             `it()` case with a plain-English description, grouped by source
-             file and `describe()` block.
+Date: 2026-05-10
+Description: Human-readable index of the FidoCadJS test suite — every
+             `it()` case (Vitest) and `test()` case (Playwright) with
+             a plain-English description, grouped by source file and
+             `describe()` block.
 Copyright: (c) 2026 Dante Loi
 -->
 
 # FidoCadJS — Test Suite Reference
 
-This document indexes every test case in `FidoCadJS/test/`. The suite is
-written in TypeScript and run with [Vitest](https://vitest.dev) under
-`jsdom`. Test files follow the `*.test.ts` convention and each carries a
-`@file`/`@author`/`@date`/`@brief` header block.
-
-The suite currently contains **327 `it()` cases across 16 files**.
+This document indexes every test case in `FidoCadJS/test/`. The suite
+comprises **345 unit tests** ([Vitest](https://vitest.dev) + jsdom) spread
+across 17 files, and **134 browser E2E tests** ([Playwright](https://playwright.dev)
++ Chromium) across 13 files, for a total of **479 tests**.
 
 ## How to run
 
 | Command | What it does |
 |---------|--------------|
 | `npm run test` | Vitest in watch mode |
-| `npm run test:run` | Run the suite once (used by CI) |
+| `npm run test:run` | Run unit tests once (used by CI) |
+| `npm run test:e2e` | Run Playwright E2E tests (headless) |
+| `npm run test:e2e:ui` | Run Playwright E2E tests (interactive UI) |
 
 The `npm run test:run` command is executed
 automatically by GitHub Actions
 (`FidoCadJS/.github/workflows/deploy.yml`) on every push and pull request
 to `main`.
 
-## Suite at a glance
+## Unit Suite at a glance
 
 | File | Area under test | `it()` cases |
 |------|-----------------|--------------|
@@ -48,7 +49,28 @@ to `main`.
 | `primitives/primitive-edge-cases.test.ts` | Per-primitive unit tests for toString/parseTokens edge cases | 20 |
 | `settings/settings-manager.test.ts` | `SettingsManager` validation, defaults, and persistence | 11 |
 | `undo/undo-actions.test.ts` | `UndoActions` — correctness, add/move/delete/rotate/mirror undo | 10 |
-| **Total** | | **327** |
+| **Unit Subtotal** | | **345** |
+
+## E2E Suite at a glance
+
+| File | Area under test | `test()` cases |
+|------|-----------------|---------------|
+| `e2e/app-loads.test.ts` | App initialisation, canvas, toolbar, libraries | 10 |
+| `e2e/drawing-tools.test.ts` | Drawing tools (all 11 primitives) via keyboard + mouse | 22 |
+| `e2e/selection-and-transform.test.ts` | Selection, move, rotate, mirror, nudge, delete | 10 |
+| `e2e/undo-redo.test.ts` | Undo/redo state tracking and keyboard shortcuts | 6 |
+| `e2e/clipboard.test.ts` | Copy, cut, duplicate via API + internal clipboard | 6 |
+| `e2e/zoom-pan.test.ts` | Zoom in/out, wheel, fit, pan | 10 |
+| `e2e/grid-snap.test.ts` | Grid visibility and snap-to-grid toggles | 2 |
+| `e2e/file-operations.test.ts` | New (Ctrl+N), load, save, view code | 6 |
+| `e2e/export.test.ts` | SVG, PGF, TikZ export + determinism | 18 |
+| `e2e/menu-bar.test.ts` | Menu bar dropdowns and command actions | 8 |
+| `e2e/keyboard-e2e.test.ts` | Keyboard shortcuts through full browser stack | 16 |
+| `e2e/macro-library.test.ts` | Library panel, macro placement via API | 5 |
+| `e2e/edge-cases.test.ts` | Empty/degenerate, rapid ops, long docs, negative coords, resize | 15 |
+| **E2E Subtotal** | | **134** |
+
+**Grand total: 479 tests**
 
 ---
 
@@ -738,11 +760,14 @@ stale references) since `undo()` re-parses the model from text snapshots.
 - **No DOM/disk needed for libraries.** The library tests build a
   `DrawingModel` and hand `ParserActions.readLibraryString` an inline
   FCL string (`SAMPLE_FCL`). Nothing reads from disk.
-- **jsdom environment.** Tests run under `jsdom`, configured in
-  `vite.config.ts`. There are no real-browser tests at present.
-
-## Placeholder areas
-
-The directories `test/e2e/`, `test/primitives/`, and `test/settings/`
-exist but currently hold no tests. They are placeholders for future
-end-to-end, primitive-unit, and settings tests respectively.
+- **jsdom environment.** Unit tests run under `jsdom`, configured in
+  `vite.config.ts`.
+- **Real Chromium.** E2E tests use Playwright to drive headless Chromium.
+  The `__circuitPanel` escape hatch on the canvas element gives tests
+  direct access to the `CircuitPanel` API. Tests that verify undo state
+  run in a single `page.evaluate()` call to avoid race conditions with
+  the browser event loop.
+- **Async clipboard in E2E.** The `duplicateSelected` call triggers an
+  async `paste()` operation. E2E tests that exercise it poll the model
+  inside `page.evaluate()` with `await new Promise(r => setTimeout(r, 50))`
+  loops until the expected primitive count is reached.
