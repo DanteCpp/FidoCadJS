@@ -228,6 +228,27 @@ describe('Primitive placement via tools', () => {
 
             expect(panel.getModel().getPrimitiveVector().length).toBe(20);
         });
+
+        it('renders primitives at widely spread coordinates without clipping', () => {
+            const panel = makePanel();
+            panel.setTool(ElementsEdtActions.CONNECTION);
+
+            // Place dots across a wide coordinate range (0 to 500)
+            const points = [
+                [10, 10], [50, 10], [100, 50], [200, 100],
+                [350, 20], [500, 80], [10, 400], [400, 450],
+                [20, 500], [450, 10],
+            ];
+            for (const [sx, sy] of points) {
+                clickCanvas(panel, sx, sy);
+            }
+
+            expect(panel.getModel().getPrimitiveVector().length).toBe(points.length);
+
+            // Call render — should not throw and should draw all primitives
+            // (We can't verify pixel output in jsdom, but we can verify no crash)
+            expect(() => panel.render()).not.toThrow();
+        });
     });
 });
 

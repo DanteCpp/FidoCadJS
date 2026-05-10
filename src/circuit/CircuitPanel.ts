@@ -969,8 +969,12 @@ export class CircuitPanel {
         const width = this.canvas.width;
         const height = this.canvas.height;
 
-        // Start with clean dirty rect: null means hitClip() always passes for full redraw
+        // Mark entire canvas as dirty so hitClip() passes for the first draw.
+        // Each subsequent draw expands the dirty rect via markDirty(), so all
+        // primitives render. Without this, the first primitive's bounds become
+        // the dirty rect and clip everything outside it.
         this.ctx.clearDirtyRect();
+        this.ctx.markDirtyFull(width, height);
 
         // Clear canvas with background color
         ctx.fillStyle = this.backgroundColor;
