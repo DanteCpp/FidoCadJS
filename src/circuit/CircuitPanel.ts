@@ -118,6 +118,8 @@ export class CircuitPanel {
     private contextMenuLogX: number = 0;
     private contextMenuLogY: number = 0;
     private menuBar: MenuBar | null = null;
+    private resizeObserver: ResizeObserver | null = null;
+    private boundOnResize: () => void = () => this.onResize();
     private isMovingSelected: boolean = false;
     private moveStartLogX: number = 0;
     private moveStartLogY: number = 0;
@@ -143,13 +145,13 @@ export class CircuitPanel {
         this.canvas.style.display = 'block';
         container.appendChild(this.canvas);
 
-        // Expose panel reference for E2E test access
+        // Expose panel reference for E2E test access (intentional escape hatch)
         (this.canvas as any).__circuitPanel = this;
 
         // Setup high-DPI canvas with ResizeObserver for robust sizing
         const dpr = window.devicePixelRatio || 1;
         let hasInitialized = false;
-        const ro = new ResizeObserver(() => {
+        this.resizeObserver = new ResizeObserver(() => {
             const w = container.clientWidth * dpr;
             const h = container.clientHeight * dpr;
             if (w <= 0 || h <= 0) return;
@@ -159,7 +161,7 @@ export class CircuitPanel {
             hasInitialized = true;
             this.render();
         });
-        ro.observe(container);
+        this.resizeObserver.observe(container);
 
         // Force initial layout computation
         container.offsetWidth;
@@ -234,7 +236,7 @@ export class CircuitPanel {
         });
 
         // Handle resize
-        window.addEventListener('resize', () => this.onResize());
+        window.addEventListener('resize', this.boundOnResize);
 
         // Mouse wheel zoom (toward cursor)
         this.canvas.addEventListener('wheel', (e) => this.onMouseWheel(e), { passive: false });
@@ -254,6 +256,16 @@ export class CircuitPanel {
         this.texOverlay.setAttribute('aria-hidden', 'true');
         container.style.position = 'relative';
         container.appendChild(this.texOverlay);
+    }
+
+    /** Remove all global listeners and observers. Call when the panel is unmounted. */
+    destroy(): void {
+        this.keyboardController.detach();
+        window.removeEventListener('resize', this.boundOnResize);
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
     }
 
     private onMouseWheel(e: WheelEvent): void {
@@ -957,9 +969,8 @@ export class CircuitPanel {
         const width = this.canvas.width;
         const height = this.canvas.height;
 
-        // Pre-fill dirty rect to full canvas so every hitClip() passes this render pass
+        // Start with clean dirty rect: null means hitClip() always passes for full redraw
         this.ctx.clearDirtyRect();
-        this.ctx.markDirtyFull(width, height);
 
         // Clear canvas with background color
         ctx.fillStyle = this.backgroundColor;

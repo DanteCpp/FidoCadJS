@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.4-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-browser-lightgrey.svg)
-![Tests](https://img.shields.io/badge/tests-17%20suites-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-16%20suites-brightgreen.svg)
 
 **A browser-based electronic schematic editor fully compatible with the FidoCad (fdc) format.**
 
@@ -271,7 +271,6 @@ npm run test:run
 | `test/geom/map-coordinates.test.ts` | Coordinate system mapping, zoom, orientation, snap |
 | `test/primitives/primitive-edge-cases.test.ts` | Per-primitive toString/parseTokens edge cases, negative coords, multi-word text |
 | `test/settings/settings-manager.test.ts` | SettingsManager validation, defaults, localStorage persistence, error handling |
-| `test/undo/undo-manager.test.ts` | Undo/redo stack, eviction, library state |
 | `test/undo/undo-actions.test.ts` | UndoActions correctness — add, move, delete, rotate, mirror undo |
 | `test/globals/globals.test.ts` | Path/extension utilities, coordinate parsing |
 | `test/layers/layer-desc.test.ts` | Layer model, StandardLayers |

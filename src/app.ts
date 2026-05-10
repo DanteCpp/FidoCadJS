@@ -170,7 +170,7 @@ class FidoCadJS {
         this.circuitPanel.clearCircuit();
     }
 
-    private importLibrary(content: string, fileName: string): void {
+    private async importLibrary(content: string, fileName: string): Promise<void> {
         let prefix = fileName.replace(/\.(?:fcl|txt)$/i, '').replace(/[^a-zA-Z0-9_-]/g, '_');
         if (!prefix) prefix = 'imported_lib';
 
@@ -184,9 +184,9 @@ class FidoCadJS {
 
         const existingPrefixes = UserLibraryStorage.getUserLibraryPrefixes();
         if (existingPrefixes.includes(prefix)) {
-            if (!confirm(`A user library with prefix "${prefix}" already exists. Overwrite it?`)) {
-                return;
-            }
+            const ok = await ConfirmDialog.show('Overwrite Library',
+                `A user library with prefix "${prefix}" already exists. Overwrite it?`);
+            if (!ok) return;
         }
 
         this.circuitPanel.loadLibraryString(content, prefix);
@@ -325,6 +325,7 @@ class FidoCadJS {
         ];
 
         try {
+            // Font Access API is experimental (https://developer.mozilla.org/en-US/docs/Web/API/Local_Font_Access_API)
             if ('queryLocalFonts' in navigator) {
                 const fontData = await (navigator as any).queryLocalFonts();
                 const families = new Set<string>();

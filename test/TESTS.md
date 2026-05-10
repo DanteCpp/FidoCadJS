@@ -15,7 +15,7 @@ written in TypeScript and run with [Vitest](https://vitest.dev) under
 `jsdom`. Test files follow the `*.test.ts` convention and each carries a
 `@file`/`@author`/`@date`/`@brief` header block.
 
-The suite currently contains **335 `it()` cases across 17 files**.
+The suite currently contains **327 `it()` cases across 16 files**.
 
 ## How to run
 
@@ -47,9 +47,8 @@ to `main`.
 | `parser/primitive-round-trip.test.ts` | FCD parser/serializer round-trips for all 11 primitives | 65 |
 | `primitives/primitive-edge-cases.test.ts` | Per-primitive unit tests for toString/parseTokens edge cases | 20 |
 | `settings/settings-manager.test.ts` | `SettingsManager` validation, defaults, and persistence | 11 |
-| `undo/undo-manager.test.ts` | Generic `UndoManager` stack | 8 |
 | `undo/undo-actions.test.ts` | `UndoActions` — correctness, add/move/delete/rotate/mirror undo | 10 |
-| **Total** | | **335** |
+| **Total** | | **327** |
 
 ---
 
@@ -513,23 +512,6 @@ FJC tokens in one test cannot leak into another.
 | Test name | What it verifies |
 |-----------|------------------|
 | `loads a simple library and makes macro parseable` | A library defining `RLED` is parsed, and the resulting key (lowercased and prefixed) appears in `model.getLibrary()`. |
-
----
-
-## `undo/undo-manager.test.ts`
-
-Tests the generic ring-buffer undo/redo stack used by the editor.
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `new manager cannot undo or redo` | A fresh `UndoManager` reports `canUndo() === false` and `canRedo() === false`. |
-| `undoPush followed by undoPop returns state` | After pushing two states, `undoPop` returns the earlier state. |
-| `undoRedo after undoPop re-applies state` | After undoing once, `undoRedo` returns the state that was just undone. |
-| `undoReset clears everything` | After `undoReset`, neither undo nor redo is possible. |
-| `undoPop at bottom returns same state (pointer clamped to 1)` | Popping past the bottom keeps returning the oldest state (the pointer is clamped, not allowed to go negative). |
-| `buffer max size evicts oldest entries` | A manager with capacity 3 drops the oldest entry when a 4th is pushed. |
-| `isNextOperationOnALibrary detects library operation` | A pushed state flagged `libraryOperation: true` is reported as such after popping the next one. |
-| `undoRedo throws when nothing to redo` | Calling `undoRedo` with nothing on the redo stack throws. |
 
 ---
 

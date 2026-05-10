@@ -83,8 +83,7 @@ export class InPlaceTextEditor {
         const cssFontSize = canvasFontSize / dpr;
         const isBold = prim.isBold();
         const isItalic = prim.isItalic();
-        // Use defaultTextFont as fallback if fontName is not accessible
-        const fontName = (prim as any).fontName || 'Courier New';
+        const fontName = prim.getFontName() || 'Courier New';
 
         const fontStyle = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}`;
         this.textarea.style.font = `${fontStyle}${cssFontSize}px ${fontName}`;

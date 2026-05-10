@@ -21,6 +21,13 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     static readonly TEXT_BOLD = 1;
     static readonly TEXT_ITALIC = 2;
     static readonly TEXT_MIRRORED = 4;
+
+    /** Font height-to-width ratio for default (non-stretched) text. */
+    private static readonly DEFAULT_FONT_ASPECT = 10 / 7;
+    /** Multiplier to scale logical font size (six) to canvas pixel size. */
+    private static readonly FONT_SIZE_RATIO = 12 / 7;
+    /** Horizontal stretch factor numerator/denominator when font is stretched. */
+    private static readonly STRETCH_FACTOR = 22 / 40;
     static readonly MAXSIZE = 2000;
     static readonly MINSIZE = 1;
     private static readonly N_POINTS = 1;
@@ -109,7 +116,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.xa = coordSys.mapX(this.x1, this.y1);
             this.ya = coordSys.mapY(this.x1, this.y1);
 
-            g.setFont(this.fontName, this.six * 12 * coordSys.getYMagnitude() / 7 + 0.5,
+            g.setFont(this.fontName, this.six * PrimitiveAdvText.FONT_SIZE_RATIO * coordSys.getYMagnitude() + 0.5,
                 (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0,
                 (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0);
 
@@ -134,8 +141,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
 
             this.xyfactor = 1.0;
             this.needsStretching = false;
-            if (this.siy / this.six !== 10 / 7) {
-                this.xyfactor = this.siy / this.six * 22.0 / 40.0;
+            if (this.siy / this.six !== PrimitiveAdvText.DEFAULT_FONT_ASPECT) {
+                this.xyfactor = this.siy / this.six * PrimitiveAdvText.STRETCH_FACTOR;
                 this.needsStretching = true;
             }
 

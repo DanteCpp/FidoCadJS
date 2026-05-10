@@ -25,6 +25,7 @@ export class PropertiesPanelController {
     private circuitPanel: CircuitPanel;
     private fontFamilies: string[] | null = null;
     private fontFamiliesPromise: Promise<string[]> | null = null;
+    private currentLayerDropdown: LayerDropdown | null = null;
 
     /** Callback to load available font families (async, app-level). */
     onGetFontFamilies: (() => Promise<string[]>) | null = null;
@@ -35,6 +36,12 @@ export class PropertiesPanelController {
     }
 
     show(prim: GraphicPrimitive): void {
+        // Destroy previous layer dropdown listener if any
+        if (this.currentLayerDropdown) {
+            this.currentLayerDropdown.destroy();
+            this.currentLayerDropdown = null;
+        }
+
         const header = this.sidebar.firstElementChild;
         this.sidebar.innerHTML = '';
         this.sidebar.appendChild(header as HTMLElement);
@@ -155,6 +162,7 @@ export class PropertiesPanelController {
             dropdown.element.style.flex = '1';
             row.appendChild(dropdown.element);
             form.appendChild(row);
+            this.currentLayerDropdown = dropdown;
         };
 
         const addNameValue = (): void => {

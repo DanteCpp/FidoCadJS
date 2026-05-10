@@ -18,6 +18,7 @@ export class LayerDropdown {
     private btnLabel: HTMLSpanElement;
     private layerList: HTMLDivElement;
     private onLayerChange: (index: number) => void;
+    private closeOnOutside: (e: MouseEvent) => void;
 
     constructor(
         layerDescs: LayerDesc[],
@@ -89,9 +90,15 @@ export class LayerDropdown {
                 this.layerList.style.display = 'none';
             }
         };
+        this.closeOnOutside = closeOnOutside;
         document.addEventListener('mousedown', closeOnOutside);
 
         this.element.append(layerBtn, this.layerList);
+    }
+
+    /** Remove global listeners. Call when the dropdown is no longer needed. */
+    destroy(): void {
+        document.removeEventListener('mousedown', this.closeOnOutside);
     }
 
     /** Programmatically select a layer without firing the callback. */

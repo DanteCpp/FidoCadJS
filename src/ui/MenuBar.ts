@@ -22,12 +22,12 @@ export class MenuBar {
     private readonly el: HTMLElement;
     private readonly panel: CircuitPanel;
     private readonly onNewCircuit: () => void;
-    private readonly onImportLibrary: ((content: string, fileName: string) => void) | undefined;
+    private readonly onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined;
     private undoMenuItem: HTMLElement | null = null;
     private redoMenuItem: HTMLElement | null = null;
 
     constructor(panel: CircuitPanel, onNewCircuit: () => void,
-                onImportLibrary: ((content: string, fileName: string) => void) | undefined) {
+                onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined) {
         this.panel = panel;
         this.onNewCircuit = onNewCircuit;
         this.onImportLibrary = onImportLibrary;
@@ -321,7 +321,7 @@ export class MenuBar {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const text = event.target?.result as string;
-                this.onImportLibrary!(text, file.name);
+                this.onImportLibrary!(text, file.name).catch(err => console.error('Import failed:', err));
             };
             reader.readAsText(file);
         });
