@@ -5,10 +5,8 @@
  * @brief Tests for UndoActions — stack management and basic correctness
  * @copyright Copyright 2026 Dante Loi - GPL v3
  *
- * NOTE: The current UndoActions implementation saves state AFTER each mutation.
- * This means a single undo() is effectively a no-op for isolated operations.
- * These tests verify stack mechanics and multi-operation correctness rather
- * than single-step undo precision (which needs a pre-change save approach).
+ * UndoActions uses a PRE-SAVE approach: state is captured BEFORE each mutation
+ * so that a single undo() restores the model to its state before that operation.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -99,17 +97,15 @@ describe('UndoActions', () => {
 
             expect(model.getPrimitiveVector().length).toBe(2);
 
-            // First undo pops the last state (model with both primitives),
-            // restoring the same state (both primitives).
-            undo.undo();
-            expect(model.getPrimitiveVector().length).toBe(2);
-
-            // Second undo pops the first state (model with first primitive),
-            // restoring model with first primitive only.
+            // First undo restores state before line2 was added (only line1 present).
             undo.undo();
             expect(model.getPrimitiveVector().length).toBe(1);
             const p = model.getPrimitiveVector()[0]!;
             expect(p.virtualPoint[0]!.x).toBe(0);
+
+            // Second undo restores state before line1 was added (empty model).
+            undo.undo();
+            expect(model.getPrimitiveVector().length).toBe(0);
         });
     });
 

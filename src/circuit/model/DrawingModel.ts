@@ -58,12 +58,12 @@ export class DrawingModel {
 
     addPrimitive(p: GraphicPrimitive, sort: boolean,
         ua: { saveUndoState(): void; setModified(b: boolean): void } | null): void {
+        if (ua !== null) {
+            ua.saveUndoState();
+        }
         this.primitiveVector.push(p);
         if (sort) this.sortPrimitiveLayers();
         if (ua !== null) {
-            // Save state AFTER mutation — the editor state machine depends on this order.
-            // Undo is handled by saving current state before restoring a previous snapshot.
-            ua.saveUndoState();
             ua.setModified(true);
             this.changedFlag = true;
         }

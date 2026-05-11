@@ -75,9 +75,34 @@ test.describe('Clipboard Operations', () => {
     expect(ok).toBe(true);
   });
 
-  // NOTE: undo-after-duplicate and undo-after-cut tests are skipped because
-  // panel.undo() does not reliably restore state when called via page.evaluate
-  // in the same synchronous context as loadCircuit/rotate/delete.
-  test.skip('duplicate is undoable', async () => {});
-  test.skip('cut then undo restores', async () => {});
+  test('duplicate is undoable', async ({ page }) => {
+    const ok = await page.evaluate(async () => {
+      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
+      const panel = (canvas as any).__circuitPanel;
+      panel.selectAll();
+      panel.duplicateSelected();
+      // Wait for the async paste to complete and verify 4 primitives
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 50));
+        if (panel.getModel().getPrimitiveVector().length === 4) break;
+      }
+      if (panel.getModel().getPrimitiveVector().length !== 4) return 'expected 4 after duplicate';
+      panel.undo();
+      return panel.getModel().getPrimitiveVector().length === 2;
+    });
+    expect(ok).toBe(true);
+  });
+
+  test('cut then undo restores', async ({ page }) => {
+    const ok = await page.evaluate(() => {
+      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
+      const panel = (canvas as any).__circuitPanel;
+      panel.selectAll();
+      panel.cutSelected();
+      if (panel.getModel().getPrimitiveVector().length !== 0) return false;
+      panel.undo();
+      return panel.getModel().getPrimitiveVector().length === 2;
+    });
+    expect(ok).toBe(true);
+  });
 });

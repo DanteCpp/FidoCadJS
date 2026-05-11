@@ -371,6 +371,7 @@ export class CircuitPanel {
             if (this.currentTool === ElementsEdtActions.SELECTION) {
                 const handleIdx = this.findHandleAt(sx, sy);
                 if (handleIdx !== GraphicPrimitive.NO_DRAG && this.dragHandlePrim !== null) {
+                    this.undoActions.saveUndoState();
                     this.dragHandleIndex = handleIdx;
                     return;
                 }
@@ -451,6 +452,8 @@ export class CircuitPanel {
                     this.mouseDownPrimHit.setSelected(true);
                     this.model.setChanged(true);
                 }
+                // Save pre-drag state so undo can restore the original positions.
+                this.undoActions.saveUndoState();
                 this.isMoveAllDrag = true;
                 this.mouseDownPrimHit = null;
             }
@@ -508,7 +511,6 @@ export class CircuitPanel {
 
         if (this.isMovingSelected) {
             this.isMovingSelected = false;
-            this.undoActions.saveUndoState();
             this.canvas.style.cursor = this.cursorForTool(this.currentTool);
             this.onUndoStateChange?.();
             return;
@@ -534,7 +536,6 @@ export class CircuitPanel {
         }
 
         if (this.isMoveAllDrag) {
-            this.undoActions.saveUndoState();
             this.isMoveAllDrag = false;
             this.render();
             return;
@@ -567,7 +568,6 @@ export class CircuitPanel {
         }
 
         if (this.dragHandleIndex !== GraphicPrimitive.NO_DRAG) {
-            this.undoActions.saveUndoState();
             this.dragHandleIndex = GraphicPrimitive.NO_DRAG;
             this.dragHandlePrim = null;
             this.render();
@@ -1218,11 +1218,10 @@ export class CircuitPanel {
     }
 
     startMoveSelected(): void {
-        // Check if there are selected primitives
         const selected = this.selectionActions.getSelectedPrimitives();
         if (selected.length === 0) return;
 
-        // Enter move mode - the next mouse drag will move the selection
+        this.undoActions.saveUndoState();
         this.isMovingSelected = true;
         this.canvas.style.cursor = 'move';
     }
@@ -1267,10 +1266,10 @@ export class CircuitPanel {
             this.model.getLayers(),
             (value) => {
                 // Commit
+                this.undoActions.saveUndoState();
                 prim.setString(value);
                 prim.setChanged(true);
                 this.model.setChanged(true);
-                this.undoActions.saveUndoState();
                 this.render();
             },
             () => {
@@ -1442,27 +1441,17 @@ export class CircuitPanel {
 
     private addNodeAt(lx: number, ly: number): void {
         const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (first instanceof PrimitivePolygon) {
-            first.addPointClosest(lx, ly);
-        } else if (first instanceof PrimitiveComplexCurve) {
-            first.addPointClosest(lx, ly);
-        } else {
-            return;
-        }
+        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
         this.undoActions.saveUndoState();
+        first.addPointClosest(lx, ly);
         this.render();
     }
 
     private removeNodeAt(lx: number, ly: number): void {
         const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (first instanceof PrimitivePolygon) {
-            first.removePoint(lx, ly, 1);
-        } else if (first instanceof PrimitiveComplexCurve) {
-            first.removePoint(lx, ly, 1);
-        } else {
-            return;
-        }
+        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
         this.undoActions.saveUndoState();
+        first.removePoint(lx, ly, 1);
         this.render();
     }
 
@@ -1488,8 +1477,10 @@ export class CircuitPanel {
         const tempParser = new ParserActions(tempModel);
         tempParser.addString(macroDesc, false);
 
+        // Save pre-vectorize state so the entire operation can be undone in one step.
+        this.undoActions.saveUndoState();
+
         // Move and transform each primitive from the macro to the canvas position
-        const saved = this.undoActions.saveUndoState.bind(this.undoActions);
         for (const prim of tempModel.getPrimitiveVector()) {
             if (!prim.virtualPoint[0]) continue;
 
@@ -1537,7 +1528,6 @@ export class CircuitPanel {
         // Remove the original macro primitive
         const idx = this.model.getPrimitiveVector().indexOf(first);
         if (idx >= 0) this.model.getPrimitiveVector().splice(idx, 1);
-        saved();
         this.render();
     }
 

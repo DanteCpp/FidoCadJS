@@ -73,13 +73,16 @@ export class ClipboardController {
         }
         if (!text) return;
 
+        // Save pre-paste state so a single undo reverts the entire paste.
+        this.undoActions.saveUndoState();
+
         // Deselect everything so only pasted items end up selected
         this.selectionActions.setSelectionAll(false);
         this.parserActions.addString(text, true);
-        // Offset pasted selection by one grid step so it doesn't overlap the original
+        // Offset pasted selection by one grid step so it doesn't overlap the original.
+        // Pass saveState=false: the undo state was already captured above.
         const step = this.mapCoordinates.getXGridStep();
-        this.editorActions.moveAllSelected(step, step);
-        this.undoActions.saveUndoState();
+        this.editorActions.moveAllSelected(step, step, false);
         this.onRenderRequested?.();
         this.onUndoStateChange?.();
     }
