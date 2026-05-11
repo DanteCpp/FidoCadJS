@@ -960,13 +960,22 @@ export class CircuitPanel {
             const fontName = prim.getFontName() || 'Courier New';
             const fontStyle = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}`;
 
-            // Layer color
+            // Layer color — blend with selection green when selected (matches canvas).
             const layerIdx = prim.getLayer();
             let textColor = '#000000';
             if (layerIdx >= 0 && layerIdx < layers.length) {
                 const color = layers[layerIdx].getColor();
                 if (color) {
-                    textColor = (color as ColorCanvas).toCSSColor();
+                    if (prim.isSelected()) {
+                        // Same blend as GraphicsCanvas.activateSelectColor:
+                        // selectedColor(0,255,0) * 0.6 + layerColor * 0.4
+                        const r = Math.floor(0 * 0.6 + color.getRed() * 0.4);
+                        const g = Math.floor(255 * 0.6 + color.getGreen() * 0.4);
+                        const b = Math.floor(0 * 0.6 + color.getBlue() * 0.4);
+                        textColor = `rgb(${r},${g},${b})`;
+                    } else {
+                        textColor = (color as ColorCanvas).toCSSColor();
+                    }
                 }
             }
 
