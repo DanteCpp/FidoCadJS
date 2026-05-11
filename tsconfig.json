@@ -24,6 +24,6 @@
     },
     "outDir": "./dist"
   },
-  "include": ["src/**/*", "test/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*", "test/**/*.test.ts"],
+  "exclude": ["node_modules", "dist", "test/e2e"]
 }
