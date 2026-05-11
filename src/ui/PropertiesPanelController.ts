@@ -192,8 +192,55 @@ export class PropertiesPanelController {
                 contentInput.focus();
                 contentInput.select();
             });
-            addNumber('Font size:', () => prim.getFontDimension(), v => prim.setFontDimension(v), 1, 2000);
-            addNumber('Font width:', () => prim.getFontWidth(), v => prim.setFontWidth(v), 1, 2000);
+            // Font size (height) and font width — custom inputs with LaTeX auto-sync.
+            // For LaTeX text ($...$), changing either field auto-updates the other
+            // to maintain the default 10:7 aspect ratio.
+            {
+                const isLatex = () => prim.getString().includes('$');
+
+                const siyRow = this.createPropertyRow('Font size:');
+                const siyInp = document.createElement('input');
+                siyInp.type = 'number';
+                siyInp.value = String(prim.getFontDimension());
+                siyInp.min = '1';
+                siyInp.max = '2000';
+                siyInp.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
+                siyRow.appendChild(siyInp);
+                form.appendChild(siyRow);
+
+                const sixRow = this.createPropertyRow('Font width:');
+                const sixInp = document.createElement('input');
+                sixInp.type = 'number';
+                sixInp.value = String(prim.getFontWidth());
+                sixInp.min = '1';
+                sixInp.max = '2000';
+                sixInp.style.cssText = 'flex: 1; padding: 4px; font-size: 12px;';
+                sixRow.appendChild(sixInp);
+                form.appendChild(sixRow);
+
+                const handleSiyChange = () => {
+                    const v = Number(siyInp.value);
+                    prim.setFontDimension(v);
+                    if (isLatex()) {
+                        const newSix = Math.round(v * 7 / 10);
+                        sixInp.value = String(newSix);
+                        prim.setFontWidth(newSix);
+                    }
+                    redraw();
+                };
+                const handleSixChange = () => {
+                    const v = Number(sixInp.value);
+                    prim.setFontWidth(v);
+                    if (isLatex()) {
+                        const newSiy = Math.round(v * 10 / 7);
+                        siyInp.value = String(newSiy);
+                        prim.setFontDimension(newSiy);
+                    }
+                    redraw();
+                };
+                siyInp.addEventListener('change', handleSiyChange);
+                sixInp.addEventListener('change', handleSixChange);
+            }
             addNumber('Orientation:', () => prim.getOrientation(), v => prim.setOrientation(v), -360, 360, 1);
             addCheck('Mirror:', () => prim.isMirrored() !== 0, v => prim.setMirrored(v ? 1 : 0));
             addCheck('Bold:', () => prim.isBold(), v => prim.setBold(v));

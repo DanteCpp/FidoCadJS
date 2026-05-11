@@ -924,6 +924,7 @@ export class CircuitPanel {
         if (!this.renderTeX) return;
 
         const htmlParts: string[] = [];
+        const layers = this.model.getLayers();
 
         for (const prim of this.model.getPrimitiveVector()) {
             if (!(prim instanceof PrimitiveAdvText)) continue;
@@ -941,6 +942,47 @@ export class CircuitPanel {
             const cssX = sx / dpr;
             const cssY = sy / dpr;
 
+            // Compute font CSS matching the canvas font settings (mirrors draw()).
+            // Use the larger of six and the width-equivalent of siy to ensure
+            // both font size fields affect the visual rendering.
+            const yMag = this.mapCoordinates.getYMagnitude();
+            const effectiveSix = Math.max(
+                prim.getFontWidth(),
+                prim.getFontDimension() * 7 / 10
+            );
+            const canvasFontSize = effectiveSix * 12 * yMag / 7 + 0.5;
+            const cssFontSize = canvasFontSize / dpr;
+            const isBold = prim.isBold();
+            const isItalic = prim.isItalic();
+            const fontName = prim.getFontName() || 'Courier New';
+            const fontStyle = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}`;
+
+            // Layer color
+            const layerIdx = prim.getLayer();
+            let textColor = '#000000';
+            if (layerIdx >= 0 && layerIdx < layers.length) {
+                const color = layers[layerIdx].getColor();
+                if (color) {
+                    textColor = (color as ColorCanvas).toCSSColor();
+                }
+            }
+
+            // Orientation and mirror (mirrors draw() coordinate adjustments).
+            let orientation = prim.getOrientation();
+            let mirror = prim.isMirrored() !== 0;
+            if (mirror) orientation = -orientation;
+            orientation -= this.mapCoordinates.getOrientation() * 90;
+            if (this.mapCoordinates.getMirror()) {
+                mirror = !mirror;
+                orientation = -orientation;
+            }
+            let transformStyle = '';
+            if (orientation !== 0 || mirror) {
+                transformStyle = `transform: rotate(${orientation}deg)` +
+                    (mirror ? ' scaleX(-1)' : '') + '; ' +
+                    'transform-origin: 0 0; ';
+            }
+
             const segments = renderMixedText(text);
             const segmentHtml = segments.map(seg => {
                 if (seg.type === 'text') {
@@ -957,7 +999,8 @@ export class CircuitPanel {
 
             htmlParts.push(
                 `<div style="position:absolute; left:${cssX}px; top:${cssY}px; ` +
-                `white-space: nowrap;">${segmentHtml}</div>`
+                `white-space: nowrap; font: ${fontStyle}${cssFontSize}px ${fontName}; ` +
+                `color: ${textColor}; ${transformStyle}">${segmentHtml}</div>`
             );
         }
 

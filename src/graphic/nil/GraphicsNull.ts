@@ -56,7 +56,9 @@ export class GraphicsNull implements GraphicsInterface {
 
     drawLine(_x1: number, _y1: number, _x2: number, _y2: number): void {}
 
-    setFont(_name: string, _size: number, _isItalic?: boolean, _isBold?: boolean): void {}
+    setFont(_name: string, _size: number, _isItalic?: boolean, _isBold?: boolean): void {
+        this.fontSize = _size;
+    }
     getFontSize(): number { return this.fontSize; }
     setFontSize(size: number): void { this.fontSize = size; }
     getFontAscent(): number {
