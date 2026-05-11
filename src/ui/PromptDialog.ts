@@ -6,6 +6,11 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
+function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export class PromptDialog {
     /**
      * Show a modal prompt dialog.
@@ -36,12 +41,12 @@ export class PromptDialog {
             dialog.innerHTML =
                 `<div style="padding:10px 16px; background:#f0f0f0; border-bottom:1px solid #ddd; ` +
                 `display:flex; align-items:center; justify-content:space-between;">` +
-                `<span style="font-weight:bold; font-size:13px;">${title}</span>` +
+                `<span style="font-weight:bold; font-size:13px;">${escapeHtml(title)}</span>` +
                 `<button id="promptClose" style="border:none; background:none; cursor:pointer; font-size:14px; color:#888;">✕</button>` +
                 `</div>` +
                 `<div style="padding:16px;">` +
-                `<div style="margin-bottom:8px;">${message}</div>` +
-                `<input id="promptInput" type="text" value="${defaultValue.replace(/"/g, '&quot;')}" ` +
+                `<div style="margin-bottom:8px;">${escapeHtml(message)}</div>` +
+                `<input id="promptInput" type="text" value="${escapeHtml(defaultValue)}" ` +
                 `style="width:100%; padding:5px 8px; font-size:12px; border:1px solid #ccc; border-radius:3px; box-sizing:border-box;">` +
                 `<div id="promptError" style="color:#d00; font-size:11px; margin-top:4px; min-height:16px;"></div>` +
                 `</div>` +

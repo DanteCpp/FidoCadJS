@@ -1,35 +1,36 @@
 <!--
 File: TESTS.md
 Author: Dante Loi
-Date: 2026-05-07
-Description: Human-readable index of the FidoCadJS Vitest suite — every
-             `it()` case with a plain-English description, grouped by source
-             file and `describe()` block.
+Date: 2026-05-10
+Description: Human-readable index of the FidoCadJS test suite — every
+             `it()` case (Vitest) and `test()` case (Playwright) with
+             a plain-English description, grouped by source file and
+             `describe()` block.
 Copyright: (c) 2026 Dante Loi
 -->
 
 # FidoCadJS — Test Suite Reference
 
-This document indexes every test case in `FidoCadJS/test/`. The suite is
-written in TypeScript and run with [Vitest](https://vitest.dev) under
-`jsdom`. Test files follow the `*.test.ts` convention and each carries a
-`@file`/`@author`/`@date`/`@brief` header block.
-
-The suite currently contains **212 `it()` cases across 11 files**.
+This document indexes every test case in `FidoCadJS/test/`. The suite
+comprises **345 unit tests** ([Vitest](https://vitest.dev) + jsdom) spread
+across 17 files, and **134 browser E2E tests** ([Playwright](https://playwright.dev)
++ Chromium) across 13 files, for a total of **479 tests**.
 
 ## How to run
 
 | Command | What it does |
 |---------|--------------|
 | `npm run test` | Vitest in watch mode |
-| `npm run test:run` | Run the suite once (used by CI) |
+| `npm run test:run` | Run unit tests once (used by CI) |
+| `npm run test:e2e` | Run Playwright E2E tests (headless) |
+| `npm run test:e2e:ui` | Run Playwright E2E tests (interactive UI) |
 
 The `npm run test:run` command is executed
 automatically by GitHub Actions
 (`FidoCadJS/.github/workflows/deploy.yml`) on every push and pull request
 to `main`.
 
-## Suite at a glance
+## Unit Suite at a glance
 
 | File | Area under test | `it()` cases |
 |------|-----------------|--------------|
@@ -37,14 +38,39 @@ to `main`.
 | `circuit/controllers/selection-actions.test.ts` | `SelectionActions` — selection queries | 8 |
 | `circuit/keyboard-shortcuts.test.ts` | `CircuitPanel` — all keyboard shortcuts | 46 |
 | `circuit/model/drawing-model.test.ts` | `DrawingModel` — core data model | 8 |
+| `export/export-pgf.test.ts` | `ExportPGF` — PGF command generation for LaTeX | 39 |
 | `export/export-svg.test.ts` | `ExportSVG` — SVG element generation | 13 |
+| `export/export-tikz.test.ts` | `ExportTikZ` — TikZ command generation for LaTeX | 34 |
 | `geom/map-coordinates.test.ts` | `MapCoordinates` — coordinate mapping, snap, zoom, orientation | 24 |
 | `globals/globals.test.ts` | `Globals` — static utility functions | 13 |
 | `layers/layer-desc.test.ts` | `LayerDesc` and `StandardLayers` | 9 |
 | `librarymodel/library-model.test.ts` | `LibraryModel`, `Library`, `Category` | 10 |
 | `parser/primitive-round-trip.test.ts` | FCD parser/serializer round-trips for all 11 primitives | 65 |
-| `undo/undo-manager.test.ts` | Generic `UndoManager` stack | 8 |
-| **Total** | | **212** |
+| `primitives/primitive-edge-cases.test.ts` | Per-primitive unit tests for toString/parseTokens edge cases | 20 |
+| `settings/settings-manager.test.ts` | `SettingsManager` validation, defaults, and persistence | 11 |
+| `undo/undo-actions.test.ts` | `UndoActions` — correctness, add/move/delete/rotate/mirror undo | 10 |
+| **Unit Subtotal** | | **345** |
+
+## E2E Suite at a glance
+
+| File | Area under test | `test()` cases |
+|------|-----------------|---------------|
+| `e2e/app-loads.test.ts` | App initialisation, canvas, toolbar, libraries | 10 |
+| `e2e/drawing-tools.test.ts` | Drawing tools (all 11 primitives) via keyboard + mouse | 22 |
+| `e2e/selection-and-transform.test.ts` | Selection, move, rotate, mirror, nudge, delete | 10 |
+| `e2e/undo-redo.test.ts` | Undo/redo state tracking and keyboard shortcuts | 6 |
+| `e2e/clipboard.test.ts` | Copy, cut, duplicate via API + internal clipboard | 6 |
+| `e2e/zoom-pan.test.ts` | Zoom in/out, wheel, fit, pan | 10 |
+| `e2e/grid-snap.test.ts` | Grid visibility and snap-to-grid toggles | 2 |
+| `e2e/file-operations.test.ts` | New (Ctrl+N), load, save, view code | 6 |
+| `e2e/export.test.ts` | SVG, PGF, TikZ export + determinism | 18 |
+| `e2e/menu-bar.test.ts` | Menu bar dropdowns and command actions | 8 |
+| `e2e/keyboard-e2e.test.ts` | Keyboard shortcuts through full browser stack | 16 |
+| `e2e/macro-library.test.ts` | Library panel, macro placement via API | 5 |
+| `e2e/edge-cases.test.ts` | Empty/degenerate, rapid ops, long docs, negative coords, resize | 15 |
+| **E2E Subtotal** | | **134** |
+
+**Grand total: 479 tests**
 
 ---
 
@@ -511,20 +537,209 @@ FJC tokens in one test cannot leak into another.
 
 ---
 
-## `undo/undo-manager.test.ts`
+## `export/export-pgf.test.ts`
 
-Tests the generic ring-buffer undo/redo stack used by the editor.
+Confirms that each `ExportPGF` method emits correct PGF commands for
+LaTeX embedding. Each test starts a fresh export with a 200×200 page,
+calls one or more draw methods, ends the export, and inspects the
+resulting PGF string.
 
 | Test name | What it verifies |
 |-----------|------------------|
-| `new manager cannot undo or redo` | A fresh `UndoManager` reports `canUndo() === false` and `canRedo() === false`. |
-| `undoPush followed by undoPop returns state` | After pushing two states, `undoPop` returns the earlier state. |
-| `undoRedo after undoPop re-applies state` | After undoing once, `undoRedo` returns the state that was just undone. |
-| `undoReset clears everything` | After `undoReset`, neither undo nor redo is possible. |
-| `undoPop at bottom returns same state (pointer clamped to 1)` | Popping past the bottom keeps returning the oldest state (the pointer is clamped, not allowed to go negative). |
-| `buffer max size evicts oldest entries` | A manager with capacity 3 drops the oldest entry when a 4th is pushed. |
-| `isNextOperationOnALibrary detects library operation` | A pushed state flagged `libraryOperation: true` is reported as such after popping the next one. |
-| `undoRedo throws when nothing to redo` | Calling `undoRedo` with nothing on the redo stack throws. |
+| `exportStart / exportEnd produce valid PGF wrapper` | Output wraps with `\\begin{pgfpicture}` … `\\end{pgfpicture}` and includes `\\pgfsetxvec`/`\\pgfsetyvec`. |
+| `exportLine produces PGF line command` | A line emits `\\pgfpathmoveto`/`\\pgfpathlineto` with correct coords. |
+| `exportRectangle produces PGF rect command` | A rect emits `\\pgfpathrectanglecorners`. |
+| `exportOval produces PGF ellipse commands` | An oval emits sequential `\\pgfpathmoveto` + `\\pgfpatharc` commands. |
+| `exportConnection produces PGF circle` | A connection dot emits `\\pgfpathcircle`. |
+| `exportPolygon produces PGF polygon` | A 3-point polygon emits `\\pgfpathmoveto` + two `\\pgfpathlineto` + `\\pgfpathclose`. |
+| `exportBezier produces PGF curve` | A cubic Bézier emits `\\pgfpathmoveto` + `\\pgfpathcurveto`. |
+| `exportPCBLine produces PGF line with line width` | A PCB line emits `\\pgfsetlinewidth` before the path. |
+| `exportPCBPad with oval style` | Pad style 0 (oval) emits `\\pgfpathcircle` + `\\pgfusepathqfillstroke`. |
+| `exportPCBPad with rect style` | Pad style 1 (rect) emits `\\pgfpathrectanglecorners`. |
+| `exportPCBPad with rounded rect style` | Pad style 2 (rounded rect) emits rect with rounded corners. |
+| `exportAdvText produces PGF text command` | Text emits `\\pgftext` with font and position. |
+| `dash style produces dash pattern` | Non-zero dash style adds a `\\pgfsetdash` command. |
+| `layer alpha < 1 produces transparency` | Layer with alpha 0.95 emits `\\pgfsetfillopacity`/`\\pgfsetstrokeopacity`. |
+| `default layer alpha 1 produces no opacity commands` | Fully opaque layer does not emit opacity commands. |
+| `connection on layer with alpha produces PGF circle with opacity` | Connection on transparent layer includes opacity commands. |
+| `complex curve produces PGF arc sequences` | Complex curve with multiple points emits proper arc path. |
+| `empty circuit produces minimal PGF` | Empty model emits only the wrapper without any drawing commands. |
+| `empty circuit produces consistent empty output` | Empty model output is stable across multiple calls. |
+| `multiple line segments produce correct PGF` | Multiple lines emit multiple path pairs. |
+| `behaves correctly with multiple primitives` | Mixed-primitive model emits correct commands in order. |
+| `exportPCBLine with dash produces linewidth + dash` | PCB line with dash has both \\pgfsetlinewidth and \\pgfsetdash. |
+| `exportPCBLine with layer alpha produces linewidth + opacity` | PCB line on transparent layer has both \\pgfsetlinewidth and opacity. |
+| `filled rectangle uses pgfpathrectanglecorners and usepathqfillstroke` | Filled rect emits proper fill command. |
+| `filled oval uses pgfpathmoveto+pgfpatharc and usepathqfillstroke` | Filled oval emits proper fill command. |
+| `filled polygon uses pgfpathclose and usepathqfillstroke` | Filled polygon emits close + fill. |
+| `arrows on line produce pgfsetarrowsstart/end` | Arrow-start and arrow-end flags emit arrow commands. |
+| `arrow style empty produces pgfsetarrowsend with o` | Empty arrow style emits `o` shape. |
+| `arrow style limiter produces pgfsetarrowsend with bar` | Limiter arrow style emits `|` shape. |
+| `arrow style empty+limiter produces composite arrows` | Combined style emits both `o` and `|`. |
+| `arrow length/width produce pgfsetarrowsend with size` | Arrow length and half-width affect emitted arrow size. |
+| `complex curve with arrows produces arrow commands` | Complex curve with arrow flags emits arrow commands. |
+| `bezier with arrows produces arrow commands` | Bézier with arrow start/end emits arrow commands. |
+| `bezier with dash produces pgfsetdash` | Bézier with dash emits dash pattern command. |
+| `bezier with layer alpha produces opacity` | Bézier on transparent layer emits opacity commands. |
+| `text produces pgftext with escaped content` | Text content is placed inside `\\pgftext` and special chars are escaped. |
+| `text with different font family renders correctly` | Font family name is passed to `\\pgftext`. |
+| `text with bold/italic style flags` | Bold and italic flags produce correct font commands. |
+| `text on layer with alpha produces opacity` | Text on transparent layer has opacity. |
+
+---
+
+## `export/export-tikz.test.ts`
+
+Confirms that each `ExportTikZ` method emits correct TikZ commands for
+LaTeX embedding. Structure mirrors `export-pgf.test.ts`.
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `exportStart / exportEnd produce valid TikZ wrapper` | Output wraps with `\\begin{tikzpicture}` … `\\end{tikzpicture}` and includes `yscale=-1`, `x=1pt`. |
+| `exportLine produces TikZ draw command` | Line emits `\\draw` with coordinate pairs. |
+| `exportRectangle produces TikZ draw command` | Rectangle emits `\\draw` with rectangle notation. |
+| `exportOval produces TikZ draw command` | Oval emits `\\draw` with ellipse notation. |
+| `exportConnection produces TikZ fill command` | Connection dot emits `\\fill` with circle notation. |
+| `exportPolygon produces TikZ draw command` | Polygon emits `\\draw` with `-- cycle`. |
+| `exportBezier produces TikZ draw command` | Bézier emits `\\draw` with `.. controls ..` syntax. |
+| `exportPCBLine produces TikZ draw with line width` | PCB line emits `\\draw[line width=...]`. |
+| `exportPCBPad with oval style` | Pad oval style emits `\\draw` with `rounded corners`. |
+| `exportPCBPad with rect style` | Pad rect style emits `\\draw` with rectangle notation. |
+| `exportPCBPad with rounded rect style` | Pad style 2 emits with `rounded corners` option. |
+| `exportAdvText produces TikZ node command` | Text emits `\\node` with font and position. |
+| `dash style produces dash pattern option` | Dash style adds `dash pattern=` to draw options. |
+| `layer alpha < 1 produces opacity option` | Layer with alpha adds `opacity=` to draw options. |
+| `default layer alpha 1 produces no opacity option` | Fully opaque layer omits opacity. |
+| `connection on layer with alpha produces fill with opacity` | Connection on transparent layer includes opacity. |
+| `complex curve produces multi-segment draw` | Complex curve with multiple points emits proper path. |
+| `empty circuit produces minimal TikZ` | Empty model emits wrapper only. |
+| `empty circuit produces consistent empty output` | Empty model output is stable. |
+| `multiple line segments produce correct TikZ` | Multiple lines emit multiple draw commands. |
+| `behaves correctly with multiple primitives` | Mixed primitive types are rendered correctly. |
+| `filled rectangle uses filldraw` | Filled rect emits `\\filldraw` instead of `\\draw`. |
+| `filled oval uses filldraw` | Filled oval emits `\\filldraw`. |
+| `filled polygon uses filldraw` | Filled polygon emits `\\filldraw`. |
+| `arrows on line produce arrow options` | Arrow start/end add arrow tip options. |
+| `arrow style empty produces o-o option` | Empty arrow style emits `o-`/`-o` tips. |
+| `arrow style limiter produces bar option` | Limiter style emits `|-`/`-|` tips. |
+| `complex curve with arrows` | Complex curve with arrows emits arrow tips. |
+| `bezier with arrows` | Bézier with arrows emits proper arrow options. |
+| `bezier with dash produces dash pattern` | Bézier with dash emits dash pattern option. |
+| `bezier with layer alpha produces opacity` | Bézier on transparent layer includes opacity. |
+| `text produces node with content` | Text is placed in a TikZ `\\node`. |
+| `text with different font family` | Font family name is passed to the node options. |
+| `text with style flags` | Bold/italic flags produce correct font options. |
+
+---
+
+## `primitives/primitive-edge-cases.test.ts`
+
+Per-primitive unit tests covering toString/parseTokens for each primitive
+type, including edge cases like zero-length lines, negative coordinates,
+filled/empty variants, and multi-word text.
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `PrimitiveLine > toString produces LI token format` | Line serialisation includes `LI` and all coordinate values. |
+| `PrimitiveLine > parseTokens round-trips basic line` | Parsed tokens→toString produces identical output. |
+| `PrimitiveLine > handles zero-length line gracefully` | Degenerate (zero-length) line returns empty string. |
+| `PrimitiveLine > handles negative coordinates` | Negative coords are faithfully represented. |
+| `PrimitiveBezier > toString produces BE token format` | Bézier serialisation includes `BE` and all 8 coords. |
+| `PrimitiveBezier > parseTokens round-trips` | Parsed tokens→toString matches input format. |
+| `PrimitiveRectangle > empty rectangle uses RV token` | Unfilled rect uses `RV`. |
+| `PrimitiveRectangle > filled rectangle uses RP token` | Filled rect uses `RP`. |
+| `PrimitiveRectangle > parseTokens handles RV token` | Parsing `RV` sets filled to false. |
+| `PrimitiveRectangle > parseTokens handles RP token` | Parsing `RP` sets filled to true. |
+| `PrimitiveOval > empty oval uses EV token` | Unfilled oval uses `EV`. |
+| `PrimitiveOval > filled oval uses EP token` | Filled oval uses `EP`. |
+| `PrimitivePolygon > open polygon uses PV token` | Open polygon uses `PV` prefix. |
+| `PrimitivePolygon > filled polygon uses PP token` | Filled polygon uses `PP` prefix. |
+| `PrimitivePolygon > addPointClosest inserts at correct segment` | Interpolation inserts a point between the two nearest vertices. |
+| `PrimitiveComplexCurve > open curve uses CV token` | Open curve uses `CV` prefix. |
+| `PrimitiveComplexCurve > closed filled curve uses CP token` | Closed filled curve uses `CP` prefix. |
+| `PrimitiveConnection > toString produces SA token format` | Connection dot serialises as `SA`. |
+| `PrimitiveConnection > parseTokens round-trips` | Parse/serialise round-trip is stable. |
+| `PrimitivePCBLine > toString produces PL token with width` | PCB line includes thickness value. |
+| `PrimitivePCBLine > round-trips width correctly` | Thickness survives parse/serialise cycle. |
+| `PrimitivePCBPad > oval style (0) round-trips` | Style 0 preserves correctly. |
+| `PrimitivePCBPad > rect style (1) round-trips` | Style 1 preserves correctly. |
+| `PrimitivePCBPad > rounded rect style (2) round-trips` | Style 2 preserves correctly. |
+| `PrimitiveAdvText > toString produces TY token` | Text serialises as `TY`. |
+| `PrimitiveAdvText > handles multi-word text` | Spaces in text content are preserved. |
+| `PrimitiveAdvText > handles empty text gracefully` | Empty text string produces valid (defined) output. |
+
+---
+
+## `settings/settings-manager.test.ts`
+
+Validates `SettingsManager` defaults, merge logic, localStorage
+persistence, and error handling for corrupted or malformed stored data.
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `defaults > returns sensible defaults when no stored settings` | All 15 settings match their documented default values. |
+| `defaults > returns a copy, not a reference to internal state` | `getSettings()` returns a new object each call; mutations don't leak. |
+| `updateSettings > merges partial updates` | Partial `updateSettings` only changes specified fields, leaving others unchanged. |
+| `updateSettings > persists to localStorage` | After update, the stored JSON reflects the change. |
+| `storage error handling > handles corrupted JSON gracefully` | Unparseable JSON is silently ignored; defaults are used. |
+| `storage error handling > ignores invalid field types` | String instead of number, non-boolean, invalid color → rejected. |
+| `storage error handling > clamps numeric values to valid ranges` | Values outside min/max range are rejected; defaults used. |
+| `storage error handling > accepts valid settings from storage` | All 15 settings loaded from valid JSON are applied correctly. |
+| `singleton behavior > getInstance returns the same instance` | Repeated calls return identical object reference. |
+
+---
+
+## `undo/undo-actions.test.ts`
+
+Validates that the production `UndoActions` class correctly saves and
+restores state for every action type, including add, move, delete, rotate,
+and mirror. These tests query the model after undo/redo (rather than using
+stale references) since `undo()` re-parses the model from text snapshots.
+
+### add primitive
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `undo restores state before primitive was added` | After adding a line and undoing, the primitive count returns to the original value. |
+| `redo restores the primitive after undo` | Undo then redo brings the added primitive back. |
+| `undo removes the correct primitive when multiple exist` | Undoing the last add of two removes only the second primitive; the first remains with correct coordinates. |
+
+### move
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `undo restores original position after move` | After `moveAllSelected(5,10)`, undo restores the primitive's first point to `(x0, y0)`. |
+| `redo re-applies the move` | Undo then redo places the primitive back at the moved position. |
+
+### delete
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `undo restores deleted primitives` | After delete+undo, the primitive count goes from 0 back to 1. |
+
+### rotate
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `undo restores original orientation after rotate` | After `rotateAllSelected()`, undo restores all control point coordinates to their pre-rotation values. |
+
+### mirror
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `undo restores original state after mirror` | After `mirrorAllSelected()`, undo restores the second point's X to its pre-mirror value. |
+
+### reset
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `clearCircuit does not leave stale undo references` | After `reset()`, both `canUndo()` and `canRedo()` return false. |
+
+### multiple undo
+
+| Test name | What it verifies |
+|-----------|------------------|
+| `can undo multiple actions in reverse order` | Two undos in sequence remove primitives in reverse creation order (LIFO). |
 
 ---
 
@@ -545,11 +760,14 @@ Tests the generic ring-buffer undo/redo stack used by the editor.
 - **No DOM/disk needed for libraries.** The library tests build a
   `DrawingModel` and hand `ParserActions.readLibraryString` an inline
   FCL string (`SAMPLE_FCL`). Nothing reads from disk.
-- **jsdom environment.** Tests run under `jsdom`, configured in
-  `vite.config.ts`. There are no real-browser tests at present.
-
-## Placeholder areas
-
-The directories `test/e2e/`, `test/primitives/`, and `test/settings/`
-exist but currently hold no tests. They are placeholders for future
-end-to-end, primitive-unit, and settings tests respectively.
+- **jsdom environment.** Unit tests run under `jsdom`, configured in
+  `vite.config.ts`.
+- **Real Chromium.** E2E tests use Playwright to drive headless Chromium.
+  The `__circuitPanel` escape hatch on the canvas element gives tests
+  direct access to the `CircuitPanel` API. Tests that verify undo state
+  run in a single `page.evaluate()` call to avoid race conditions with
+  the browser event loop.
+- **Async clipboard in E2E.** The `duplicateSelected` call triggers an
+  async `paste()` operation. E2E tests that exercise it poll the model
+  inside `page.evaluate()` with `await new Promise(r => setTimeout(r, 50))`
+  loops until the expected primitive count is reached.

@@ -22,6 +22,10 @@ tsconfig.tsbuildinfo
 .DS_Store
 Thumbs.db
 
+# Project-level review/planning docs (kept outside repo)
+CODEREVIEW.md
+TODO.md
+
 # IDE
 .vscode/
 .idea/

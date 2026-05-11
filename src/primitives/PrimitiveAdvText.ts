@@ -9,17 +9,26 @@
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
+import { TeXMode } from '../graphic/TeXMode.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
 import { GeometricDistances } from '../geom/GeometricDistances.js';
 import { RectangleG } from '../graphic/RectangleG.js';
 import { PointG } from '../graphic/PointG.js';
+import { GraphicsNull } from '../graphic/nil/GraphicsNull.js';
 
 export class PrimitiveAdvText extends GraphicPrimitive {
     static readonly TEXT_BOLD = 1;
     static readonly TEXT_ITALIC = 2;
     static readonly TEXT_MIRRORED = 4;
+
+    /** Font height-to-width ratio for default (non-stretched) text. */
+    private static readonly DEFAULT_FONT_ASPECT = 10 / 7;
+    /** Multiplier to scale logical font size (six) to canvas pixel size. */
+    private static readonly FONT_SIZE_RATIO = 12 / 7;
+    /** Horizontal stretch factor numerator/denominator when font is stretched. */
+    private static readonly STRETCH_FACTOR = 22 / 40;
     static readonly MAXSIZE = 2000;
     static readonly MINSIZE = 1;
     private static readonly N_POINTS = 1;
@@ -40,7 +49,6 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     private mirror: boolean = false;
     private orientation: number = 0;
     private h: number = 0; private th: number = 0; private w: number = 0;
-    private ymagnitude: number = 1;
     private coordmirroring: boolean = false;
     private x1: number = 0; private y1: number = 0;
     private xa: number = 0; private ya: number = 0;
@@ -48,6 +56,10 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     private xyfactor: number = 1.0;
     private si: number = 0; private co: number = 0;
     private needsStretching: boolean = false;
+
+    /** Measured TeX overlay dimensions in logical units (set after KaTeX render). */
+    private texOverlayW: number = 0;
+    private texOverlayH: number = 0;
 
     constructor()
     constructor(x: number, y: number, sx: number, sy: number, fn: string,
@@ -84,8 +96,9 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         if (!this.selectLayer(g, layerV)) return;
         if (this.txt.length === 0) return;
 
+        // Always recompute font metrics when rendering — the zoom/mirror
+        // may have changed since the last draw call.
         this.changed = true;
-        this.ymagnitude = coordSys.getYMagnitude();
         this.coordmirroring = coordSys.getMirror();
 
         if (this.changed) {
@@ -98,7 +111,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.xa = coordSys.mapX(this.x1, this.y1);
             this.ya = coordSys.mapY(this.x1, this.y1);
 
-            g.setFont(this.fontName, this.six * 12 * coordSys.getYMagnitude() / 7 + 0.5,
+            g.setFont(this.fontName, this.six * PrimitiveAdvText.FONT_SIZE_RATIO * coordSys.getYMagnitude() + 0.5,
                 (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0,
                 (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0);
 
@@ -123,8 +136,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
 
             this.xyfactor = 1.0;
             this.needsStretching = false;
-            if (this.siy / this.six !== 10 / 7) {
-                this.xyfactor = this.siy / this.six * 22.0 / 40.0;
+            if (this.siy / this.six !== PrimitiveAdvText.DEFAULT_FONT_ASPECT) {
+                this.xyfactor = this.siy / this.six * PrimitiveAdvText.STRETCH_FACTOR;
                 this.needsStretching = true;
             }
 
@@ -164,9 +177,14 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.qq = Math.trunc(this.ya / this.xyfactor);
         }
 
-        g.drawAdvText(this.xyfactor, this.xa, this.ya, this.qq,
-            this.h, this.w, this.h, this.needsStretching,
-            this.orientation, this.mirror, this.txt);
+        // When TeX overlay is active, skip canvas rendering for text with math
+        // (the overlay renders these via KaTeX instead).
+        // Bounding-box tracking must still happen above for zoom-to-fit.
+        if (!(TeXMode.active && this.txt.includes('$'))) {
+            g.drawAdvText(this.xyfactor, this.xa, this.ya, this.qq,
+                this.h, this.w, this.h, this.needsStretching,
+                this.orientation, this.mirror, this.txt);
+        }
     }
 
     parseTokens(tokens: string[], nn: number): void {
@@ -209,18 +227,24 @@ export class PrimitiveAdvText extends GraphicPrimitive {
 
     getDistanceToPoint(px: number, py: number): number {
         if (this.changed || this.recalcSize) {
-            if (this.changed) {
-                // Phase 2: use GraphicsNull for accurate measurement.
-                // Phase 1 approximation: character width ≈ six * 12/7 * 0.6
-                const approxCharW = this.six * 12.0 / 7.0 * 0.6;
-                this.wSCI = Math.trunc(this.txt.length * approxCharW);
-                const approxH = Math.trunc(this.six * 12.0 / 7.0);
-                this.hSCI = approxH;
-                this.thSCI = Math.trunc(approxH * 1.2);
-            } else {
-                this.hSCI = Math.trunc(this.h / this.ymagnitude);
-                this.thSCI = Math.trunc(this.th / this.ymagnitude);
-                this.wSCI = Math.trunc(this.w / this.ymagnitude);
+            // Use GraphicsNull for accurate text measurement in logical units.
+            // Avoids coordinate-scale mismatch between canvas zoomed metrics
+            // and unmapXnosnap/unmapYnosnap used by findPrimitiveAt.
+            const gSCI = new GraphicsNull();
+            gSCI.setFont(this.fontName,
+                Math.trunc(this.six * PrimitiveAdvText.FONT_SIZE_RATIO + 0.5),
+                (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0,
+                (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0);
+            this.wSCI = Math.trunc(gSCI.getStringWidth(this.txt));
+            this.hSCI = gSCI.getFontAscent();
+            this.thSCI = this.hSCI + gSCI.getFontDescent();
+
+            // For LaTeX text, prefer the actual measured KaTeX overlay dimensions
+            // (set by CircuitPanel.syncTeXOverlay after DOM layout).
+            if (this.txt.includes('$') && this.texOverlayW > 0 && this.texOverlayH > 0) {
+                this.wSCI = this.texOverlayW;
+                this.thSCI = this.texOverlayH;
+                this.hSCI = Math.trunc(this.texOverlayH * 0.8);
             }
             this.recalcSize = false;
             this.xaSCI = this.virtualPoint[0]!.x;
@@ -238,8 +262,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             if (this.coordmirroring) this.wSCI = -this.wSCI;
 
             if (this.orientationSCI !== 0) {
-                const si = Math.sin(this.orientation * Math.PI / 180);
-                const co = Math.cos(this.orientation * Math.PI / 180);
+                const si = Math.sin(this.orientationSCI * Math.PI / 180);
+                const co = Math.cos(this.orientationSCI * Math.PI / 180);
                 this.xpSCI = [
                     this.xaSCI,
                     Math.trunc(this.xaSCI + this.thSCI * si),
@@ -337,6 +361,17 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         this.recalcSize = true;
     }
 
+    /**
+     * Store the actual measured dimensions of the KaTeX overlay rendering
+     * (in logical units). Called by CircuitPanel after the TeX overlay DOM
+     * is laid out. When set, getDistanceToPoint uses these instead of
+     * GraphicsNull estimates for text containing $.
+     */
+    setTeXOverlaySize(w: number, h: number): void {
+        this.texOverlayW = w;
+        this.texOverlayH = h;
+    }
+
     override rotatePrimitive(bCounterClockWise: boolean, ix: number, iy: number): void {
         super.rotatePrimitive(bCounterClockWise, ix, iy);
         let po = Math.trunc(this.o / 90);
@@ -357,24 +392,30 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         if (!this.getCurrentLayer()?.isVisible()) return false;
         if (isLeftToRightSelection) return this.isFullyContained(rect);
 
-        // Phase 2: use GraphicsNull for accurate measurement.
-        const approxCharW = this.six * 12.0 / 7.0 * 0.6;
-        const textWidth = Math.trunc(this.txt.length * approxCharW);
-        const textHeight = Math.trunc(this.six * 12.0 / 7.0 * 1.2);
+        // Use GraphicsNull for accurate text measurement.
+        const gSCI = new GraphicsNull();
+        gSCI.setFont(this.fontName,
+            Math.trunc(this.six * PrimitiveAdvText.FONT_SIZE_RATIO + 0.5),
+            (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0,
+            (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0);
+        const textWidth = Math.trunc(gSCI.getStringWidth(this.txt));
+        const textAscent = gSCI.getFontAscent();
+        const textHeight = textAscent + gSCI.getFontDescent();
 
         const angleRad = this.o * Math.PI / 180;
         let cos = Math.cos(angleRad);
         const sin = Math.sin(angleRad);
         if ((this.sty & PrimitiveAdvText.TEXT_MIRRORED) !== 0) cos = -cos;
 
+        // Bounding box: text extends downward from the virtual point.
         const x = this.virtualPoint[0]!.x, y = this.virtualPoint[0]!.y;
-        const x1 = x, y1 = y - textHeight;
+        const x1 = x, y1 = y;
         const x2 = x + Math.trunc(textWidth * cos);
-        const y2 = y - Math.trunc(textWidth * sin);
-        const x3 = x + Math.trunc(textWidth * cos - textHeight * sin);
-        const y3 = y - Math.trunc(textWidth * sin + textHeight * cos);
-        const x4 = x - Math.trunc(textHeight * sin);
-        const y4 = y - Math.trunc(textHeight * cos);
+        const y2 = y + Math.trunc(textWidth * sin);
+        const x3 = x + Math.trunc(textWidth * cos + textHeight * sin);
+        const y3 = y + Math.trunc(textWidth * sin + textHeight * cos);
+        const x4 = x + Math.trunc(textHeight * sin);
+        const y4 = y + Math.trunc(textHeight * cos);
 
         const minX = Math.min(x1, x2, x3, x4);
         const minY = Math.min(y1, y2, y3, y4);

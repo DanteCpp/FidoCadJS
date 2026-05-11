@@ -58,10 +58,12 @@ export class DrawingModel {
 
     addPrimitive(p: GraphicPrimitive, sort: boolean,
         ua: { saveUndoState(): void; setModified(b: boolean): void } | null): void {
+        if (ua !== null) {
+            ua.saveUndoState();
+        }
         this.primitiveVector.push(p);
         if (sort) this.sortPrimitiveLayers();
         if (ua !== null) {
-            ua.saveUndoState();
             ua.setModified(true);
             this.changedFlag = true;
         }

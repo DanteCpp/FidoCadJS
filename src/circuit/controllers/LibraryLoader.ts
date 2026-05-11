@@ -19,18 +19,24 @@ const STANDARD_LIBRARIES: LibraryEntry[] = [
     { url: `${BASE}lib/FCDstdlib_en.fcl`,       prefix: '' },
     { url: `${BASE}lib/elettrotecnica_en.fcl`,  prefix: 'elettrotecnica' },
     { url: `${BASE}lib/EY_Libraries.fcl`,       prefix: 'EY_Libraries' },
-    { url: `${BASE}lib/IHRAM_en.FCL`,           prefix: 'IHRAM' },
+    { url: `${BASE}lib/IHRAM_en.fcl`,           prefix: 'IHRAM' },
 ];
 
 export async function loadStandardLibraries(parserActions: ParserActions): Promise<void> {
-    for (const { url, prefix } of STANDARD_LIBRARIES) {
-        try {
+    // Fetch all libraries in parallel, then parse sequentially to avoid
+    // race conditions on the shared library map.
+    const results = await Promise.allSettled(
+        STANDARD_LIBRARIES.map(async ({ url, prefix }) => {
             const response = await fetch(url);
-            if (!response.ok) continue;
-            const text = await response.text();
-            parserActions.readLibraryString(text, prefix);
-        } catch (e) {
-            console.warn('Failed to load library:', url, e);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return { prefix, text: await response.text() };
+        })
+    );
+    for (const result of results) {
+        if (result.status === 'fulfilled') {
+            parserActions.readLibraryString(result.value.text, result.value.prefix);
+        } else {
+            console.warn('Failed to load library:', result.reason);
         }
     }
 }

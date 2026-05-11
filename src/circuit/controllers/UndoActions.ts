@@ -36,6 +36,13 @@ export class UndoActions {
         return this.redoStack.length > 0;
     }
 
+    /** Reset all undo/redo state (called on New/Clear). */
+    reset(): void {
+        this.undoStack = [];
+        this.redoStack = [];
+        this.isModified = false;
+    }
+
     /** Save current state for undo */
     saveUndoState(): void {
         const state = this.parserActions.getText(true);

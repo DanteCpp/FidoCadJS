@@ -415,8 +415,8 @@ export abstract class GraphicPrimitive {
             if (i === nvp || i === vvp) continue;
             for (let j = i + 1; j < this.getControlPointNumber(); j++) {
                 if (j === nvp || j === vvp) continue;
-                qx = Math.abs(this.virtualPoint[i]!.x - this.virtualPoint[j]!.x);
-                qy = Math.abs(this.virtualPoint[i]!.y - this.virtualPoint[j]!.y);
+                qx = Math.max(qx, Math.abs(this.virtualPoint[i]!.x - this.virtualPoint[j]!.x));
+                qy = Math.max(qy, Math.abs(this.virtualPoint[i]!.y - this.virtualPoint[j]!.y));
             }
         }
         return new DimensionG(qx, qy);

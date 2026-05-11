@@ -161,11 +161,10 @@ export class ParserActions {
                 if (tokens[0] === 'FCJ') {
                     if (hasFCJ && oldTokens[0] === 'MC') {
                         macroCounter = 2;
-                        g = new PrimitiveMacro(this.model.getLibrary(), layerV,
-                            macroFont, macroFontSize);
+                        g = this.createPrimitiveForToken('MC')!;
                         g.parseTokens(oldTokens, oldJ + 1);
                     } else if (hasFCJ && oldTokens[0] === 'LI') {
-                        g = new PrimitiveLine(macroFont, macroFontSize);
+                        g = this.createPrimitiveForToken('LI')!;
                         for (let l = 0; l < j; l++) oldTokens[l + oldJ + 1] = tokens[l]!;
                         oldJ += j;
                         g.parseTokens(oldTokens, oldJ + 1);
@@ -176,7 +175,7 @@ export class ParserActions {
                             this.model.addPrimitive(g, false, null);
                         }
                     } else if (hasFCJ && oldTokens[0] === 'BE') {
-                        g = new PrimitiveBezier(macroFont, macroFontSize);
+                        g = this.createPrimitiveForToken('BE')!;
                         for (let l = 0; l < j; l++) oldTokens[l + oldJ + 1] = tokens[l]!;
                         oldJ += j;
                         g.parseTokens(oldTokens, oldJ + 1);
@@ -187,7 +186,7 @@ export class ParserActions {
                             this.model.addPrimitive(g, false, null);
                         }
                     } else if (hasFCJ && (oldTokens[0] === 'RV' || oldTokens[0] === 'RP')) {
-                        g = new PrimitiveRectangle(macroFont, macroFontSize);
+                        g = this.createPrimitiveForToken(oldTokens[0]!)!;
                         for (let l = 0; l < j; l++) oldTokens[l + oldJ + 1] = tokens[l]!;
                         oldJ += j;
                         g.parseTokens(oldTokens, oldJ + 1);
@@ -198,7 +197,7 @@ export class ParserActions {
                             this.model.addPrimitive(g, false, null);
                         }
                     } else if (hasFCJ && (oldTokens[0] === 'EV' || oldTokens[0] === 'EP')) {
-                        g = new PrimitiveOval(macroFont, macroFontSize);
+                        g = this.createPrimitiveForToken(oldTokens[0]!)!;
                         for (let l = 0; l < j; l++) oldTokens[l + oldJ + 1] = tokens[l]!;
                         oldJ += j;
                         g.parseTokens(oldTokens, oldJ + 1);
@@ -209,7 +208,7 @@ export class ParserActions {
                             this.model.addPrimitive(g, false, null);
                         }
                     } else if (hasFCJ && (oldTokens[0] === 'PV' || oldTokens[0] === 'PP')) {
-                        g = new PrimitivePolygon(macroFont, macroFontSize);
+                        g = this.createPrimitiveForToken(oldTokens[0]!)!;
                         for (let l = 0; l < j; l++) oldTokens[l + oldJ + 1] = tokens[l]!;
                         oldJ += j;
                         g.parseTokens(oldTokens, oldJ + 1);
@@ -220,7 +219,7 @@ export class ParserActions {
                             this.model.addPrimitive(g, false, null);
                         }
                     } else if (hasFCJ && (oldTokens[0] === 'CV' || oldTokens[0] === 'CP')) {
-                        g = new PrimitiveComplexCurve(macroFont, macroFontSize);
+                        g = this.createPrimitiveForToken(oldTokens[0]!)!;
                         for (let l = 0; l < j; l++) oldTokens[l + oldJ + 1] = tokens[l]!;
                         oldJ += j;
                         g.parseTokens(oldTokens, oldJ + 1);
@@ -367,7 +366,7 @@ export class ParserActions {
             const layerNum = parseInt(tokens[2]!, 10);
             if (layerNum >= 0 && layerNum < layerV.length) {
                 const parts: string[] = [];
-                for (let t = 3; t < ntokens + 1; t++) {
+                for (let t = 3; t < ntokens; t++) {
                     parts.push(tokens[t]!);
                     parts.push(' ');
                 }
@@ -384,56 +383,43 @@ export class ParserActions {
         }
     }
 
-    private registerPrimitivesWithFCJ(hasFCJt: boolean, tokens: string[],
-        gg: GraphicPrimitive, oldTokens: string[], oldJ: number,
-        selectNew: boolean): boolean {
+    /**
+     * Map FCD token name to the corresponding primitive constructor.
+     * Centralizes factory logic shared between addString and registerPrimitivesWithFCJ.
+     */
+    private createPrimitiveForToken(token: string): GraphicPrimitive | null {
         const macroFont = this.model.getTextFont();
         const macroFontSize = this.model.getTextFontSize();
         const layerV = this.model.getLayers();
 
-        let g = gg;
+        switch (token) {
+            case 'LI': return new PrimitiveLine(macroFont, macroFontSize);
+            case 'BE': return new PrimitiveBezier(macroFont, macroFontSize);
+            case 'MC': return new PrimitiveMacro(this.model.getLibrary(), layerV, macroFont, macroFontSize);
+            case 'RV': case 'RP': return new PrimitiveRectangle(macroFont, macroFontSize);
+            case 'EV': case 'EP': return new PrimitiveOval(macroFont, macroFontSize);
+            case 'PV': case 'PP': return new PrimitivePolygon(macroFont, macroFontSize);
+            case 'CV': case 'CP': return new PrimitiveComplexCurve(macroFont, macroFontSize);
+            case 'PL': return new PrimitivePCBLine(macroFont, macroFontSize);
+            case 'PA': return new PrimitivePCBPad(macroFont, macroFontSize);
+            case 'SA': return new PrimitiveConnection(macroFont, macroFontSize);
+            default: return null;
+        }
+    }
+
+    private registerPrimitivesWithFCJ(hasFCJt: boolean, tokens: string[],
+        _gg: GraphicPrimitive, oldTokens: string[], oldJ: number,
+        selectNew: boolean): boolean {
         let hasFCJ = hasFCJt;
-        let addPrimitive = false;
 
         if (hasFCJ && tokens[0] !== 'FCJ') {
-            if (oldTokens[0] === 'MC') {
-                g = new PrimitiveMacro(this.model.getLibrary(), layerV, macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'LI') {
-                g = new PrimitiveLine(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'BE') {
-                g = new PrimitiveBezier(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'RP' || oldTokens[0] === 'RV') {
-                g = new PrimitiveRectangle(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'EP' || oldTokens[0] === 'EV') {
-                g = new PrimitiveOval(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'PP' || oldTokens[0] === 'PV') {
-                g = new PrimitivePolygon(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'PL') {
-                g = new PrimitivePCBLine(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'CP' || oldTokens[0] === 'CV') {
-                g = new PrimitiveComplexCurve(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'PA') {
-                g = new PrimitivePCBPad(macroFont, macroFontSize);
-                addPrimitive = true;
-            } else if (oldTokens[0] === 'SA') {
-                g = new PrimitiveConnection(macroFont, macroFontSize);
-                addPrimitive = true;
+            const g = this.createPrimitiveForToken(oldTokens[0]!);
+            if (g) {
+                g.parseTokens(oldTokens, oldJ + 1);
+                g.setSelected(selectNew);
+                this.model.addPrimitive(g, false, null);
+                hasFCJ = false;
             }
-        }
-
-        if (addPrimitive) {
-            g.parseTokens(oldTokens, oldJ + 1);
-            g.setSelected(selectNew);
-            this.model.addPrimitive(g, false, null);
-            hasFCJ = false;
         }
         return hasFCJ;
     }

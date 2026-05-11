@@ -48,6 +48,8 @@ export class EditorActions {
         const first = this.selectionActions.getFirstSelectedPrimitive();
         if (!first) return;
 
+        this.undoActions?.saveUndoState();
+
         const ix = first.getFirstPoint().x;
         const iy = first.getFirstPoint().y;
 
@@ -56,14 +58,14 @@ export class EditorActions {
                 prim.rotatePrimitive(false, ix, iy);
             }
         }
-
-        this.undoActions?.saveUndoState();
     }
 
     /** Mirror all selected primitives horizontally */
     mirrorAllSelected(): void {
         const first = this.selectionActions.getFirstSelectedPrimitive();
         if (!first) return;
+
+        this.undoActions?.saveUndoState();
 
         const ix = first.getFirstPoint().x;
 
@@ -72,48 +74,51 @@ export class EditorActions {
                 prim.mirrorPrimitive(ix);
             }
         }
-
-        this.undoActions?.saveUndoState();
     }
 
-    /** Move all selected primitives by dx, dy */
-    moveAllSelected(dx: number, dy: number): void {
+    /** Move all selected primitives by dx, dy.
+     *  @param saveState  Pass false when the caller already saved undo state. */
+    moveAllSelected(dx: number, dy: number, saveState: boolean = true): void {
+        if (saveState) {
+            this.undoActions?.saveUndoState();
+        }
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 prim.movePrimitive(dx, dy);
             }
         }
-        this.undoActions?.saveUndoState();
     }
 
     /** Delete all selected primitives */
     deleteAllSelected(saveState: boolean): void {
+        if (saveState && this.undoActions) {
+            this.undoActions.saveUndoState();
+        }
         const v = this.model.getPrimitiveVector();
         for (let i = v.length - 1; i >= 0; i--) {
             if (v[i].isSelected()) {
                 v.splice(i, 1);
             }
         }
-        if (saveState && this.undoActions) {
-            this.undoActions.saveUndoState();
-        }
     }
 
     /** Set layer for selected primitives */
     setLayerForSelectedPrimitives(layer: number): boolean {
-        let toRedraw = false;
+        const hasSelected = this.model.getPrimitiveVector().some(
+            p => p.isSelected() && !(p instanceof PrimitiveMacro)
+        );
+        if (!hasSelected) return false;
+
+        this.undoActions?.saveUndoState();
+
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected() && !(prim instanceof PrimitiveMacro)) {
                 prim.setLayer(layer);
-                toRedraw = true;
             }
         }
-        if (toRedraw) {
-            this.model.sortPrimitiveLayers();
-            this.model.setChanged(true);
-            this.undoActions?.saveUndoState();
-        }
-        return toRedraw;
+        this.model.sortPrimitiveLayers();
+        this.model.setChanged(true);
+        return true;
     }
 
     /** Calculate minimum distance from point to any primitive */
@@ -192,72 +197,84 @@ export class EditorActions {
     /** Align selected primitives to leftmost position */
     alignLeftSelected(): void {
         let leftmost = Number.MAX_VALUE;
+        let hasSelected = false;
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
+                hasSelected = true;
                 const x = prim.getPosition().x;
                 if (x < leftmost) leftmost = x;
             }
         }
+        if (!hasSelected) return;
+        this.undoActions?.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dx = leftmost - prim.getPosition().x;
                 prim.movePrimitive(dx, 0);
             }
         }
-        this.undoActions?.saveUndoState();
     }
 
     /** Align selected primitives to rightmost position */
     alignRightSelected(): void {
         let rightmost = Number.MIN_VALUE;
+        let hasSelected = false;
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
+                hasSelected = true;
                 const x = prim.getPosition().x + prim.getSize().width;
                 if (x > rightmost) rightmost = x;
             }
         }
+        if (!hasSelected) return;
+        this.undoActions?.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dx = rightmost - (prim.getPosition().x + prim.getSize().width);
                 prim.movePrimitive(dx, 0);
             }
         }
-        this.undoActions?.saveUndoState();
     }
 
     /** Align selected primitives to topmost position */
     alignTopSelected(): void {
         let topmost = Number.MAX_VALUE;
+        let hasSelected = false;
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
+                hasSelected = true;
                 const y = prim.getPosition().y;
                 if (y < topmost) topmost = y;
             }
         }
+        if (!hasSelected) return;
+        this.undoActions?.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dy = topmost - prim.getPosition().y;
                 prim.movePrimitive(0, dy);
             }
         }
-        this.undoActions?.saveUndoState();
     }
 
     /** Align selected primitives to bottommost position */
     alignBottomSelected(): void {
         let bottommost = Number.MIN_VALUE;
+        let hasSelected = false;
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
+                hasSelected = true;
                 const y = prim.getPosition().y + prim.getSize().height;
                 if (y > bottommost) bottommost = y;
             }
         }
+        if (!hasSelected) return;
+        this.undoActions?.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dy = bottommost - (prim.getPosition().y + prim.getSize().height);
                 prim.movePrimitive(0, dy);
             }
         }
-        this.undoActions?.saveUndoState();
     }
 }

@@ -17,6 +17,11 @@ import { LayerDesc } from '../layers/LayerDesc.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
 import { Export, registerExportHooks } from './views/Export.js';
 import { ExportSVG } from '../export/ExportSVG.js';
+import { ExportPGF } from '../export/ExportPGF.js';
+import { ExportTikZ } from '../export/ExportTikZ.js';
+import { TeXMode } from '../graphic/TeXMode.js';
+import { renderMixedText } from '../graphic/TeXRenderer.js';
+import '../vendor/katex/katex.min.css';
 import { DrawingSize } from '../geom/DrawingSize.js';
 import { SelectionActions } from './controllers/SelectionActions.js';
 import { UndoActions } from './controllers/UndoActions.js';
@@ -36,6 +41,9 @@ import { InPlaceTextEditor } from '../ui/InPlaceTextEditor.js';
 import { ContextMenu } from '../ui/ContextMenu.js';
 import { AddElements } from './controllers/AddElements.js';
 import { MenuBar } from '../ui/MenuBar.js';
+import { KeyboardController } from './controllers/KeyboardController.js';
+import type { KeyboardHost } from './controllers/KeyboardController.js';
+import { ClipboardController } from './controllers/ClipboardController.js';
 
 export class CircuitPanel {
     private container: HTMLElement;
@@ -49,6 +57,8 @@ export class CircuitPanel {
     private gridColor: string = '#6464c8';
     private selectionLTRColor: string = '#008000';
     private selectionRTLColor: string = '#0000ff';
+    private renderTeX: boolean = false;
+    private texOverlay: HTMLDivElement;
     private drawing: Drawing;
     private isPanning: boolean = false;
     private panStartX: number = 0;
@@ -102,11 +112,14 @@ export class CircuitPanel {
     private static readonly DBLCLICK_TIME_MS = 400;
     private static readonly DBLCLICK_DIST_PX = 5;
 
-    private clipboard: string = '';
+    private clipboardController: ClipboardController;
+    private keyboardController: KeyboardController;
     private contextMenu!: ContextMenu;
     private contextMenuLogX: number = 0;
     private contextMenuLogY: number = 0;
     private menuBar: MenuBar | null = null;
+    private resizeObserver: ResizeObserver | null = null;
+    private boundOnResize: () => void = () => this.onResize();
     private isMovingSelected: boolean = false;
     private moveStartLogX: number = 0;
     private moveStartLogY: number = 0;
@@ -132,13 +145,13 @@ export class CircuitPanel {
         this.canvas.style.display = 'block';
         container.appendChild(this.canvas);
 
-        // Expose panel reference for E2E test access
+        // Expose panel reference for E2E test access (intentional escape hatch)
         (this.canvas as any).__circuitPanel = this;
 
         // Setup high-DPI canvas with ResizeObserver for robust sizing
         const dpr = window.devicePixelRatio || 1;
         let hasInitialized = false;
-        const ro = new ResizeObserver(() => {
+        this.resizeObserver = new ResizeObserver(() => {
             const w = container.clientWidth * dpr;
             const h = container.clientHeight * dpr;
             if (w <= 0 || h <= 0) return;
@@ -148,7 +161,7 @@ export class CircuitPanel {
             hasInitialized = true;
             this.render();
         });
-        ro.observe(container);
+        this.resizeObserver.observe(container);
 
         // Force initial layout computation
         container.offsetWidth;
@@ -188,6 +201,19 @@ export class CircuitPanel {
         // Initialize context menu — mount on body to avoid overflow:hidden clipping
         this.contextMenu = new ContextMenu();
 
+        // Initialize clipboard controller (before keyboard, which depends on it)
+        this.clipboardController = new ClipboardController(
+            this.selectionActions, this.parserActions, this.editorActions,
+            this.undoActions, this.mapCoordinates
+        );
+        this.clipboardController.onRenderRequested = () => this.render();
+        this.clipboardController.onUndoStateChange = () => this.onUndoStateChange?.();
+
+        // Initialize keyboard controller
+        this.keyboardController = new KeyboardController(
+            this as unknown as KeyboardHost, this.clipboardController
+        );
+
         // Set initial cursor
         this.canvas.style.cursor = this.cursorForTool(this.currentTool);
 
@@ -210,7 +236,7 @@ export class CircuitPanel {
         });
 
         // Handle resize
-        window.addEventListener('resize', () => this.onResize());
+        window.addEventListener('resize', this.boundOnResize);
 
         // Mouse wheel zoom (toward cursor)
         this.canvas.addEventListener('wheel', (e) => this.onMouseWheel(e), { passive: false });
@@ -221,6 +247,25 @@ export class CircuitPanel {
         this.canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
         this.canvas.addEventListener('mouseleave', (e) => this.onMouseUp(e));
         this.canvas.addEventListener('dblclick', (e) => this.onDoubleClick(e));
+
+        // TeX overlay — positioned on top of canvas for crisp math rendering
+        this.texOverlay = document.createElement('div');
+        this.texOverlay.style.cssText =
+            'position: absolute; top: 0; left: 0; width: 100%; height: 100%; ' +
+            'pointer-events: none; overflow: hidden; z-index: 1; display: none;';
+        this.texOverlay.setAttribute('aria-hidden', 'true');
+        container.style.position = 'relative';
+        container.appendChild(this.texOverlay);
+    }
+
+    /** Remove all global listeners and observers. Call when the panel is unmounted. */
+    destroy(): void {
+        this.keyboardController.detach();
+        window.removeEventListener('resize', this.boundOnResize);
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
     }
 
     private onMouseWheel(e: WheelEvent): void {
@@ -326,6 +371,7 @@ export class CircuitPanel {
             if (this.currentTool === ElementsEdtActions.SELECTION) {
                 const handleIdx = this.findHandleAt(sx, sy);
                 if (handleIdx !== GraphicPrimitive.NO_DRAG && this.dragHandlePrim !== null) {
+                    this.undoActions.saveUndoState();
                     this.dragHandleIndex = handleIdx;
                     return;
                 }
@@ -406,6 +452,8 @@ export class CircuitPanel {
                     this.mouseDownPrimHit.setSelected(true);
                     this.model.setChanged(true);
                 }
+                // Save pre-drag state so undo can restore the original positions.
+                this.undoActions.saveUndoState();
                 this.isMoveAllDrag = true;
                 this.mouseDownPrimHit = null;
             }
@@ -463,7 +511,6 @@ export class CircuitPanel {
 
         if (this.isMovingSelected) {
             this.isMovingSelected = false;
-            this.undoActions.saveUndoState();
             this.canvas.style.cursor = this.cursorForTool(this.currentTool);
             this.onUndoStateChange?.();
             return;
@@ -489,7 +536,6 @@ export class CircuitPanel {
         }
 
         if (this.isMoveAllDrag) {
-            this.undoActions.saveUndoState();
             this.isMoveAllDrag = false;
             this.render();
             return;
@@ -522,7 +568,6 @@ export class CircuitPanel {
         }
 
         if (this.dragHandleIndex !== GraphicPrimitive.NO_DRAG) {
-            this.undoActions.saveUndoState();
             this.dragHandleIndex = GraphicPrimitive.NO_DRAG;
             this.dragHandlePrim = null;
             this.render();
@@ -791,6 +836,7 @@ export class CircuitPanel {
     getParserActions(): ParserActions { return this.parserActions; }
     getMapCoordinates(): MapCoordinates { return this.mapCoordinates; }
     getAddElements(): AddElements { return this.elementsEdt.getAddElements(); }
+    getCanvasElement(): HTMLCanvasElement { return this.canvas; }
 
     setGridVisible(visible: boolean): void {
         this.gridVisible = visible;
@@ -807,6 +853,15 @@ export class CircuitPanel {
     setGridColor(c: string): void { this.gridColor = c; }
     setSelectionLTRColor(c: string): void { this.selectionLTRColor = c; }
     setSelectionRTLColor(c: string): void { this.selectionRTLColor = c; }
+
+    setRenderTeX(enabled: boolean): void {
+        this.renderTeX = enabled;
+        this.texOverlay.style.display = enabled ? 'block' : 'none';
+        if (!enabled) {
+            this.texOverlay.innerHTML = '';
+        }
+        this.render();
+    }
 
     setSelectedColor(c: ColorInterface): void {
         this.ctx.setSelectedColor(c);
@@ -864,12 +919,135 @@ export class CircuitPanel {
         this.mapCoordinates.setYCenter(Math.min(this.mapCoordinates.getYCenter(), 0));
     }
 
+    /** Populate the TeX overlay div with KaTeX-rendered math from text primitives. */
+    private syncTeXOverlay(dpr: number): void {
+        if (!this.renderTeX) return;
+
+        const htmlParts: string[] = [];
+        const latexIndices: number[] = []; // primitive indices for each overlay div
+        const layers = this.model.getLayers();
+        const primitives = this.model.getPrimitiveVector();
+
+        for (let pi = 0; pi < primitives.length; pi++) {
+            const prim = primitives[pi]!;
+            if (!(prim instanceof PrimitiveAdvText)) continue;
+
+            const text = prim.getString();
+            // Quick skip: if no $ delimiter, no math to render
+            if (!text.includes('$')) continue;
+
+            const lx = prim.virtualPoint[0]!.x;
+            const ly = prim.virtualPoint[0]!.y;
+            const sx = this.mapCoordinates.mapX(lx, ly);
+            const sy = this.mapCoordinates.mapY(lx, ly);
+
+            // Convert canvas pixels to CSS pixels for overlay positioning
+            const cssX = sx / dpr;
+            const cssY = sy / dpr;
+
+            // Compute font CSS matching the canvas font settings (mirrors draw()).
+            // Use the larger of six and the width-equivalent of siy to ensure
+            // both font size fields affect the visual rendering.
+            const yMag = this.mapCoordinates.getYMagnitude();
+            const effectiveSix = Math.max(
+                prim.getFontWidth(),
+                prim.getFontDimension() * 7 / 10
+            );
+            const canvasFontSize = effectiveSix * 12 * yMag / 7 + 0.5;
+            const cssFontSize = canvasFontSize / dpr;
+            const isBold = prim.isBold();
+            const isItalic = prim.isItalic();
+            const fontName = prim.getFontName() || 'Courier New';
+            const fontStyle = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}`;
+
+            // Layer color — blend with selection green when selected (matches canvas).
+            const layerIdx = prim.getLayer();
+            let textColor = '#000000';
+            if (layerIdx >= 0 && layerIdx < layers.length) {
+                const color = layers[layerIdx].getColor();
+                if (color) {
+                    if (prim.isSelected()) {
+                        // Same blend as GraphicsCanvas.activateSelectColor:
+                        // selectedColor(0,255,0) * 0.6 + layerColor * 0.4
+                        const r = Math.floor(0 * 0.6 + color.getRed() * 0.4);
+                        const g = Math.floor(255 * 0.6 + color.getGreen() * 0.4);
+                        const b = Math.floor(0 * 0.6 + color.getBlue() * 0.4);
+                        textColor = `rgb(${r},${g},${b})`;
+                    } else {
+                        textColor = (color as ColorCanvas).toCSSColor();
+                    }
+                }
+            }
+
+            // Orientation and mirror (mirrors draw() coordinate adjustments).
+            let orientation = prim.getOrientation();
+            let mirror = prim.isMirrored() !== 0;
+            if (mirror) orientation = -orientation;
+            orientation -= this.mapCoordinates.getOrientation() * 90;
+            if (this.mapCoordinates.getMirror()) {
+                mirror = !mirror;
+                orientation = -orientation;
+            }
+            let transformStyle = '';
+            if (orientation !== 0 || mirror) {
+                transformStyle = `transform: rotate(${orientation}deg)` +
+                    (mirror ? ' scaleX(-1)' : '') + '; ' +
+                    'transform-origin: 0 0; ';
+            }
+
+            const segments = renderMixedText(text);
+            const segmentHtml = segments.map(seg => {
+                if (seg.type === 'text') {
+                    // Escape HTML in plain text segments
+                    const escaped = seg.content
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                    return `<span style="white-space: pre;">${escaped}</span>`;
+                }
+                // Math segments already contain safe KaTeX HTML
+                return seg.content;
+            }).join('');
+
+            htmlParts.push(
+                `<div data-prim-index="${pi}" style="position:absolute; left:${cssX}px; top:${cssY}px; ` +
+                `white-space: nowrap; font: ${fontStyle}${cssFontSize}px ${fontName}; ` +
+                `color: ${textColor}; ${transformStyle}">${segmentHtml}</div>`
+            );
+            latexIndices.push(pi);
+        }
+
+        this.texOverlay.innerHTML = htmlParts.join('');
+
+        // Measure actual KaTeX overlay dimensions after layout and feed them
+        // back to the primitives for accurate click hit-testing.
+        requestAnimationFrame(() => {
+            const overlayDivs = this.texOverlay.querySelectorAll('[data-prim-index]');
+            for (const div of overlayDivs) {
+                const idx = parseInt((div as HTMLElement).dataset['primIndex'] ?? '', 10);
+                const prim = primitives[idx];
+                if (!(prim instanceof PrimitiveAdvText)) continue;
+                const rect = div.getBoundingClientRect();
+                if (rect.width <= 0 && rect.height <= 0) continue;
+                // Convert CSS pixel dimensions to logical units.
+                // The div is positioned at (cssX, cssY) which maps to
+                // (virtualPoint.x, virtualPoint.y) in logical coords.
+                const wLogical = Math.round(rect.width * dpr / this.mapCoordinates.getXMagnitude());
+                const hLogical = Math.round(rect.height * dpr / this.mapCoordinates.getYMagnitude());
+                prim.setTeXOverlaySize(wLogical, hLogical);
+            }
+        });
+    }
+
     render(): void {
         const ctx = this.ctx.getCtx();
         const width = this.canvas.width;
         const height = this.canvas.height;
 
-        // Pre-fill dirty rect to full canvas so every hitClip() passes this render pass
+        // Mark entire canvas as dirty so hitClip() passes for the first draw.
+        // Each subsequent draw expands the dirty rect via markDirty(), so all
+        // primitives render. Without this, the first primitive's bounds become
+        // the dirty rect and clip everything outside it.
         this.ctx.clearDirtyRect();
         this.ctx.markDirtyFull(width, height);
 
@@ -886,6 +1064,7 @@ export class CircuitPanel {
 
         // Draw primitives via the Drawing view (correct layer ordering, macro support)
         this.mapCoordinates.resetMinMax();
+        TeXMode.active = this.renderTeX;
         this.drawing.draw(this.ctx, this.mapCoordinates);
 
         // Draw handles for selected elements
@@ -916,6 +1095,9 @@ export class CircuitPanel {
             ctx.restore();
         }
 
+        // Sync TeX overlay when LaTeX rendering is enabled
+        this.syncTeXOverlay(window.devicePixelRatio || 1);
+
         this.model.setChanged(false);
         this.ctx.clearDirtyRect();
     }
@@ -942,6 +1124,28 @@ export class CircuitPanel {
         exportView.exportDrawing(svg, false, mp);
         svg.exportEnd();
         return svg.getSvgString();
+    }
+
+    exportPGF(): string {
+        const mp = new MapCoordinates();
+        mp.setMagnitudes(1, 1);
+        const pgf = new ExportPGF();
+        const exportView = new Export(this.model);
+        exportView.exportHeader(pgf, mp);
+        exportView.exportDrawing(pgf, false, mp);
+        pgf.exportEnd();
+        return pgf.getPgfString();
+    }
+
+    exportTikZ(): string {
+        const mp = new MapCoordinates();
+        mp.setMagnitudes(1, 1);
+        const tikz = new ExportTikZ();
+        const exportView = new Export(this.model);
+        exportView.exportHeader(tikz, mp);
+        exportView.exportDrawing(tikz, false, mp);
+        tikz.exportEnd();
+        return tikz.getTikZString();
     }
 
     setTool(toolId: number): void {
@@ -1014,11 +1218,10 @@ export class CircuitPanel {
     }
 
     startMoveSelected(): void {
-        // Check if there are selected primitives
         const selected = this.selectionActions.getSelectedPrimitives();
         if (selected.length === 0) return;
 
-        // Enter move mode - the next mouse drag will move the selection
+        this.undoActions.saveUndoState();
         this.isMovingSelected = true;
         this.canvas.style.cursor = 'move';
     }
@@ -1063,10 +1266,10 @@ export class CircuitPanel {
             this.model.getLayers(),
             (value) => {
                 // Commit
+                this.undoActions.saveUndoState();
                 prim.setString(value);
                 prim.setChanged(true);
                 this.model.setChanged(true);
-                this.undoActions.saveUndoState();
                 this.render();
             },
             () => {
@@ -1094,7 +1297,10 @@ export class CircuitPanel {
 
     clearCircuit(): void {
         this.model.getPrimitiveVector().splice(0);
-        this.undoActions = new UndoActions(this.parserActions);
+        // Reset existing undo stack rather than replacing the instance,
+        // so dependent controllers (EditorActions, AddElements, etc.) keep
+        // valid references.
+        this.undoActions.reset();
         this.selectionActions.setSelectionAll(false);
         this.ghostPrimitive = null;
         this.selRectActive = false;
@@ -1104,71 +1310,35 @@ export class CircuitPanel {
         this.onUndoStateChange?.();
     }
 
-    // ─── Clipboard ───────────────────────────────────────────────────────────
+    // ─── KeyboardHost interface implementation ───────────────────────────────
 
-    copySelected(): void {
-        const selected = this.selectionActions.getSelectedPrimitives();
-        if (selected.length === 0) return;
-        const text = this.selectionActions.getSelectedString(true, this.parserActions);
-        this.clipboard = text;
-        // Also push to the system clipboard so it can be pasted into other apps
-        if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(text).catch(() => { /* ignore permission errors */ });
-        }
+    isTextEditActive(): boolean { return this.textEditDialog.isActive(); }
+    getMenuBar(): MenuBar | null { return this.menuBar; }
+    cancelTextEdit(): void { this.onCancelTextEdit?.(); }
+    deselectAll(): void { this.selectionActions.setSelectionAll(false); }
+    clearGhostAndSelection(): void {
+        this.isMovingSelected = false;
+        this.isMoveAllDrag = false;
+        this.mouseDownPrimHit = null;
+        this.dragHandleIndex = GraphicPrimitive.NO_DRAG;
+        this.dragHandlePrim = null;
+        this.ghostPrimitive = null;
+        this.selRectActive = false;
     }
-
-    cutSelected(): void {
-        this.copySelected();
-        this.editorActions.deleteAllSelected(true);
+    nudgeSelected(dx: number, dy: number): void {
+        this.editorActions.moveAllSelected(dx, dy);
+        // moveAllSelected already saves undo state — do not double-save
         this.render();
         this.onUndoStateChange?.();
     }
 
-    async paste(): Promise<void> {
-        let text = '';
-        // Prefer system clipboard
-        if (navigator.clipboard?.readText) {
-            try {
-                text = await navigator.clipboard.readText();
-            } catch {
-                // permission denied or non-secure context – fall back
-            }
-        }
-        // Fall back to internal clipboard if system read yielded nothing
-        if (!text) {
-            text = this.clipboard;
-        }
-        if (!text) return;
+    // ─── Clipboard (delegated) ───────────────────────────────────────────────
 
-        // Deselect everything so only pasted items end up selected
-        this.selectionActions.setSelectionAll(false);
-        this.parserActions.addString(text, true);
-        // Offset pasted selection by one grid step so it doesn't overlap the original
-        const step = this.mapCoordinates.getXGridStep();
-        this.editorActions.moveAllSelected(step, step);
-        this.undoActions.saveUndoState();
-        this.render();
-        this.onUndoStateChange?.();
-    }
-
-    duplicateSelected(): void {
-        this.copySelected();
-        // duplicate should not overwrite the OS clipboard when possible, so keep
-        // internal buffer hot and let paste fall back to it.
-        void this.paste();
-    }
-
-    // Return true if the user might be able to paste (either via system clipboard
-    // or the internal fallback).
-    canPaste(): boolean {
-        if (this.clipboard.length > 0) return true;
-        try {
-            if (typeof (navigator as any).clipboard?.readText === 'function') return true;
-        } catch {
-            /* non-secure context or permission denied */
-        }
-        return false;
-    }
+    copySelected(): void { this.clipboardController.copySelected(); }
+    cutSelected(): void { this.clipboardController.cutSelected(); }
+    async paste(): Promise<void> { await this.clipboardController.paste(); }
+    duplicateSelected(): void { this.clipboardController.duplicateSelected(); }
+    canPaste(): boolean { return this.clipboardController.canPaste(); }
 
     // ─── Context Menu ─────────────────────────────────────────────────────────
 
@@ -1184,7 +1354,7 @@ export class CircuitPanel {
 
         const first = this.selectionActions.getFirstSelectedPrimitive();
         const somethingSelected = first !== null;
-        const hasCb = this.clipboard.length > 0;
+        const hasCb = this.clipboardController.canPaste();
         const isNodePrim = this.selectionActions.isUniquePrimitiveSelected() &&
             (first instanceof PrimitivePolygon || first instanceof PrimitiveComplexCurve);
         const isMacroPrim = this.selectionActions.isUniquePrimitiveSelected() &&
@@ -1271,27 +1441,17 @@ export class CircuitPanel {
 
     private addNodeAt(lx: number, ly: number): void {
         const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (first instanceof PrimitivePolygon) {
-            first.addPointClosest(lx, ly);
-        } else if (first instanceof PrimitiveComplexCurve) {
-            first.addPointClosest(lx, ly);
-        } else {
-            return;
-        }
+        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
         this.undoActions.saveUndoState();
+        first.addPointClosest(lx, ly);
         this.render();
     }
 
     private removeNodeAt(lx: number, ly: number): void {
         const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (first instanceof PrimitivePolygon) {
-            first.removePoint(lx, ly, 1);
-        } else if (first instanceof PrimitiveComplexCurve) {
-            first.removePoint(lx, ly, 1);
-        } else {
-            return;
-        }
+        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
         this.undoActions.saveUndoState();
+        first.removePoint(lx, ly, 1);
         this.render();
     }
 
@@ -1317,33 +1477,50 @@ export class CircuitPanel {
         const tempParser = new ParserActions(tempModel);
         tempParser.addString(macroDesc, false);
 
+        // Save pre-vectorize state so the entire operation can be undone in one step.
+        this.undoActions.saveUndoState();
+
         // Move and transform each primitive from the macro to the canvas position
-        const saved = this.undoActions.saveUndoState.bind(this.undoActions);
         for (const prim of tempModel.getPrimitiveVector()) {
-            // Apply orientation transformations before positioning
-            let px = prim.virtualPoint[0]?.x ?? 0;
-            let py = prim.virtualPoint[0]?.y ?? 0;
+            if (!prim.virtualPoint[0]) continue;
+
+            // Macro primitives are stored in a local coordinate system with origin at (100, 100).
+            // Compute the primitive's position relative to the macro origin, apply
+            // mirror/rotation, then place it at the macro's global position.
+            let relX = prim.virtualPoint[0].x - 100;
+            let relY = prim.virtualPoint[0].y - 100;
 
             // Apply mirror if needed
             if (mirrored) {
-                px = -px;
+                relX = -relX;
             }
 
             // Apply orientation rotation (0=0°, 1=90°, 2=180°, 3=270°)
             switch (orientation) {
                 case 1:
-                    [px, py] = [-py, px];
+                    [relX, relY] = [-relY, relX];
                     break;
                 case 2:
-                    px = -px; py = -py;
+                    relX = -relX; relY = -relY;
                     break;
                 case 3:
-                    [px, py] = [py, -px];
+                    [relX, relY] = [relY, -relX];
                     break;
             }
 
-            prim.virtualPoint; // ensure virtual point array initialized
-            prim.movePrimitive(posX - 100, posY - 100);
+            // Move the primitive so its first control point lands at the transformed position.
+            // Also rotate the primitive itself if it's text (other types don't have orientation).
+            const targetX = posX + relX;
+            const targetY = posY + relY;
+            const dx = targetX - prim.virtualPoint[0].x;
+            const dy = targetY - prim.virtualPoint[0].y;
+            prim.movePrimitive(dx, dy);
+
+            // For text primitives, also apply the macro's orientation rotation to the text itself
+            if (prim instanceof PrimitiveAdvText) {
+                prim.setOrientation((prim.getOrientation() + orientation * 90) % 360);
+            }
+
             prim.setLayer(layer);
             this.model.addPrimitive(prim, false, null);
         }
@@ -1351,330 +1528,17 @@ export class CircuitPanel {
         // Remove the original macro primitive
         const idx = this.model.getPrimitiveVector().indexOf(first);
         if (idx >= 0) this.model.getPrimitiveVector().splice(idx, 1);
-        saved();
         this.render();
     }
 
-    // ─── Keyboard ─────────────────────────────────────────────────────────────
+    // ─── Keyboard (delegated) ────────────────────────────────────────────────
 
     addKeyboardListeners(): void {
-        document.addEventListener('keydown', this._handleDocumentKeyDown);
+        this.keyboardController.attach();
     }
 
     removeKeyboardListeners(): void {
-        document.removeEventListener('keydown', this._handleDocumentKeyDown);
-    }
-
-    // Central document-level key handler.
-    // When focus is on a text input / textarea / contentEditable element,
-    // only global app shortcuts (Ctrl+N/O/S/E/P/W) are forwarded;
-    // tool shortcuts and clipboard operations are suppressed so the
-    // user can type normally.  Otherwise every keystroke goes through.
-    private _handleDocumentKeyDown = (e: KeyboardEvent): void => {
-        const target = e.target as HTMLElement;
-        const tagName = target.tagName.toLowerCase();
-        const isInput = tagName === 'input' || tagName === 'textarea' ||
-            tagName === 'select' || target.isContentEditable;
-
-        if (isInput) {
-            const key = e.key.toLowerCase();
-            const isCtrlOrMeta = e.ctrlKey || e.metaKey;
-
-            // Global file-level shortcuts that should work app-wide
-            if (isCtrlOrMeta && (key === 'n' || key === 'o' || key === 's' ||
-                key === 'e' || key === 'p' || key === 'w')) {
-                this.onKeyDown(e);
-                return;
-            }
-
-            // Escape cancels the TEXT tool even while focus is in a text
-            // input (user just placed text and is editing it).
-            if (e.key === 'Escape' && !this.textEditDialog.isActive() &&
-                this.currentTool === ElementsEdtActions.TEXT) {
-                this.onKeyDown(e);
-                return;
-            }
-
-            return;
-        }
-
-        this.onKeyDown(e);
-    };
-
-    private onKeyDown(e: KeyboardEvent): void {
-        // Don't process canvas shortcuts while in-place text editor is active
-        if (this.textEditDialog.isActive()) {
-            return;
-        }
-
-        const key = e.key.toLowerCase();
-        const isCtrlOrMeta = e.ctrlKey || e.metaKey;
-        const isAlt = e.altKey;
-
-        // ===== CLIPBOARD OPERATIONS =====
-        if (key === 'x' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.cutSelected();
-            return;
-        }
-
-        if (key === 'c' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.copySelected();
-            return;
-        }
-
-        if (key === 'v' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.paste();
-            return;
-        }
-
-        if (key === 'd' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.duplicateSelected();
-            return;
-        }
-
-        // ===== FILE OPERATIONS =====
-        if (key === 'n' && isCtrlOrMeta) {
-            e.preventDefault();
-            // Trigger new file via menu bar
-            this.menuBar?.newFile();
-            return;
-        }
-
-        if (key === 'o' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.openFile();
-            return;
-        }
-
-        if (key === 's' && isCtrlOrMeta && !e.shiftKey) {
-            e.preventDefault();
-            this.menuBar?.saveFile();
-            return;
-        }
-
-        if (key === 's' && isCtrlOrMeta && e.shiftKey) {
-            e.preventDefault();
-            this.menuBar?.saveFileAs();
-            return;
-        }
-
-        if (key === 'e' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.exportFile();
-            return;
-        }
-
-        if (key === 'p' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.printFile();
-            return;
-        }
-
-        if (key === 'w' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.menuBar?.closeFile();
-            return;
-        }
-
-        // ===== UNDO/REDO =====
-        if (key === 'z' && isCtrlOrMeta && !e.shiftKey) {
-            e.preventDefault();
-            this.undo();
-            return;
-        }
-
-        if ((key === 'z' && isCtrlOrMeta && e.shiftKey) || (key === 'y' && isCtrlOrMeta)) {
-            e.preventDefault();
-            this.redo();
-            return;
-        }
-
-        // ===== TOOL SELECTION (single key, case-insensitive) =====
-        // A or Escape: Selection tool
-        if (key === 'a' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.SELECTION);
-            this.ghostPrimitive = null;
-            this.selRectActive = false;
-            this.render();
-            return;
-        }
-
-        // Space: Fit to view
-        if (key === ' ' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.zoomToFit();
-            return;
-        }
-
-        if (key === 'escape') {
-            e.preventDefault();
-
-            // Close any open text-editing UI (properties sidebar, etc.)
-            this.onCancelTextEdit?.();
-
-            // Cancel in-progress operations
-            this.isMovingSelected = false;
-            this.isMoveAllDrag = false;
-            this.mouseDownPrimHit = null;
-            this.dragHandleIndex = GraphicPrimitive.NO_DRAG;
-            this.dragHandlePrim = null;
-            this.ghostPrimitive = null;
-            this.selRectActive = false;
-
-            // Deselect all objects
-            this.selectionActions.setSelectionAll(false);
-
-            // Switch to Selection tool (resets clickNumber, successiveMove, primEdit)
-            this.setTool(ElementsEdtActions.SELECTION);
-
-            this.render();
-            return;
-        }
-
-        // L: Line tool
-        if (key === 'l' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.LINE);
-            return;
-        }
-
-        // T: Text tool
-        if (key === 't' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.TEXT);
-            return;
-        }
-
-        // B: Bezier curve tool
-        if (key === 'b' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.BEZIER);
-            return;
-        }
-
-        // P: Polygon tool
-        if (key === 'p' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.POLYGON);
-            return;
-        }
-
-        // O: Complex curve tool
-        if (key === 'o' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.COMPLEXCURVE);
-            return;
-        }
-
-        // E: Ellipse tool
-        if (key === 'e' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.ELLIPSE);
-            return;
-        }
-
-        // G: Rectangle tool
-        if (key === 'g' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.RECTANGLE);
-            return;
-        }
-
-        // C: Connection tool
-        if (key === 'c' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.CONNECTION);
-            return;
-        }
-
-        // I: PCB track tool
-        if (key === 'i' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.PCB_LINE);
-            return;
-        }
-
-        // Z: PCB pad tool
-        if (key === 'z' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.setTool(ElementsEdtActions.PCB_PAD);
-            return;
-        }
-
-        // ===== TRANSFORM OPERATIONS (when something is selected) =====
-        // M: Move selected elements
-        if (key === 'm' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.startMoveSelected();
-            return;
-        }
-
-        // R: Rotate selected elements
-        if (key === 'r' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.rotateSelected();
-            return;
-        }
-
-        // S: Mirror selected elements
-        if (key === 's' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.mirrorSelected();
-            return;
-        }
-
-        // Delete or Backspace: Delete selected objects
-        if (key === 'delete' || key === 'backspace') {
-            e.preventDefault();
-            this.deleteSelected();
-            return;
-        }
-
-        // ===== NUDGE WITH ALT + ARROW KEYS =====
-        if (isAlt) {
-            const nudgeStep = 1; // 1 logical unit
-            let dx = 0, dy = 0;
-
-            if (key === 'arrowleft') {
-                e.preventDefault();
-                dx = -nudgeStep;
-            } else if (key === 'arrowright') {
-                e.preventDefault();
-                dx = nudgeStep;
-            } else if (key === 'arrowup') {
-                e.preventDefault();
-                dy = nudgeStep;
-            } else if (key === 'arrowdown') {
-                e.preventDefault();
-                dy = -nudgeStep;
-            }
-
-            if (dx !== 0 || dy !== 0) {
-                this.editorActions.moveAllSelected(dx, dy);
-                this.undoActions.saveUndoState();
-                this.render();
-                this.onUndoStateChange?.();
-                return;
-            }
-        }
-
-        // ===== ZOOM CONTROLS =====
-        if (key === '+' || key === '=') {
-            e.preventDefault();
-            this.zoomIn();
-            return;
-        }
-
-        if (key === '-') {
-            e.preventDefault();
-            this.zoomOut();
-            return;
-        }
+        this.keyboardController.detach();
     }
 }
 

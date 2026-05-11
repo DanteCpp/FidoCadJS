@@ -29,6 +29,9 @@ export interface AppSettings {
     gridColor: string;
     selectionLTRColor: string;
     selectionRTLColor: string;
+
+    // TeX
+    renderTeX: boolean;
 }
 
 const DEFAULTS: AppSettings = {
@@ -46,6 +49,7 @@ const DEFAULTS: AppSettings = {
     gridColor: '#6464c8',
     selectionLTRColor: '#008000',
     selectionRTLColor: '#0000ff',
+    renderTeX: false,
 };
 
 const STORAGE_KEY = 'fidocadts.settings.v1';
@@ -78,6 +82,7 @@ function sanitize(parsed: unknown): Partial<AppSettings> {
     if (isValidColor(p.gridColor)) out.gridColor = p.gridColor;
     if (isValidColor(p.selectionLTRColor)) out.selectionLTRColor = p.selectionLTRColor;
     if (isValidColor(p.selectionRTLColor)) out.selectionRTLColor = p.selectionRTLColor;
+    if (typeof p.renderTeX === 'boolean') out.renderTeX = p.renderTeX;
     return out;
 }
 
@@ -126,6 +131,7 @@ export class SettingsManager {
         panel.setGridColor(s.gridColor);
         panel.setSelectionLTRColor(s.selectionLTRColor);
         panel.setSelectionRTLColor(s.selectionRTLColor);
+        panel.setRenderTeX(s.renderTeX);
     }
 
     private load(): void {
