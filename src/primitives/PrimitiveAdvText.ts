@@ -57,6 +57,10 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     private si: number = 0; private co: number = 0;
     private needsStretching: boolean = false;
 
+    /** Measured TeX overlay dimensions in logical units (set after KaTeX render). */
+    private texOverlayW: number = 0;
+    private texOverlayH: number = 0;
+
     constructor()
     constructor(x: number, y: number, sx: number, sy: number, fn: string,
         or: number, st: number, t: string, l: number)
@@ -234,6 +238,14 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.wSCI = Math.trunc(gSCI.getStringWidth(this.txt));
             this.hSCI = gSCI.getFontAscent();
             this.thSCI = this.hSCI + gSCI.getFontDescent();
+
+            // For LaTeX text, prefer the actual measured KaTeX overlay dimensions
+            // (set by CircuitPanel.syncTeXOverlay after DOM layout).
+            if (this.txt.includes('$') && this.texOverlayW > 0 && this.texOverlayH > 0) {
+                this.wSCI = this.texOverlayW;
+                this.thSCI = this.texOverlayH;
+                this.hSCI = Math.trunc(this.texOverlayH * 0.8);
+            }
             this.recalcSize = false;
             this.xaSCI = this.virtualPoint[0]!.x;
             this.yaSCI = this.virtualPoint[0]!.y;
@@ -347,6 +359,17 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         if (v) this.sty |= PrimitiveAdvText.TEXT_ITALIC;
         else this.sty &= ~PrimitiveAdvText.TEXT_ITALIC;
         this.recalcSize = true;
+    }
+
+    /**
+     * Store the actual measured dimensions of the KaTeX overlay rendering
+     * (in logical units). Called by CircuitPanel after the TeX overlay DOM
+     * is laid out. When set, getDistanceToPoint uses these instead of
+     * GraphicsNull estimates for text containing $.
+     */
+    setTeXOverlaySize(w: number, h: number): void {
+        this.texOverlayW = w;
+        this.texOverlayH = h;
     }
 
     override rotatePrimitive(bCounterClockWise: boolean, ix: number, iy: number): void {

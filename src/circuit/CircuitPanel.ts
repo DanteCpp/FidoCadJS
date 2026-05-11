@@ -924,9 +924,12 @@ export class CircuitPanel {
         if (!this.renderTeX) return;
 
         const htmlParts: string[] = [];
+        const latexIndices: number[] = []; // primitive indices for each overlay div
         const layers = this.model.getLayers();
+        const primitives = this.model.getPrimitiveVector();
 
-        for (const prim of this.model.getPrimitiveVector()) {
+        for (let pi = 0; pi < primitives.length; pi++) {
+            const prim = primitives[pi]!;
             if (!(prim instanceof PrimitiveAdvText)) continue;
 
             const text = prim.getString();
@@ -998,13 +1001,33 @@ export class CircuitPanel {
             }).join('');
 
             htmlParts.push(
-                `<div style="position:absolute; left:${cssX}px; top:${cssY}px; ` +
+                `<div data-prim-index="${pi}" style="position:absolute; left:${cssX}px; top:${cssY}px; ` +
                 `white-space: nowrap; font: ${fontStyle}${cssFontSize}px ${fontName}; ` +
                 `color: ${textColor}; ${transformStyle}">${segmentHtml}</div>`
             );
+            latexIndices.push(pi);
         }
 
         this.texOverlay.innerHTML = htmlParts.join('');
+
+        // Measure actual KaTeX overlay dimensions after layout and feed them
+        // back to the primitives for accurate click hit-testing.
+        requestAnimationFrame(() => {
+            const overlayDivs = this.texOverlay.querySelectorAll('[data-prim-index]');
+            for (const div of overlayDivs) {
+                const idx = parseInt((div as HTMLElement).dataset['primIndex'] ?? '', 10);
+                const prim = primitives[idx];
+                if (!(prim instanceof PrimitiveAdvText)) continue;
+                const rect = div.getBoundingClientRect();
+                if (rect.width <= 0 && rect.height <= 0) continue;
+                // Convert CSS pixel dimensions to logical units.
+                // The div is positioned at (cssX, cssY) which maps to
+                // (virtualPoint.x, virtualPoint.y) in logical coords.
+                const wLogical = Math.round(rect.width * dpr / this.mapCoordinates.getXMagnitude());
+                const hLogical = Math.round(rect.height * dpr / this.mapCoordinates.getYMagnitude());
+                prim.setTeXOverlaySize(wLogical, hLogical);
+            }
+        });
     }
 
     render(): void {
