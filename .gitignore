@@ -24,7 +24,9 @@ Thumbs.db
 
 # Project-level review/planning docs (kept outside repo)
 CODEREVIEW.md
+PLAN.md
 TODO.md
+AGENTS.md
 
 # IDE
 .vscode/
