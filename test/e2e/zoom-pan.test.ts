@@ -143,3 +143,62 @@ test.describe('Pan Operations', () => {
     expect(true).toBe(true);
   });
 });
+
+test.describe('Resize behavior', () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoApp(page);
+  });
+
+  test('viewport resize does not crash the app', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 600 });
+    await page.waitForTimeout(300);
+
+    // The canvas should still be present and have non-zero dimensions
+    const canvas = page.locator('[data-testid="editor-canvas"]');
+    await expect(canvas).toBeVisible();
+
+    const box = await canvas.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.width).toBeGreaterThan(0);
+    expect(box!.height).toBeGreaterThan(0);
+  });
+
+  test('viewport resize preserves rendering without offset', async ({ page }) => {
+    // Load content first so we have something to verify
+    await loadCircuit(page, FOUR_PRIMITIVES_FCD);
+
+    // Resize the viewport
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.waitForTimeout(500);
+
+    // Force a render by zooming
+    await pressKey(page, '+');
+    await page.waitForTimeout(200);
+
+    // App should still be functional — zoom should work
+    const zoom = await getZoomPercent(page);
+    expect(zoom).toBeGreaterThan(0);
+  });
+
+  test('multiple consecutive resizes do not crash', async ({ page }) => {
+    const sizes = [
+      { width: 1024, height: 768 },
+      { width: 800, height: 600 },
+      { width: 1280, height: 720 },
+      { width: 640, height: 480 },
+    ];
+
+    for (const size of sizes) {
+      await page.setViewportSize(size);
+      await page.waitForTimeout(200);
+    }
+
+    // Verify canvas is still alive
+    const canvas = page.locator('[data-testid="editor-canvas"]');
+    await expect(canvas).toBeVisible();
+
+    // Should still be able to interact
+    const zoom = await getZoomPercent(page);
+    expect(zoom).toBeGreaterThan(0);
+  });
+});

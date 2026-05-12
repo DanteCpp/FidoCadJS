@@ -119,7 +119,8 @@ export class CircuitPanel {
     private contextMenuLogY: number = 0;
     private menuBar: MenuBar | null = null;
     private resizeObserver: ResizeObserver | null = null;
-    private boundOnResize: () => void = () => this.onResize();
+    private dprMediaQuery: MediaQueryList | null = null;
+    private readonly boundHandleResize = () => this.handleResize();
     private isMovingSelected: boolean = false;
     private moveStartLogX: number = 0;
     private moveStartLogY: number = 0;
@@ -149,19 +150,16 @@ export class CircuitPanel {
         (this.canvas as any).__circuitPanel = this;
 
         // Setup high-DPI canvas with ResizeObserver for robust sizing
-        const dpr = window.devicePixelRatio || 1;
-        let hasInitialized = false;
-        this.resizeObserver = new ResizeObserver(() => {
-            const w = container.clientWidth * dpr;
-            const h = container.clientHeight * dpr;
-            if (w <= 0 || h <= 0) return;
-            if (w === this.canvas.width && h === this.canvas.height && hasInitialized) return;
-            this.canvas.width = w;
-            this.canvas.height = h;
-            hasInitialized = true;
-            this.render();
-        });
+        this.resizeObserver = new ResizeObserver(() => this.handleResize());
         this.resizeObserver.observe(container);
+
+        // Detect device-pixel-ratio changes (e.g. window moved to another monitor)
+        try {
+            this.dprMediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+            this.dprMediaQuery.addEventListener('change', this.boundHandleResize);
+        } catch {
+            // matchMedia not available — graceful degradation
+        }
 
         // Force initial layout computation
         container.offsetWidth;
@@ -235,9 +233,6 @@ export class CircuitPanel {
             }
         });
 
-        // Handle resize
-        window.addEventListener('resize', this.boundOnResize);
-
         // Mouse wheel zoom (toward cursor)
         this.canvas.addEventListener('wheel', (e) => this.onMouseWheel(e), { passive: false });
 
@@ -261,7 +256,10 @@ export class CircuitPanel {
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
     destroy(): void {
         this.keyboardController.detach();
-        window.removeEventListener('resize', this.boundOnResize);
+        if (this.dprMediaQuery) {
+            this.dprMediaQuery.removeEventListener('change', this.boundHandleResize);
+            this.dprMediaQuery = null;
+        }
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
@@ -611,30 +609,20 @@ export class CircuitPanel {
         }
     }
 
-    private onResize(): void {
+    /** Handle canvas resize triggered by ResizeObserver or DPR changes.
+     *  Reads devicePixelRatio fresh each invocation so the internal canvas
+     *  resolution stays in sync with the actual screen density.  The logical
+     *  origin (xCenter / yCenter) is kept pinned — the drawing does not shift. */
+    private handleResize(): void {
         const dpr = window.devicePixelRatio || 1;
-        const rect = this.canvas.parentElement?.getBoundingClientRect();
-        if (!rect || rect.width === 0) return;
+        const w = this.container.clientWidth * dpr;
+        const h = this.container.clientHeight * dpr;
+        if (w <= 0 || h <= 0) return;
+        if (w === this.canvas.width && h === this.canvas.height) return;
 
-        const oldW = this.canvas.width;
-        const oldH = this.canvas.height;
-        const newW = rect.width * dpr;
-        const newH = rect.height * dpr;
-
-        // Preserve relative pan: keep center as same fraction of canvas
-        if (oldW > 0) {
-            this.mapCoordinates.setXCenter(
-                this.mapCoordinates.getXCenter() * (newW / oldW)
-            );
-        }
-        if (oldH > 0) {
-            this.mapCoordinates.setYCenter(
-                this.mapCoordinates.getYCenter() * (newH / oldH)
-            );
-        }
+        this.canvas.width = w;
+        this.canvas.height = h;
         this.clampCenter();
-        this.canvas.width = newW;
-        this.canvas.height = newH;
         this.render();
     }
 
