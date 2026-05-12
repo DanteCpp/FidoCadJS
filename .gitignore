@@ -1,5 +1,7 @@
 # Test artifacts
 test/TESTS.html
+test-results/
+test/e2e/report/
 
 # Dependencies
 node_modules/
