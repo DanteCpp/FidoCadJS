@@ -13,7 +13,6 @@ import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
 import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
 import type { ColorInterface } from '../graphic/ColorInterface.js';
 import { StandardLayers } from '../layers/StandardLayers.js';
-import { LayerDesc } from '../layers/LayerDesc.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
 import { Export, registerExportHooks } from './views/Export.js';
 import { ExportSVG } from '../export/ExportSVG.js';
@@ -45,9 +44,11 @@ import { KeyboardController } from './controllers/KeyboardController.js';
 import type { KeyboardHost } from './KeyboardHost.js';
 import type { EditorFacade } from './EditorFacade.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
+import { CanvasManager } from './CanvasManager.js';
 
 export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
+    private canvasManager: CanvasManager;
     private canvas: HTMLCanvasElement;
     private ctx: GraphicsCanvas;
     private model: DrawingModel;
@@ -119,9 +120,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private contextMenuLogX: number = 0;
     private contextMenuLogY: number = 0;
     private menuBar: MenuBar | null = null;
-    private resizeObserver: ResizeObserver | null = null;
-    private dprMediaQuery: MediaQueryList | null = null;
-    private readonly boundHandleResize = () => this.handleResize();
     private isMovingSelected: boolean = false;
     private moveStartLogX: number = 0;
     private moveStartLogY: number = 0;
@@ -139,28 +137,13 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.mapCoordinates.setXMagnitude(20);
         this.mapCoordinates.setYMagnitude(20);
 
-        // Create canvas
-        this.canvas = document.createElement('canvas');
-        this.canvas.setAttribute('data-testid', 'editor-canvas');
-        this.canvas.style.width = '100%';
-        this.canvas.style.height = '100%';
-        this.canvas.style.display = 'block';
-        container.appendChild(this.canvas);
-
-        // Setup high-DPI canvas with ResizeObserver for robust sizing
-        this.resizeObserver = new ResizeObserver(() => this.handleResize());
-        this.resizeObserver.observe(container);
-
-        // Detect device-pixel-ratio changes (e.g. window moved to another monitor)
-        try {
-            this.dprMediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-            this.dprMediaQuery.addEventListener('change', this.boundHandleResize);
-        } catch {
-            // matchMedia not available — graceful degradation
-        }
-
-        // Force initial layout computation
-        container.offsetWidth;
+        // Create canvas via CanvasManager
+        this.canvasManager = new CanvasManager(container);
+        this.canvas = this.canvasManager.canvas;
+        this.canvasManager.setOnResize(() => {
+            this.clampCenter();
+            this.render();
+        });
 
         this.ctx = new GraphicsCanvas(this.canvas);
         this.ctx.setZoom(1);
@@ -254,14 +237,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
     destroy(): void {
         this.keyboardController.detach();
-        if (this.dprMediaQuery) {
-            this.dprMediaQuery.removeEventListener('change', this.boundHandleResize);
-            this.dprMediaQuery = null;
-        }
-        if (this.resizeObserver) {
-            this.resizeObserver.disconnect();
-            this.resizeObserver = null;
-        }
+        this.canvasManager.destroy();
     }
 
     private onMouseWheel(e: WheelEvent): void {
@@ -607,22 +583,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         }
     }
 
-    /** Handle canvas resize triggered by ResizeObserver or DPR changes.
-     *  Reads devicePixelRatio fresh each invocation so the internal canvas
-     *  resolution stays in sync with the actual screen density.  The logical
-     *  origin (xCenter / yCenter) is kept pinned — the drawing does not shift. */
-    private handleResize(): void {
-        const dpr = window.devicePixelRatio || 1;
-        const w = this.container.clientWidth * dpr;
-        const h = this.container.clientHeight * dpr;
-        if (w <= 0 || h <= 0) return;
-        if (w === this.canvas.width && h === this.canvas.height) return;
-
-        this.canvas.width = w;
-        this.canvas.height = h;
-        this.clampCenter();
-        this.render();
-    }
 
     private findHandleAt(sx: number, sy: number): number {
         for (const prim of this.model.getPrimitiveVector()) {
