@@ -45,10 +45,12 @@ import type { KeyboardHost } from './KeyboardHost.js';
 import type { EditorFacade } from './EditorFacade.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
 import { CanvasManager } from './CanvasManager.js';
+import { GhostPreview } from './GhostPreview.js';
 
 export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
     private canvasManager: CanvasManager;
+    private ghostPreview: GhostPreview;
     private canvas: HTMLCanvasElement;
     private ctx: GraphicsCanvas;
     private model: DrawingModel;
@@ -144,6 +146,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             this.clampCenter();
             this.render();
         });
+
+        // Initialize ghost preview generator
+        this.ghostPreview = new GhostPreview();
 
         this.ctx = new GraphicsCanvas(this.canvas);
         this.ctx.setZoom(1);
@@ -474,6 +479,12 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         }
     }
 
+    private updateGhostPreview(lx: number, ly: number): void {
+        this.ghostPrimitive = this.ghostPreview.updateGhost(
+            lx, ly, this.currentTool, this.elementsEdt, this.model
+        );
+    }
+
     private onMouseUp(e: MouseEvent): void {
         // If the preceding mousedown committed the text editor, consume this mouseup
         if (this.textEditorJustCommitted) {
@@ -648,134 +659,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.mapCoordinates.setYMagnitudeNoCheck(newZ);
         this.render();
         this.onZoomChange?.();
-    }
-
-    private updateGhostPreview(lx: number, ly: number): void {
-        this.ghostPrimitive = null;
-
-        const tool = this.currentTool;
-        const clickNum = this.elementsEdt.clickNumber;
-        const xpoly = this.elementsEdt.xpoly;
-        const ypoly = this.elementsEdt.ypoly;
-        const layer = this.elementsEdt.currentLayer;
-        const font = this.model.getTextFont();
-        const fontSize = this.model.getTextFontSize();
-
-        switch (tool) {
-            case ElementsEdtActions.LINE:
-                if (clickNum === 1) {
-                    this.ghostPrimitive = new PrimitiveLine(
-                        xpoly[1], ypoly[1], lx, ly, layer,
-                        false, false, 0, 3, 2, 0, font, fontSize
-                    );
-                }
-                break;
-
-            case ElementsEdtActions.BEZIER:
-                if (clickNum === 3) {
-                    this.ghostPrimitive = new PrimitiveBezier(
-                        xpoly[1], ypoly[1],
-                        xpoly[2], ypoly[2],
-                        xpoly[3], ypoly[3],
-                        lx, ly,
-                        layer, false, false, 0, 3, 2, 0, font, fontSize
-                    );
-                } else if (clickNum >= 1 && clickNum < 3) {
-                    const ctrlPoly = new PrimitivePolygon(false, layer, 0, font, fontSize);
-                    for (let i = 1; i <= clickNum; i++) {
-                        ctrlPoly.addPoint(xpoly[i], ypoly[i]);
-                    }
-                    ctrlPoly.addPoint(lx, ly);
-                    this.ghostPrimitive = ctrlPoly;
-                }
-                break;
-
-            case ElementsEdtActions.RECTANGLE:
-                if (clickNum === 1) {
-                    this.ghostPrimitive = new PrimitiveRectangle(
-                        xpoly[1], ypoly[1], lx, ly, false, layer, 0, font, fontSize
-                    );
-                }
-                break;
-
-            case ElementsEdtActions.ELLIPSE:
-                if (clickNum === 1) {
-                    this.ghostPrimitive = new PrimitiveOval(
-                        xpoly[1], ypoly[1], lx, ly, false, layer, 0, font, fontSize
-                    );
-                }
-                break;
-
-            case ElementsEdtActions.POLYGON:
-                if (clickNum >= 1) {
-                    const poly = new PrimitivePolygon(false, layer, 0, font, fontSize);
-                    for (let i = 1; i <= clickNum; i++) {
-                        poly.addPoint(xpoly[i], ypoly[i]);
-                    }
-                    poly.addPoint(lx, ly);
-                    this.ghostPrimitive = poly;
-                }
-                break;
-
-            case ElementsEdtActions.COMPLEXCURVE:
-                if (clickNum >= 1) {
-                    const cc = new PrimitiveComplexCurve(
-                        false, false, layer,
-                        false, false, 0, 3, 2, 0,
-                        font, fontSize
-                    );
-                    for (let i = 1; i <= clickNum; i++) {
-                        cc.addPoint(xpoly[i], ypoly[i]);
-                    }
-                    cc.addPoint(lx, ly);
-                    this.ghostPrimitive = cc;
-                }
-                break;
-
-            case ElementsEdtActions.PCB_LINE:
-                if (clickNum === 1) {
-                    this.ghostPrimitive = new PrimitivePCBLine(
-                        xpoly[1], ypoly[1], lx, ly,
-                        this.elementsEdt.getAddElements().getPcbThickness(),
-                        layer, font, fontSize
-                    );
-                }
-                break;
-
-            case ElementsEdtActions.MACRO:
-                // Show preview of macro following cursor (like Java version)
-                if (this.elementsEdt.macroKey !== '') {
-                    try {
-                        let orientation = 0;
-                        let mirror = false;
-                        if (this.elementsEdt.primEdit instanceof PrimitiveMacro) {
-                            orientation = this.elementsEdt.primEdit.getOrientation();
-                            mirror = this.elementsEdt.primEdit.isMirrored();
-                        }
-
-                        const macroPreview = new PrimitiveMacro(
-                            this.model.getLibrary(),
-                            StandardLayers.createEditingLayerArray(), // Green preview color
-                            font,
-                            fontSize
-                        );
-                        macroPreview.virtualPoint[0]!.x = lx;
-                        macroPreview.virtualPoint[0]!.y = ly;
-                        macroPreview.virtualPoint[1]!.x = lx + 10;
-                        macroPreview.virtualPoint[1]!.y = ly + 10;
-                        macroPreview.virtualPoint[2]!.x = lx + 10;
-                        macroPreview.virtualPoint[2]!.y = ly + 5;
-                        macroPreview.setOrientation(orientation);
-                        macroPreview.setMirrored(mirror);
-                        macroPreview.initializeFromKey(this.elementsEdt.macroKey);
-                        macroPreview.setDrawOnlyLayer(-1);
-                        this.ghostPrimitive = macroPreview;
-                    } catch (e) {
-                        // Ignore errors during preview (macro might not be loaded yet)
-                    }
-                }
-                break;
-        }
     }
 
     getModel(): DrawingModel { return this.model; }
