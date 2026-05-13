@@ -43,9 +43,10 @@ import { AddElements } from './controllers/AddElements.js';
 import { MenuBar } from '../ui/MenuBar.js';
 import { KeyboardController } from './controllers/KeyboardController.js';
 import type { KeyboardHost } from './KeyboardHost.js';
+import type { EditorFacade } from './EditorFacade.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
 
-export class CircuitPanel implements KeyboardHost {
+export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
     private canvas: HTMLCanvasElement;
     private ctx: GraphicsCanvas;

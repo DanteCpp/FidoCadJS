@@ -6,12 +6,12 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
-import type { CircuitPanel } from '../circuit/CircuitPanel.js';
+import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { SettingsManager, type AppSettings } from '../settings/SettingsManager.js';
 
 type TabId = 'drawing' | 'pcb' | 'appearance';
 
-export function showOptionsDialog(panel: CircuitPanel): void {
+export function showOptionsDialog(panel: EditorFacade): void {
     const mgr = SettingsManager.getInstance();
     const s = mgr.getSettings();
 

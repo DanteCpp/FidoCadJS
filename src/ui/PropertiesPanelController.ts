@@ -6,7 +6,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
-import type { CircuitPanel } from '../circuit/CircuitPanel.js';
+import type { EditorFacade } from '../circuit/EditorFacade.js';
 import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
 import { PrimitiveAdvText } from '../primitives/PrimitiveAdvText.js';
 import { PrimitiveLine } from '../primitives/PrimitiveLine.js';
@@ -22,7 +22,7 @@ import { LayerDropdown } from './LayerDropdown.js';
 
 export class PropertiesPanelController {
     private sidebar: HTMLElement;
-    private circuitPanel: CircuitPanel;
+    private circuitPanel: EditorFacade;
     private fontFamilies: string[] | null = null;
     private fontFamiliesPromise: Promise<string[]> | null = null;
     private currentLayerDropdown: LayerDropdown | null = null;
@@ -30,7 +30,7 @@ export class PropertiesPanelController {
     /** Callback to load available font families (async, app-level). */
     onGetFontFamilies: (() => Promise<string[]>) | null = null;
 
-    constructor(sidebar: HTMLElement, circuitPanel: CircuitPanel) {
+    constructor(sidebar: HTMLElement, circuitPanel: EditorFacade) {
         this.sidebar = sidebar;
         this.circuitPanel = circuitPanel;
     }

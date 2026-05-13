@@ -7,12 +7,12 @@
  */
 
 import { ElementsEdtActions } from '../circuit/controllers/ElementsEdtActions.js';
-import type { CircuitPanel } from '../circuit/CircuitPanel.js';
+import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { LayerDropdown } from './LayerDropdown.js';
 
 export class ToolbarController {
     private toolbar: HTMLElement;
-    private circuitPanel: CircuitPanel;
+    private circuitPanel: EditorFacade;
     private toolButtons: Map<number, HTMLButtonElement> = new Map();
     private baseUrl: string;
 
@@ -21,7 +21,7 @@ export class ToolbarController {
 
     constructor(
         toolbar: HTMLElement,
-        circuitPanel: CircuitPanel,
+        circuitPanel: EditorFacade,
         baseUrl: string,
     ) {
         this.toolbar = toolbar;
