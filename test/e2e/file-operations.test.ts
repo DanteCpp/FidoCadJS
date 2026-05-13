@@ -57,8 +57,7 @@ test.describe('File Operations', () => {
     // Draw a line
     await pressKey(page, 'l');
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       const mc = panel.getMapCoordinates();
       const sx = mc.mapX(10, 10);
       const sy = mc.mapY(10, 10);

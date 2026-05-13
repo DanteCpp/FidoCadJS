@@ -82,8 +82,7 @@ test.describe('Macro — Load and Place via API', () => {
   test('can load a simple macro library and place it', async ({ page }) => {
     // Register a simple test macro library
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       const libraryFCL = `
 [RESISTOR]
 R=Resistor
@@ -101,8 +100,7 @@ SA 140 100 0
 
     // Need to trigger library model refresh
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       // Access the library and set macro tool
       panel.setMacroTool('testlib.r');
     });
@@ -123,8 +121,7 @@ SA 140 100 0
   test('placing unknown macro key silently drops', async ({ page }) => {
     // Try placing a macro with a key that doesn't exist
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.setMacroTool('nonexistent.unknown');
     });
 

@@ -13,8 +13,7 @@ test.describe('Undo / Redo', () => {
   test.beforeEach(async ({ page }) => {
     await gotoApp(page);
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.clearCircuit();
     });
     await page.waitForTimeout(200);
@@ -22,8 +21,7 @@ test.describe('Undo / Redo', () => {
 
   test('rotate creates undo entry (canUndo becomes true)', async ({ page }) => {
     const result = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\n');
       if (panel.canUndo()) return 'undo should not be available after loadCircuit';
       panel.selectAll();
@@ -36,8 +34,7 @@ test.describe('Undo / Redo', () => {
 
   test('Ctrl+Shift+Z redo shortcut works', async ({ page }) => {
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\n');
       panel.selectAll();
       panel.rotateSelected();
@@ -49,8 +46,7 @@ test.describe('Undo / Redo', () => {
     await page.waitForTimeout(200);
 
     const canRedoNow = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.canRedo();
     });
     expect(canRedoNow).toBe(true);
@@ -60,8 +56,7 @@ test.describe('Undo / Redo', () => {
     await page.waitForTimeout(200);
 
     const canUndoNow = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.canUndo();
     });
     expect(canUndoNow).toBe(true);
@@ -69,8 +64,7 @@ test.describe('Undo / Redo', () => {
 
   test('delete creates undo entry', async ({ page }) => {
     const result = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\nLI 20 20 100 20 1\n');
       panel.selectAll();
       panel.deleteSelected();
@@ -82,8 +76,7 @@ test.describe('Undo / Redo', () => {
 
   test('mirror creates undo entry', async ({ page }) => {
     const result = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\n');
       panel.selectAll();
       panel.mirrorSelected();
@@ -95,8 +88,7 @@ test.describe('Undo / Redo', () => {
 
   test('multiple operations stack undo entries', async ({ page }) => {
     const result = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\n');
       panel.selectAll();
       panel.rotateSelected();
@@ -110,8 +102,7 @@ test.describe('Undo / Redo', () => {
 
   test('clearCircuit resets undo stack', async ({ page }) => {
     const result = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\n');
       panel.selectAll();
       panel.rotateSelected();

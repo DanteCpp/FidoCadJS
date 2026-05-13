@@ -99,6 +99,9 @@ class FidoCadJS {
         this.circuitPanel = new CircuitPanel(editorContainer);
         SettingsManager.getInstance().applyToPanel(this.circuitPanel);
 
+        // Expose stable test API for E2E tests (replaces canvas.__circuitPanel hack)
+        (window as any).__FidoCadJS__ = { circuitPanel: this.circuitPanel };
+
         // Create menu bar
         this.menuBar = new MenuBar(this.circuitPanel, () => this.newCircuit(),
             (content, fileName) => this.importLibrary(content, fileName));

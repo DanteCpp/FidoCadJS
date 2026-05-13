@@ -65,8 +65,7 @@ test.describe('Edge Cases — Empty/Degenerate', () => {
 /** Select all via the panel API. */
 async function selectAll(page: any) {
   await page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     panel.selectAll();
   });
   await page.waitForTimeout(200);
@@ -105,8 +104,7 @@ test.describe('Edge Cases — Rapid Operations', () => {
 
   test('draw, select all, delete — undo entry created', async ({ page }) => {
     const result = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
 
       let fcd = 'FJC A 1\nFJC B 1\n';
       for (let i = 0; i < 5; i++) {

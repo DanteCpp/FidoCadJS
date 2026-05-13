@@ -1,4 +1,4 @@
-name: Build, Test, and Deploy
+name: Main Workflow
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: main-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -52,15 +52,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-
-      - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
-    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
