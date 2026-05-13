@@ -42,10 +42,10 @@ import { ContextMenu } from '../ui/ContextMenu.js';
 import { AddElements } from './controllers/AddElements.js';
 import { MenuBar } from '../ui/MenuBar.js';
 import { KeyboardController } from './controllers/KeyboardController.js';
-import type { KeyboardHost } from './controllers/KeyboardController.js';
+import type { KeyboardHost } from './KeyboardHost.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
 
-export class CircuitPanel {
+export class CircuitPanel implements KeyboardHost {
     private container: HTMLElement;
     private canvas: HTMLCanvasElement;
     private ctx: GraphicsCanvas;
@@ -206,7 +206,7 @@ export class CircuitPanel {
 
         // Initialize keyboard controller
         this.keyboardController = new KeyboardController(
-            this as unknown as KeyboardHost, this.clipboardController
+            this, this.clipboardController
         );
 
         // Set initial cursor
