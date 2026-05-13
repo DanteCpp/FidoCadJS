@@ -8,7 +8,7 @@
  *          to provide a standalone, importable contract.
  */
 
-import type { MenuBar } from '../../ui/MenuBar.js';
+import type { MenuBar } from '../ui/MenuBar.js';
 
 /**
  * Interface that the host (CircuitPanel) must satisfy for the keyboard

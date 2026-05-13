@@ -10,7 +10,7 @@
  *          Extracted during agent-friendly refactoring (P2.5).
  */
 
-import type { MapCoordinates } from '../geom/MapCoordinates.js';
+import { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { DrawingModel } from './model/DrawingModel.js';
 import { ElementsEdtActions } from './controllers/ElementsEdtActions.js';
 import type { EditorActions } from './controllers/EditorActions.js';

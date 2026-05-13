@@ -7,7 +7,6 @@
  */
 
 import { ElementsEdtActions } from './ElementsEdtActions.js';
-import type { MenuBar } from '../../ui/MenuBar.js';
 import type { ClipboardController } from './ClipboardController.js';
 import type { KeyboardHost } from '../KeyboardHost.js';
 

@@ -83,6 +83,10 @@ export interface EditorFacade {
     setRenderTeX(e: boolean): void;
     getAddElements(): AddElements;
 
+    // ─── Layer ────────────────────────────────────────────────────────────
+    getCurrentLayer(): number;
+    setCurrentLayer(layer: number): void;
+
     // ─── Render ───────────────────────────────────────────────────────────
     render(): void;
 }
