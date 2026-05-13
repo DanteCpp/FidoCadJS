@@ -148,22 +148,9 @@ FidoCadJS runs in any modern browser with Canvas 2D and ES2022 support. There is
 
 It works on desktop, tablet, and mobile; pointer events are handled uniformly so touch and mouse input behave the same.
 
-### Differences from FidoCadJ (Java)
-
-FidoCadJS targets feature parity with FidoCadJ for editing and `.fcd` interoperability, but a few things from the Java upstream are not (yet) ported:
-
-- **Export formats**: PNG, SVG, PGF/TikZ (LaTeX), and FCD. PDF, EPS, and JPG export from FidoCadJ are not yet implemented.
-- **Locales**: the i18n framework is in place but only the English bundle ships. FidoCadJ has 10+ translations.
-- **Platform integrations**: there is no Android-specific build. The browser version covers mobile via touch events.
-- **Print**: the native print dialog is delegated to the browser's built-in print.
-- **PCB**: PCB trace and pad tools plus the PCB Footprints library are available. The app supports schematic capture and single-layer PCB layout side by side, same as FidoCadJ. 
-
-If you need any of the missing pieces, FidoCadJ remains fully supported and can read/write the same `.fcd` files.
-
 ### Roadmap
 
-The project is currently at a **beta** release. Editing, parsing, and SVG export are stable and covered by tests; the FCL round-trip is validated for all 11 primitive types. Work in progress includes additional export formats, more locale bundles, and broader feature coverage versus FidoCadJ. Bug reports and pull requests are welcome (see [Contributing](#contributing)).
-
+The project is currently at a **beta** release. Editing, parsing, and SVG export are stable and covered by tests; the FCL round-trip is validated for all 11 primitive types. Work in progress includes additional export formats, more locale bundles, and broader feature coverage versus FidoCadJ. Bug reports and pull requests are welcome (see [Contributing](#contributing)). If you need any of the missing pieces, FidoCadJ remains fully supported and can read/write the same `.fcd` files.
 ---
 
 ## For Developers
@@ -177,27 +164,39 @@ FidoCadJS/
     ├── tsconfig.json        # Strict TypeScript configuration
     ├── package.json         # Dependencies and scripts
     ├── src/
-    │   ├── app.ts           # Application entry point & UI bootstrap
-    │   ├── circuit/         # Editor core (MVC)
-    │   │   ├── model/       #   DrawingModel, layers
-    │   │   ├── controllers/ #   Parser, Editor, Selection, AddElements
-    │   │   └── views/       #   Drawing, Export
+    │   ├── app.ts           # Application entry point and UI bootstrap
+    │   ├── circuit/         # Editor core
+    │   │   ├── CircuitPanel.ts        # Main editor panel, canvas host
+    │   │   ├── EditorFacade.ts        # Narrow interface for UI decoupling
+    │   │   ├── CanvasManager.ts       # Canvas element and DPR management
+    │   │   ├── InputHandler.ts        # Mouse and touch event dispatch
+    │   │   ├── GhostPreview.ts        # Per-tool cursor ghost primitives
+    │   │   ├── ContextMenuManager.ts  # Right-click context menus
+    │   │   ├── MacroVectorizer.ts     # Macro to primitive decomposition
+    │   │   ├── ImageAsCanvas.ts       # Background image attachment
+    │   │   ├── KeyboardHost.ts        # Keyboard event interface
+    │   │   ├── ToolGhostHandler.ts    # Ghost handler type definitions
+    │   │   ├── services.ts            # Editor service container factory
+    │   │   ├── model/                 # DrawingModel, ProcessElementsInterface
+    │   │   ├── controllers/           # Parser, EditorActions, AddElements, Selection, Undo, Clipboard
+    │   │   └── views/                 # Drawing, Export, TeXOverlay
     │   ├── primitives/      # 11 graphic primitive types
-    │   ├── librarymodel/    # Component library system
-    │   ├── export/          # SVG export
-    │   ├── graphic/         # Canvas graphics abstraction layer
-    │   ├── geom/            # Coordinate mapping, geometry
-    │   ├── layers/          # Layer definitions
-    │   ├── macropicker/     # Library tree browser
-    │   ├── ui/              # Dialogs, menus, context menu, toolbar, properties panel
-    │   ├── undo/            # Undo/redo managers
-    │   ├── settings/        # Persisted settings
-    │   ├── i18n/            # Internationalization
-    │   └── globals/         # Constants and utilities
-    ├── test/                # Vitest test suite
+    │   ├── librarymodel/    # Component library system (CRUD, events, storage)
+    │   ├── export/          # SVG, PGF, and TikZ export
+    │   ├── graphic/         # Canvas 2D graphics abstraction layer
+    │   ├── geom/            # Coordinate mapping, zoom, geometry utilities
+    │   ├── layers/          # Layer definitions and standard layers
+    │   ├── macropicker/     # Library tree browser with search and preview
+    │   ├── ui/              # Toolbar, menus, dialogs, properties panel
+    │   ├── undo/            # Undo state snapshot model
+    │   ├── settings/        # Persisted application settings
+    │   ├── i18n/            # Internationalization framework
+    │   ├── globals/         # Constants and utility functions
+    │   └── vendor/          # Vendored third-party code (KaTeX shim)
+    ├── test/                # Unit and E2E test suites
     └── public/
         ├── lib/             # Standard FCL libraries
-        ├── icons/           # Toolbar and app icons
+        ├── icons/           # Toolbar and application icons
         └── img/             # Screenshots
 ```
 
@@ -214,13 +213,13 @@ Open `http://localhost:5173/FidoCadJS/` in your browser.
 
 ### Project Architecture
 
-FidoCadJS follows a clean MVC architecture:
+FidoCadJS separates model, view, and control logic:
 
-- **Model**: `DrawingModel` holds primitives, layers, and macro library state
-- **View**: HTML Canvas rendering via the `GraphicsInterface` abstraction. `Drawing` handles per-layer rendering
-- **Controller**: `CircuitPanel` coordinates mouse/keyboard input, `ElementsEdtActions` dispatches tool-specific handlers, `UndoManager` tracks full-state snapshots
+- **Model**: `DrawingModel` holds the primitive vector, layer state, and macro library map. `UndoState` captures full model snapshots for undo and redo. `LibraryModel` manages the component library hierarchy with CRUD operations and change events.
+- **View**: `Drawing` renders primitives layer by layer through the `GraphicsInterface` abstraction backed by Canvas 2D. `TeXOverlay` handles KaTeX math rendering on a separate overlay canvas. `MacroPicker` renders the collapsible library tree with a canvas preview pane.
+- **Control**: `CircuitPanel` owns the editor lifecycle. Input is routed through `InputHandler` to `ElementsEdtActions`, which dispatches to per-tool handlers in `AddElements`, `EditorActions`, and `SelectionActions`. `GhostPreview` uses a strategy registry to render cursor feedback for each tool. `EditorFacade` exposes a narrow interface so that UI modules (toolbar, menus, dialogs) do not depend on `CircuitPanel` directly.
 
-The FCL parser (`ParserActions`) handles the text-based `.fcd` format with safety limits and macro expansion (max depth 16).
+The FCL parser (`ParserActions`) reads and writes the `.fcd` text format. It enforces a token limit (10 000 per line) and a macro expansion depth limit (16 levels) to guard against malformed input.
 
 ### Building from Source
 
@@ -268,52 +267,19 @@ npm run test:e2e        # Run all E2E tests (headless)
 npm run test:e2e:ui     # Interactive UI mode with time-travel
 ```
 
-**Current test suites:**
-
-| Suite | Type | What it validates |
-|-------|------|-------------------|
-| `test/parser/primitive-round-trip.test.ts` | Unit | FCL format: all 11 primitive types survive parse→serialize→parse with identical output |
-| `test/circuit/model/drawing-model.test.ts` | Unit | DrawingModel construction, primitive manipulation, dirty flag |
-| `test/circuit/controllers/add-elements.test.ts` | Unit | Creating all primitive types via tool handlers |
-| `test/circuit/controllers/selection-actions.test.ts` | Unit | Selection queries, multi-select, get-text |
-| `test/circuit/keyboard-shortcuts.test.ts` | Unit | All keyboard shortcuts: tools, transforms, zoom, clipboard, nudge, input blocking |
-| `test/export/export-svg.test.ts` | Unit | SVG export produces correct XML for all primitive types |
-| `test/export/export-pgf.test.ts` | Unit | PGF export for LaTeX: state tracking, arrows, dashes, layers, all primitives |
-| `test/export/export-tikz.test.ts` | Unit | TikZ export for LaTeX: all primitives, dash patterns, arrows |
-| `test/graphic/tex-renderer.test.ts` | Unit | KaTeX math rendering: inline, display, mixed, edge cases |
-| `test/geom/map-coordinates.test.ts` | Unit | Coordinate system mapping, zoom, orientation, snap |
-| `test/primitives/primitive-edge-cases.test.ts` | Unit | Per-primitive toString/parseTokens edge cases, negative coords, multi-word text |
-| `test/settings/settings-manager.test.ts` | Unit | SettingsManager validation, defaults, localStorage persistence, error handling |
-| `test/undo/undo-actions.test.ts` | Unit | UndoActions correctness: add, move, delete, rotate, mirror undo |
-| `test/globals/globals.test.ts` | Unit | Path/extension utilities, coordinate parsing |
-| `test/layers/layer-desc.test.ts` | Unit | Layer model, StandardLayers |
-| `test/librarymodel/library-model.test.ts` | Unit | Library hierarchy, CRUD, events |
-| `test/e2e/app-loads.test.ts` | E2E | App initialisation, canvas, toolbar, libraries |
-| `test/e2e/drawing-tools.test.ts` | E2E | Drawing all 11 primitives via keyboard + mouse clicks |
-| `test/e2e/selection-and-transform.test.ts` | E2E | Click-select, rubber-band, rotate, mirror, nudge, delete, move |
-| `test/e2e/undo-redo.test.ts` | E2E | Undo/redo state tracking and keyboard shortcuts |
-| `test/e2e/clipboard.test.ts` | E2E | Copy, cut, duplicate via API + internal clipboard |
-| `test/e2e/zoom-pan.test.ts` | E2E | Zoom in/out, wheel, fit-to-view, pan |
-| `test/e2e/grid-snap.test.ts` | E2E | Grid visibility and snap-to-grid toggles |
-| `test/e2e/file-operations.test.ts` | E2E | New (Ctrl+N), load, save, view code |
-| `test/e2e/export.test.ts` | E2E | SVG, PGF, TikZ export + determinism |
-| `test/e2e/menu-bar.test.ts` | E2E | Menu bar dropdowns and keyboard file operations |
-| `test/e2e/keyboard-e2e.test.ts` | E2E | Keyboard shortcuts through full browser stack |
-| `test/e2e/macro-library.test.ts` | E2E | Library panel, macro placement via API |
-| `test/e2e/edge-cases.test.ts` | E2E | Empty/degenerate, rapid ops, long docs, negative coords, resize |
-
 For detailed test case descriptions, see [TESTS.md](test/TESTS.md).
 
 ### Coding Conventions
 
-- ✅ **Language:** TypeScript 5.4 with strict mode enabled
-- ✅ **Indentation:** 4 spaces (no tabs)
-- ✅ **Naming:** `PascalCase` for classes, `camelCase` for methods/variables
-- ✅ **Imports:** Explicit `.js` extensions in import paths (ESM)
-- ✅ **Null safety:** `strictNullChecks`, `exactOptionalPropertyTypes`
-- ✅ **No unused code:** `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`
-- ✅ **TypeScript config:** `@/` path alias maps to `./src/`
-- ✅ **File headers:** Every file includes a header block with filename, author, date, description, and copyright
+- **Language:** TypeScript 5.4 with strict mode enabled
+- **Indentation:** 4 spaces (no tabs)
+- **Naming:** `PascalCase` for classes, `camelCase` for methods/variables
+- **Imports:** Explicit `.js` extensions in import paths (ESM)
+- **Null safety:** `strictNullChecks`, `exactOptionalPropertyTypes`
+- **No unused code:** `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`
+- **TypeScript config:** `@/` path alias maps to `./src/`
+- **File headers:** Every file includes a header block with filename, author, date, description, and copyright
+- **File Lenght** Keep files compact and relevant, no more then 400 lines.
 
 ---
 
@@ -332,14 +298,8 @@ Design decisions and architectural intent remain the responsibility of human con
 1. Fork the repository
 2. Create a feature branch (use `dev` as base; never commit to `main` directly)
 3. Make your changes, following the coding conventions
-4. Run `npm run typecheck` and `npm run test:run`
+4. Run typecheck, unit tests, and e2e tests
 5. Submit a pull request to `dev`
-
-**Before submitting:**
-- [ ] Follows coding conventions (file headers, strict TS, 4-space indent)
-- [ ] Code compiles (`npm run typecheck`)
-- [ ] All tests pass (`npm run test:run`)
-- [ ] Build succeeds (`npm run build`)
 
 ---
 
@@ -361,10 +321,6 @@ Design decisions and architectural intent remain the responsibility of human con
 
 - **Davide Bucci** ([DarwinNE](https://github.com/DarwinNE)), original author of FidoCadJ, for reverse-engineering the FidoCad format, the complete Java implementation, and years of continued development
 - All contributors, beta testers, translators, and library editors listed in the [FidoCadJ README](https://github.com/FidoCadJ/FidoCadJ)
-
-### Icons
-
-- Toolbar icons from [Pictogrammers](https://pictogrammers.com/libraries/)
 
 ---
 
