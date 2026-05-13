@@ -146,9 +146,6 @@ export class CircuitPanel {
         this.canvas.style.display = 'block';
         container.appendChild(this.canvas);
 
-        // Expose panel reference for E2E test access (intentional escape hatch)
-        (this.canvas as any).__circuitPanel = this;
-
         // Setup high-DPI canvas with ResizeObserver for robust sizing
         this.resizeObserver = new ResizeObserver(() => this.handleResize());
         this.resizeObserver.observe(container);

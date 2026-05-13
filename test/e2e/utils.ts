@@ -45,8 +45,7 @@ export async function pressKey(page: Page, key: string): Promise<void> {
 /** Get the number of primitives in the model. */
 export async function primitiveCount(page: Page): Promise<number> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.getModel().getPrimitiveVector().length;
   });
 }
@@ -54,8 +53,7 @@ export async function primitiveCount(page: Page): Promise<number> {
 /** Get the circuit text (FCD format). */
 export async function getCircuitText(page: Page): Promise<string> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.getCircuitText();
   });
 }
@@ -63,8 +61,7 @@ export async function getCircuitText(page: Page): Promise<string> {
 /** Get the current zoom percentage. */
 export async function getZoomPercent(page: Page): Promise<number> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.getZoomPercent();
   });
 }
@@ -72,8 +69,7 @@ export async function getZoomPercent(page: Page): Promise<number> {
 /** Get the current active tool ID. */
 export async function getCurrentTool(page: Page): Promise<number> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.getTool();
   });
 }
@@ -81,8 +77,7 @@ export async function getCurrentTool(page: Page): Promise<number> {
 /** Check if undo is available. */
 export async function canUndo(page: Page): Promise<boolean> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.canUndo();
   });
 }
@@ -90,8 +85,7 @@ export async function canUndo(page: Page): Promise<boolean> {
 /** Check if redo is available. */
 export async function canRedo(page: Page): Promise<boolean> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.canRedo();
   });
 }
@@ -99,8 +93,7 @@ export async function canRedo(page: Page): Promise<boolean> {
 /** Get the exported SVG string. */
 export async function exportSVG(page: Page): Promise<string> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.exportSVG();
   });
 }
@@ -108,8 +101,7 @@ export async function exportSVG(page: Page): Promise<string> {
 /** Get the exported PGF string. */
 export async function exportPGF(page: Page): Promise<string> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.exportPGF();
   });
 }
@@ -117,8 +109,7 @@ export async function exportPGF(page: Page): Promise<string> {
 /** Get the exported TikZ string. */
 export async function exportTikZ(page: Page): Promise<string> {
   return page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     return panel.exportTikZ();
   });
 }
@@ -127,8 +118,7 @@ export async function exportTikZ(page: Page): Promise<string> {
 export async function loadCircuit(page: Page, fcd: string): Promise<void> {
   await page.evaluate(
     (circuit) => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit(circuit);
     },
     fcd,
@@ -139,8 +129,7 @@ export async function loadCircuit(page: Page, fcd: string): Promise<void> {
 /** Clear the circuit. */
 export async function clearCircuit(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     panel.clearCircuit();
   });
   await page.waitForTimeout(200);
