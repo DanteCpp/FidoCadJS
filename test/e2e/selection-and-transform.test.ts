@@ -23,8 +23,7 @@ LI 100 100 200 100 1
 async function selectAll(page: ReturnType<typeof test['info']> extends never ? never : any) {
   // Use the API directly since Ctrl+A is not wired as a keyboard shortcut
   await page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     panel.selectAll();
   });
   await page.waitForTimeout(200);

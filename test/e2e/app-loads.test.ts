@@ -65,11 +65,10 @@ test.describe('App Initialisation', () => {
     expect(count).toBe(0);
   });
 
-  test('canvas has __circuitPanel escape hatch for E2E', async ({ page }) => {
+  test('window.__FidoCadJS__ exposes circuitPanel for E2E', async ({ page }) => {
     await gotoApp(page);
     const hasPanel = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      return !!(canvas as any).__circuitPanel;
+      return !!(window as any).__FidoCadJS__?.circuitPanel;
     });
     expect(hasPanel).toBe(true);
   });

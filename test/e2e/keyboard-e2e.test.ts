@@ -15,8 +15,7 @@ import {
 /** Select all via the panel API. */
 async function selectAll(page: any) {
   await page.evaluate(() => {
-    const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-    const panel = (canvas as any).__circuitPanel;
+    const panel = (window as any).__FidoCadJS__.circuitPanel;
     panel.selectAll();
   });
   await page.waitForTimeout(200);
@@ -116,8 +115,7 @@ test.describe('Keyboard Shortcuts — Undo/Redo', () => {
   test('Ctrl+Z undoes, Ctrl+Y redoes', async ({ page }) => {
     // Load a circuit, rotate to create undo state, then undo/redo
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\nRV 20 50 80 80 2\n');
       panel.selectAll();
       panel.rotateSelected();
@@ -201,8 +199,7 @@ test.describe('Keyboard Shortcuts — Nudge', () => {
   test('Alt+ArrowLeft nudges selected left', async ({ page }) => {
     await selectAll(page);
     const before = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 
@@ -210,8 +207,7 @@ test.describe('Keyboard Shortcuts — Nudge', () => {
     await page.waitForTimeout(200);
 
     const after = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 
@@ -221,16 +217,14 @@ test.describe('Keyboard Shortcuts — Nudge', () => {
   test('Alt+ArrowRight nudges selected right', async ({ page }) => {
     await selectAll(page);
     const before = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 
     await pressKey(page, 'Alt+ArrowRight');
 
     const after = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 
@@ -240,16 +234,14 @@ test.describe('Keyboard Shortcuts — Nudge', () => {
   test('Alt+ArrowUp nudges selected up', async ({ page }) => {
     await selectAll(page);
     const before = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 
     await pressKey(page, 'Alt+ArrowUp');
 
     const after = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 
@@ -259,16 +251,14 @@ test.describe('Keyboard Shortcuts — Nudge', () => {
   test('Alt+ArrowDown nudges selected down', async ({ page }) => {
     await selectAll(page);
     const before = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 
     await pressKey(page, 'Alt+ArrowDown');
 
     const after = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       return panel.getCircuitText();
     });
 

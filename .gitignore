@@ -1,5 +1,7 @@
 # Test artifacts
 test/TESTS.html
+test-results/
+test/e2e/report/
 
 # Dependencies
 node_modules/
@@ -24,7 +26,10 @@ Thumbs.db
 
 # Project-level review/planning docs (kept outside repo)
 CODEREVIEW.md
+PLAN.md
 TODO.md
+AGENTS.md
+AGENTS.md.backup
 
 # IDE
 .vscode/

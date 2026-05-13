@@ -10,7 +10,7 @@
  * On OK, builds a MacroDesc and adds it to the library model.
  */
 
-import type { CircuitPanel } from '../circuit/CircuitPanel.js';
+import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { DrawingModel } from '../circuit/model/DrawingModel.js';
 import type { LibraryModel } from '../librarymodel/LibraryModel.js';
 import { ParserActions } from '../circuit/controllers/ParserActions.js';
@@ -50,7 +50,7 @@ export class DialogSymbolize {
     private isDragging: boolean = false;
     private resizeObserver: ResizeObserver | null = null;
 
-    constructor(_circuitPanel: CircuitPanel, drawingModel: DrawingModel, libraryModel: LibraryModel, onSaved: () => void) {
+    constructor(_circuitPanel: EditorFacade, drawingModel: DrawingModel, libraryModel: LibraryModel, onSaved: () => void) {
         this.drawingModel = drawingModel;
         this.libraryModel = libraryModel;
         this.onSaved = onSaved;

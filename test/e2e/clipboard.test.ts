@@ -13,8 +13,7 @@ test.describe('Clipboard Operations', () => {
   test.beforeEach(async ({ page }) => {
     await gotoApp(page);
     await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.clearCircuit();
       panel.loadCircuit('FJC A 1\nFJC B 1\nLI 50 50 150 50 0\nLI 100 100 200 100 1\n');
     });
@@ -23,8 +22,7 @@ test.describe('Clipboard Operations', () => {
 
   test('copySelected preserves primitives', async ({ page }) => {
     const ok = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.selectAll();
       panel.copySelected();
       return panel.getModel().getPrimitiveVector().length === 2;
@@ -34,8 +32,7 @@ test.describe('Clipboard Operations', () => {
 
   test('cutSelected removes primitives', async ({ page }) => {
     const ok = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.selectAll();
       panel.cutSelected();
       return panel.getModel().getPrimitiveVector().length === 0;
@@ -45,8 +42,7 @@ test.describe('Clipboard Operations', () => {
 
   test('duplicateSelected doubles count', async ({ page }) => {
     const ok = await page.evaluate(async () => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.selectAll();
       panel.duplicateSelected();
       for (let i = 0; i < 20; i++) {
@@ -60,8 +56,7 @@ test.describe('Clipboard Operations', () => {
 
   test('cut then duplicate works via internal clipboard', async ({ page }) => {
     const ok = await page.evaluate(async () => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.selectAll();
       panel.cutSelected();
       if (panel.getModel().getPrimitiveVector().length !== 0) return false;
@@ -77,8 +72,7 @@ test.describe('Clipboard Operations', () => {
 
   test('duplicate is undoable', async ({ page }) => {
     const ok = await page.evaluate(async () => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.selectAll();
       panel.duplicateSelected();
       // Wait for the async paste to complete and verify 4 primitives
@@ -95,8 +89,7 @@ test.describe('Clipboard Operations', () => {
 
   test('cut then undo restores', async ({ page }) => {
     const ok = await page.evaluate(() => {
-      const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-      const panel = (canvas as any).__circuitPanel;
+      const panel = (window as any).__FidoCadJS__.circuitPanel;
       panel.selectAll();
       panel.cutSelected();
       if (panel.getModel().getPrimitiveVector().length !== 0) return false;

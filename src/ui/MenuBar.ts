@@ -6,7 +6,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
-import { CircuitPanel } from '../circuit/CircuitPanel.js';
+import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { showOptionsDialog } from './OptionsDialog.js';
 import { showExportDialog, executeExport } from './ExportDialog.js';
 
@@ -20,13 +20,13 @@ interface MenuItem {
 
 export class MenuBar {
     private readonly el: HTMLElement;
-    private readonly panel: CircuitPanel;
+    private readonly panel: EditorFacade;
     private readonly onNewCircuit: () => void;
     private readonly onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined;
     private undoMenuItem: HTMLElement | null = null;
     private redoMenuItem: HTMLElement | null = null;
 
-    constructor(panel: CircuitPanel, onNewCircuit: () => void,
+    constructor(panel: EditorFacade, onNewCircuit: () => void,
                 onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined) {
         this.panel = panel;
         this.onNewCircuit = onNewCircuit;

@@ -7,7 +7,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
-import { CircuitPanel } from '../circuit/CircuitPanel.js';
+import type { EditorFacade } from '../circuit/EditorFacade.js';
 
 /** Supported export formats */
 export type ExportFormat = 'png' | 'svg' | 'pgf' | 'tikz';
@@ -27,7 +27,7 @@ export interface ExportSelection {
  *
  * Currently implemented formats: PNG, SVG, PGF, TikZ.
  */
-export function showExportDialog(_panel: CircuitPanel): Promise<ExportSelection | null> {
+export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection | null> {
     // Build the dialog
     const overlay = document.createElement('div');
     overlay.style.cssText =
@@ -189,7 +189,7 @@ export function showExportDialog(_panel: CircuitPanel): Promise<ExportSelection 
  * Execute the export based on user selection.
  * Creates a Blob, triggers a download, or for PNG renders the canvas.
  */
-export function executeExport(panel: CircuitPanel, selection: ExportSelection): void {
+export function executeExport(panel: EditorFacade, selection: ExportSelection): void {
     const { format, filename } = selection;
 
     switch (format) {
@@ -208,22 +208,22 @@ export function executeExport(panel: CircuitPanel, selection: ExportSelection): 
     }
 }
 
-function exportSVG(panel: CircuitPanel, filename: string): void {
+function exportSVG(panel: EditorFacade, filename: string): void {
     const svgText = panel.exportSVG();
     downloadBlob(svgText, 'image/svg+xml', ensureExt(filename, '.svg'));
 }
 
-function exportPGF(panel: CircuitPanel, filename: string): void {
+function exportPGF(panel: EditorFacade, filename: string): void {
     const pgfText = panel.exportPGF();
     downloadBlob(pgfText, 'text/plain', ensureExt(filename, '.pgf'));
 }
 
-function exportTikZ(panel: CircuitPanel, filename: string): void {
+function exportTikZ(panel: EditorFacade, filename: string): void {
     const tikzText = panel.exportTikZ();
     downloadBlob(tikzText, 'text/plain', ensureExt(filename, '.tex'));
 }
 
-function exportPNG(panel: CircuitPanel, filename: string): void {
+function exportPNG(panel: EditorFacade, filename: string): void {
     // For PNG, we render the canvas to a blob via toBlob
     const canvas = panel.getCanvasElement();
 

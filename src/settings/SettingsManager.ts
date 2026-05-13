@@ -6,7 +6,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
-import type { CircuitPanel } from '../circuit/CircuitPanel.js';
+import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { Globals } from '../globals/Globals.js';
 
 export interface AppSettings {
@@ -111,7 +111,7 @@ export class SettingsManager {
         this.save();
     }
 
-    applyToPanel(panel: CircuitPanel): void {
+    applyToPanel(panel: EditorFacade): void {
         const s = this.settings;
         const mc = panel.getMapCoordinates();
         mc.setXGridStep(s.gridSizeX);
