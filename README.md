@@ -106,19 +106,19 @@ MC 60 45 0 0 ey_libraries.refpnt2
 
 ### What is FidoCadJS?
 
-FidoCadJS is a **TypeScript browser port** of [FidoCadJ](https://github.com/FidoCadJ/FidoCadJ), the multiplatform electronic schematic and PCB layout editor. It runs entirely in your web browser; no installation, no Java runtime, no downloads. Just open the page and start drawing.
+FidoCadJS is a **TypeScript browser port** of [FidoCadJ](https://github.com/FidoCadJ/FidoCadJ), the multiplatform electronic schematic and PCB layout editor. It runs entirely in your web browser with no installation, no Java runtime, and no downloads.
 
-It supports the full FidoCad/FidoCadJ file format (`.fcd`), so any schematic you already have works immediately. FidoCadJS saves and loads files using the compact text format that made FidoCad popular on Italian Usenet and forums.
+It supports the full FidoCad/FidoCadJ file format (`.fcd`). Schematics you already have work immediately. FidoCadJS saves and loads files using the compact text format that made FidoCad popular on Italian Usenet and forums.
 
-**Zero runtime dependencies.** The entire application is built on browser APIs: Canvas 2D, localStorage, the Fetch API, and the Clipboard API. There are no server-side components; it's all client-side, so your drawings never leave your machine.
+**Zero runtime dependencies.** The application is built on browser APIs: Canvas 2D, localStorage, the Fetch API, and the Clipboard API. There is no server. Your drawings never leave your machine.
 
 ### A Bit of History
 
-The story begins in the late 1990s, in the Italian newsgroup **it.hobby.elettronica**. Lorenzo Lutti created **FidoCad per Windows**, a small, fast vector drawing program using a compact text-based file format. The format was ingenious: a schematic could be represented entirely as printable ASCII text, small enough to paste directly into a Usenet message. This made it perfect for sharing circuit designs in discussion groups.
+The story begins in the late 1990s, in the Italian newsgroup **it.hobby.elettronica**. Lorenzo Lutti created **FidoCad per Windows**, a small vector drawing program using a compact text-based file format. A schematic could be represented as printable ASCII text, small enough to paste into a Usenet message. This made it practical for sharing circuit designs in discussion groups.
 
-FidoCad for Windows gained widespread adoption in the Italian electronics community. The program was last updated in 2001, but the format lived on.
+FidoCad for Windows was widely adopted in the Italian electronics community. The program was last updated in 2001, but the format lived on.
 
-In 2007, **Davide Bucci** ([DarwinNE](https://github.com/DarwinNE)) found himself without a way to use FidoCad on macOS and Linux. Rather than complain, he reverse-engineered the FidoCad format, first writing **FidoReadJ** (a Java applet for viewing FidoCad drawings in a web page), then in 2008 completing **FidoCadJ**; a full-featured editor written in Java. FidoCadJ brought anti-aliased graphics, internationalization (10+ languages), advanced export (PDF, EPS, SVG, PGF for LaTeX, PNG, JPG), more community libraries, and active development. It even gained an Android port and runs on Windows, macOS, Linux, and Android.
+In 2007, **Davide Bucci** ([DarwinNE](https://github.com/DarwinNE)) reverse-engineered the FidoCad format to use it on macOS and Linux. He first wrote **FidoReadJ**, a Java applet for viewing FidoCad drawings in a web page. In 2008 he completed **FidoCadJ**, a full-featured editor written in Java. FidoCadJ brought anti-aliased graphics, internationalization (10+ languages), advanced export (PDF, EPS, SVG, PGF for LaTeX, PNG, JPG), more community libraries, and active development. It was ported to Android and runs on Windows, macOS, Linux, and Android.
 
 For a deeper dive into the project's history, see Davide Bucci's article (in italian) at [ElectroYou](https://www.electroyou.it/darwinne/wiki/fidocadj).
 
@@ -152,11 +152,11 @@ It works on desktop, tablet, and mobile; pointer events are handled uniformly so
 
 FidoCadJS targets feature parity with FidoCadJ for editing and `.fcd` interoperability, but a few things from the Java upstream are not (yet) ported:
 
-- **Export formats** - PNG, SVG, PGF/TikZ (LaTeX), and FCD. PDF, EPS, and JPG export from FidoCadJ are not yet implemented.
-- **Locales** - the i18n framework is in place but currently only the English bundle ships. FidoCadJ has 10+ translations.
-- **Platform integrations** — there is no Android-specific build; the browser version covers mobile via touch events.
-- **Print** - native print dialog is delegated to the browser's built-in print.
-- **PCB** — PCB trace and pad tools plus the PCB Footprints library have been reintroduced. The app supports schematic capture and single-layer PCB layout side by side, same as FidoCadJ. 
+- **Export formats**: PNG, SVG, PGF/TikZ (LaTeX), and FCD. PDF, EPS, and JPG export from FidoCadJ are not yet implemented.
+- **Locales**: the i18n framework is in place but only the English bundle ships. FidoCadJ has 10+ translations.
+- **Platform integrations**: there is no Android-specific build. The browser version covers mobile via touch events.
+- **Print**: the native print dialog is delegated to the browser's built-in print.
+- **PCB**: PCB trace and pad tools plus the PCB Footprints library are available. The app supports schematic capture and single-layer PCB layout side by side, same as FidoCadJ. 
 
 If you need any of the missing pieces, FidoCadJ remains fully supported and can read/write the same `.fcd` files.
 
@@ -216,9 +216,9 @@ Open `http://localhost:5173/FidoCadJS/` in your browser.
 
 FidoCadJS follows a clean MVC architecture:
 
-- **Model** — `DrawingModel` holds primitives, layers, and macro library state
-- **View** — HTML Canvas rendering via the `GraphicsInterface` abstraction; `Drawing` handles per-layer rendering
-- **Controller** — `CircuitPanel` coordinates mouse/keyboard input, `ElementsEdtActions` dispatches tool-specific handlers, `UndoManager` tracks full-state snapshots
+- **Model**: `DrawingModel` holds primitives, layers, and macro library state
+- **View**: HTML Canvas rendering via the `GraphicsInterface` abstraction. `Drawing` handles per-layer rendering
+- **Controller**: `CircuitPanel` coordinates mouse/keyboard input, `ElementsEdtActions` dispatches tool-specific handlers, `UndoManager` tracks full-state snapshots
 
 The FCL parser (`ParserActions`) handles the text-based `.fcd` format with safety limits and macro expansion (max depth 16).
 
@@ -254,14 +254,14 @@ npm run build
 
 FidoCadJS has two test suites:
 
-**Unit tests** — [Vitest](https://vitest.dev) with [jsdom](https://github.com/jsdom/jsdom) for browser-like DOM.
+**Unit tests** use [Vitest](https://vitest.dev) with [jsdom](https://github.com/jsdom/jsdom) for browser-like DOM.
 
 ```bash
 npm run test:run        # Run once (CI)
 npm test                # Watch mode
 ```
 
-**E2E tests** — [Playwright](https://playwright.dev) driving headless Chromium for real browser interaction (canvas clicks, keyboard input, export verification).
+**E2E tests** use [Playwright](https://playwright.dev) driving headless Chromium for real browser interaction (canvas clicks, keyboard input, export verification).
 
 ```bash
 npm run test:e2e        # Run all E2E tests (headless)
@@ -278,13 +278,13 @@ npm run test:e2e:ui     # Interactive UI mode with time-travel
 | `test/circuit/controllers/selection-actions.test.ts` | Unit | Selection queries, multi-select, get-text |
 | `test/circuit/keyboard-shortcuts.test.ts` | Unit | All keyboard shortcuts: tools, transforms, zoom, clipboard, nudge, input blocking |
 | `test/export/export-svg.test.ts` | Unit | SVG export produces correct XML for all primitive types |
-| `test/export/export-pgf.test.ts` | Unit | PGF export for LaTeX — state tracking, arrows, dashes, layers, all primitives |
-| `test/export/export-tikz.test.ts` | Unit | TikZ export for LaTeX — all primitives, dash patterns, arrows |
+| `test/export/export-pgf.test.ts` | Unit | PGF export for LaTeX: state tracking, arrows, dashes, layers, all primitives |
+| `test/export/export-tikz.test.ts` | Unit | TikZ export for LaTeX: all primitives, dash patterns, arrows |
 | `test/graphic/tex-renderer.test.ts` | Unit | KaTeX math rendering: inline, display, mixed, edge cases |
 | `test/geom/map-coordinates.test.ts` | Unit | Coordinate system mapping, zoom, orientation, snap |
 | `test/primitives/primitive-edge-cases.test.ts` | Unit | Per-primitive toString/parseTokens edge cases, negative coords, multi-word text |
 | `test/settings/settings-manager.test.ts` | Unit | SettingsManager validation, defaults, localStorage persistence, error handling |
-| `test/undo/undo-actions.test.ts` | Unit | UndoActions correctness — add, move, delete, rotate, mirror undo |
+| `test/undo/undo-actions.test.ts` | Unit | UndoActions correctness: add, move, delete, rotate, mirror undo |
 | `test/globals/globals.test.ts` | Unit | Path/extension utilities, coordinate parsing |
 | `test/layers/layer-desc.test.ts` | Unit | Layer model, StandardLayers |
 | `test/librarymodel/library-model.test.ts` | Unit | Library hierarchy, CRUD, events |
@@ -319,33 +319,27 @@ For detailed test case descriptions, see [TESTS.md](test/TESTS.md).
 
 ## Contributing
 
-Contributions are welcome — whether it's bug fixes, new features, translations, or documentation improvements. Human contributors and coding agents alike are encouraged.
+Bug fixes, new features, translations, and documentation improvements are all welcome. Human contributors and coding agents alike may participate.
 
-### Coding agent workflow
+### Coding agents
 
-FidoCadJS is structured to work well with coding agents (Claude Code, Pi, Codex, etc.):
+The codebase is structured to accommodate coding agents. Interfaces are narrow, modules are decoupled, and there is minimal indirection. Agents can be useful for routine tasks such as refactoring, test generation, and boilerplate reduction.
 
-- **Agent-friendly architecture** — narrow interfaces (`EditorFacade`), per-tool strategy patterns (`GhostPreview`), and a service container (`createEditorServices`) keep modules decoupled and easy for an agent to reason about. There is no monorepo tooling, no DI framework, and no magic; just clean TypeScript files with explicit imports.
-- **Guide files** — `AGENTS.md`, `PLAN.md`, and `TODO.md` at the repo root provide an agent with conventions, a plan-first workflow, and a task checklist. Always read these before acting.
-- **Plan-first workflow** — if you are asked to design a change, write it in `PLAN.md` and stop there. Do not implement until the plan is reviewed. This keeps agent and human aligned.
-- **Tests alongside code** — every new module should ship with unit tests covering its public API and edge cases.
+Design decisions and architectural intent remain the responsibility of human contributors. Agent-produced code is held to the same standards as any other contribution.
 
-> ⚠️ **This workflow is highly encouraged**, but it does not relax quality standards. Careful design choices, comprehensive testing, and good development practices remain essential. Low-quality or untested code will not be merged regardless of how it was produced.
+### Pull requests
 
-### Human contributor workflow
-
-1. 🍴 Fork the repository
-2. 🌿 Create a feature branch (use `dev` as base; never commit to `main` directly)
-3. 🔨 Make your changes following the coding conventions
-4. ✅ Run `npm run typecheck` and `npm run test:run`
-5. 📬 Submit a pull request to `dev`
+1. Fork the repository
+2. Create a feature branch (use `dev` as base; never commit to `main` directly)
+3. Make your changes, following the coding conventions
+4. Run `npm run typecheck` and `npm run test:run`
+5. Submit a pull request to `dev`
 
 **Before submitting:**
 - [ ] Follows coding conventions (file headers, strict TS, 4-space indent)
 - [ ] Code compiles (`npm run typecheck`)
 - [ ] All tests pass (`npm run test:run`)
 - [ ] Build succeeds (`npm run build`)
-- [ ] Related `PLAN.md` / `TODO.md` files are kept up to date
 
 ---
 
@@ -361,11 +355,11 @@ FidoCadJS is structured to work well with coding agents (Claude Code, Pi, Codex,
 
 ### Original FidoCad
 
-- **Lorenzo Lutti** for creating the original FidoCad for Windows and its brilliant text-based file format. Without his work, none of this would exist.
+- **Lorenzo Lutti** for creating the original FidoCad for Windows and its text-based file format.
 
 ### FidoCadJ (Java)
 
-- **Davide Bucci** ([DarwinNE](https://github.com/DarwinNE)) — Original author of FidoCadJ, for his reverse-engineering of the FidoCad format, the complete Java implementation, and years of continued development
+- **Davide Bucci** ([DarwinNE](https://github.com/DarwinNE)), original author of FidoCadJ, for reverse-engineering the FidoCad format, the complete Java implementation, and years of continued development
 - All contributors, beta testers, translators, and library editors listed in the [FidoCadJ README](https://github.com/FidoCadJ/FidoCadJ)
 
 ### Icons
