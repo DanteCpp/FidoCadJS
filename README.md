@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-GPL%20v3-green.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.4-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-browser-lightgrey.svg)
-![Tests](https://img.shields.io/badge/tests-16%20unit%20%7C%2013%20e2e-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-17%20unit%20%7C%2013%20e2e-brightgreen.svg)
 
 **A browser-based electronic schematic editor fully compatible with the FidoCad (fdc) format.**
 
@@ -131,7 +131,8 @@ FidoCadJS bundles the standard FidoCadJ libraries under `public/lib/`:
 | Standard library | `FCDstdlib_en.fcl` | Original FidoCad standard symbols (resistors, capacitors, ICs, ...) |
 | Electrical symbols | `elettrotecnica_en.fcl` | Power and electrotechnical symbols |
 | EY Libraries | `EY_Libraries.fcl` | ElectroYou community symbols |
-| IHRAM 3.1 | `IHRAM_en.fcl` | it.hobby.radioamatori.moderato community library | 
+| IHRAM 3.1 | `IHRAM_en.fcl` | it.hobby.radioamatori.moderato community library |
+| PCB Footprints | `PCB_en.fcl` | Board outlines, through-hole footprints, SMD pads | 
 
 Users can also load additional `.fcl` files into the User Library from the macro picker; these persist across reloads in `localStorage`.
 
@@ -155,7 +156,7 @@ FidoCadJS targets feature parity with FidoCadJ for editing and `.fcd` interopera
 - **Locales** - the i18n framework is in place but currently only the English bundle ships. FidoCadJ has 10+ translations.
 - **Platform integrations** — there is no Android-specific build; the browser version covers mobile via touch events.
 - **Print** - native print dialog is delegated to the browser's built-in print.
-- **PCB** — PCB drawing tools and the PCB standard library have been intentionally removed. Single-layer hand-drawn PCBs are anachronistic in 2026. Refer to FidoCadJ if you need this feature. The app still supports rendering PCB primitives for backward compatibility. 
+- **PCB** — PCB trace and pad tools plus the PCB Footprints library have been reintroduced. The app supports schematic capture and single-layer PCB layout side by side, same as FidoCadJ. 
 
 If you need any of the missing pieces, FidoCadJ remains fully supported and can read/write the same `.fcd` files.
 
@@ -318,19 +319,33 @@ For detailed test case descriptions, see [TESTS.md](test/TESTS.md).
 
 ## Contributing
 
-Contributions are welcome! Whether it's bug fixes, new features, translations, or documentation improvements.
+Contributions are welcome — whether it's bug fixes, new features, translations, or documentation improvements. Human contributors and coding agents alike are encouraged.
+
+### Coding agent workflow
+
+FidoCadJS is structured to work well with coding agents (Claude Code, Pi, Codex, etc.):
+
+- **Agent-friendly architecture** — narrow interfaces (`EditorFacade`), per-tool strategy patterns (`GhostPreview`), and a service container (`createEditorServices`) keep modules decoupled and easy for an agent to reason about. There is no monorepo tooling, no DI framework, and no magic; just clean TypeScript files with explicit imports.
+- **Guide files** — `AGENTS.md`, `PLAN.md`, and `TODO.md` at the repo root provide an agent with conventions, a plan-first workflow, and a task checklist. Always read these before acting.
+- **Plan-first workflow** — if you are asked to design a change, write it in `PLAN.md` and stop there. Do not implement until the plan is reviewed. This keeps agent and human aligned.
+- **Tests alongside code** — every new module should ship with unit tests covering its public API and edge cases.
+
+> ⚠️ **This workflow is highly encouraged**, but it does not relax quality standards. Careful design choices, comprehensive testing, and good development practices remain essential. Low-quality or untested code will not be merged regardless of how it was produced.
+
+### Human contributor workflow
 
 1. 🍴 Fork the repository
-2. 🌿 Create a feature branch
+2. 🌿 Create a feature branch (use `dev` as base; never commit to `main` directly)
 3. 🔨 Make your changes following the coding conventions
 4. ✅ Run `npm run typecheck` and `npm run test:run`
-5. 📬 Submit a pull request
+5. 📬 Submit a pull request to `dev`
 
 **Before submitting:**
-- [ ] Follows coding conventions
+- [ ] Follows coding conventions (file headers, strict TS, 4-space indent)
 - [ ] Code compiles (`npm run typecheck`)
 - [ ] All tests pass (`npm run test:run`)
 - [ ] Build succeeds (`npm run build`)
+- [ ] Related `PLAN.md` / `TODO.md` files are kept up to date
 
 ---
 
