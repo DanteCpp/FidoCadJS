@@ -63,6 +63,8 @@ export class ToolbarController {
             ['E: Place an ellipse (hold Control for a circle).',                    'ellipse.png',     ElementsEdtActions.ELLIPSE],
             ['G: Place a rectangle.',                                               'rectangle.png',   ElementsEdtActions.RECTANGLE],
             ['C: Place an electrical connection.',                                  'connection.png',  ElementsEdtActions.CONNECTION],
+            ['I: Place a PCB trace.',                                                 'pcbline.png',      ElementsEdtActions.PCB_LINE],
+            ['Z: Place a PCB pad.',                                                   'pcbpad.png',       ElementsEdtActions.PCB_PAD],
         ];
 
         for (const [tooltip, icon, toolId] of toolDefs) {

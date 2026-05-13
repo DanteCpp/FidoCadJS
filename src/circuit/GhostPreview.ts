@@ -20,6 +20,7 @@ import { PrimitiveOval } from '../primitives/PrimitiveOval.js';
 import { PrimitivePolygon } from '../primitives/PrimitivePolygon.js';
 import { PrimitiveComplexCurve } from '../primitives/PrimitiveComplexCurve.js';
 import { PrimitivePCBLine } from '../primitives/PrimitivePCBLine.js';
+import { PrimitivePCBPad } from '../primitives/PrimitivePCBPad.js';
 import { PrimitiveMacro } from '../primitives/PrimitiveMacro.js';
 import { StandardLayers } from '../layers/StandardLayers.js';
 
@@ -103,6 +104,16 @@ const complexCurveGhost: ToolGhostHandler = (ctx) => {
     return null;
 };
 
+const pcbPadGhost: ToolGhostHandler = (ctx, edt) => {
+    const ae = edt.getAddElements();
+    return new PrimitivePCBPad(
+        ctx.lx, ctx.ly,
+        ae.getPcbPadSizeX(), ae.getPcbPadSizeY(),
+        ae.getPcbPadDrill(), ae.getPcbPadStyle(),
+        ctx.layer, ctx.font, ctx.fontSize
+    );
+};
+
 const pcbLineGhost: ToolGhostHandler = (ctx, edt) => {
     if (ctx.clickNum === 1) {
         return new PrimitivePCBLine(
@@ -159,6 +170,7 @@ const registry = new Map<number, ToolGhostHandler>([
     [ElementsEdtActions.POLYGON, polygonGhost],
     [ElementsEdtActions.COMPLEXCURVE, complexCurveGhost],
     [ElementsEdtActions.PCB_LINE, pcbLineGhost],
+    [ElementsEdtActions.PCB_PAD, pcbPadGhost],
     [ElementsEdtActions.MACRO, macroGhost],
 ]);
 
