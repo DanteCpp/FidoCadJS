@@ -50,6 +50,7 @@ import { TeXOverlay } from './views/TeXOverlay.js';
 import { MacroVectorizer } from './MacroVectorizer.js';
 import { ContextMenuManager } from './ContextMenuManager.js';
 import { ExportFacade } from '../export/ExportFacade.js';
+import { createEditorServices } from './services.js';
 
 export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
@@ -138,14 +139,18 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         registerDrawingHooks();
         registerExportHooks();
 
-        // Initialize coordinate system FIRST (before ResizeObserver)
-        this.mapCoordinates = new MapCoordinates();
-        this.mapCoordinates.setXCenter(0);  // Logical coordinate, not pixels!
-        this.mapCoordinates.setYCenter(0);
-        this.mapCoordinates.setXMagnitude(20);
-        this.mapCoordinates.setYMagnitude(20);
+        // Create all editor services via factory (explicit dependency graph)
+        const services = createEditorServices();
+        this.model = services.model;
+        this.mapCoordinates = services.mapCoordinates;
+        this.parserActions = services.parserActions;
+        this.selectionActions = services.selectionActions;
+        this.undoActions = services.undoActions;
+        this.editorActions = services.editorActions;
+        this.elementsEdt = services.elementsEdt;
+        this.clipboardController = services.clipboardController;
 
-        // Create canvas via CanvasManager
+        // Create canvas via CanvasManager (must happen early)
         this.canvasManager = new CanvasManager(container);
         this.canvas = this.canvasManager.canvas;
         this.canvasManager.setOnResize(() => {
@@ -156,21 +161,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         // Initialize ghost preview generator
         this.ghostPreview = new GhostPreview();
 
+        // Initialize graphics context
         this.ctx = new GraphicsCanvas(this.canvas);
         this.ctx.setZoom(1);
-
-        // Initialize model
-        this.model = new DrawingModel();
-        this.model.setLayers(StandardLayers.createStandardLayers());
-        this.parserActions = new ParserActions(this.model);
-
-        // Initialize controllers
-        this.selectionActions = new SelectionActions(this.model);
-        this.undoActions = new UndoActions(this.parserActions);
-        this.editorActions = new EditorActions(this.model, this.selectionActions, this.undoActions);
-        this.elementsEdt = new ElementsEdtActions(
-            this.model, this.selectionActions, this.undoActions, this.editorActions
-        );
 
         // Wire up callbacks from ElementsEdtActions
         this.elementsEdt.onTextEditRequested = (prim, sx, sy) => {
@@ -191,11 +184,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         // Initialize context menu — mount on body to avoid overflow:hidden clipping
         this.contextMenu = new ContextMenu();
 
-        // Initialize clipboard controller (before keyboard, which depends on it)
-        this.clipboardController = new ClipboardController(
-            this.selectionActions, this.parserActions, this.editorActions,
-            this.undoActions, this.mapCoordinates
-        );
+        // Wire clipboard callbacks (controller already created by services factory)
         this.clipboardController.onRenderRequested = () => this.render();
         this.clipboardController.onUndoStateChange = () => this.onUndoStateChange?.();
 
