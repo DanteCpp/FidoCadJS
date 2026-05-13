@@ -46,11 +46,19 @@ import type { EditorFacade } from './EditorFacade.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
 import { CanvasManager } from './CanvasManager.js';
 import { GhostPreview } from './GhostPreview.js';
+import { TeXOverlay } from './views/TeXOverlay.js';
+import { MacroVectorizer } from './MacroVectorizer.js';
+import { ContextMenuManager } from './ContextMenuManager.js';
+import { ExportFacade } from '../export/ExportFacade.js';
 
 export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
     private canvasManager: CanvasManager;
     private ghostPreview: GhostPreview;
+    private texOverlayManager: TeXOverlay;
+    private exportFacade: ExportFacade;
+    private macroVectorizer: MacroVectorizer;
+    private contextMenuManager: ContextMenuManager;
     private canvas: HTMLCanvasElement;
     private ctx: GraphicsCanvas;
     private model: DrawingModel;
@@ -119,8 +127,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private clipboardController: ClipboardController;
     private keyboardController: KeyboardController;
     private contextMenu!: ContextMenu;
-    private contextMenuLogX: number = 0;
-    private contextMenuLogY: number = 0;
     private menuBar: MenuBar | null = null;
     private isMovingSelected: boolean = false;
     private moveStartLogX: number = 0;
@@ -193,6 +199,30 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.clipboardController.onRenderRequested = () => this.render();
         this.clipboardController.onUndoStateChange = () => this.onUndoStateChange?.();
 
+        // Initialize extracted managers
+        this.exportFacade = new ExportFacade(this.model);
+        this.macroVectorizer = new MacroVectorizer(
+            this.model, this.selectionActions, this.undoActions, () => this.render()
+        );
+        this.contextMenuManager = new ContextMenuManager(
+            this.contextMenu, this.selectionActions, this.undoActions,
+            this.mapCoordinates, this.clipboardController,
+            {
+                onPropertiesRequested: (prim) => this.onPropertiesRequested?.(prim),
+                onSymbolizeRequested: () => this.onSymbolizeRequested?.(),
+                onRender: () => this.render(),
+                copySelected: () => this.copySelected(),
+                cutSelected: () => this.cutSelected(),
+                paste: () => this.paste(),
+                duplicateSelected: () => this.duplicateSelected(),
+                selectAll: () => this.selectAll(),
+                startMoveSelected: () => this.startMoveSelected(),
+                rotateSelected: () => this.rotateSelected(),
+                mirrorSelected: () => this.mirrorSelected(),
+                vectorizeMacro: () => this.vectorizeSelectedMacro(),
+            }
+        );
+
         // Initialize keyboard controller
         this.keyboardController = new KeyboardController(
             this, this.clipboardController
@@ -215,7 +245,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
                 this.setTool(ElementsEdtActions.SELECTION);
                 this.render();
             } else {
-                this.showContextMenu(e.clientX, e.clientY);
+                this.contextMenuManager.show(e.clientX, e.clientY);
             }
         });
 
@@ -237,6 +267,8 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.texOverlay.setAttribute('aria-hidden', 'true');
         container.style.position = 'relative';
         container.appendChild(this.texOverlay);
+
+        this.texOverlayManager = new TeXOverlay(this.texOverlay);
     }
 
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
@@ -685,10 +717,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setRenderTeX(enabled: boolean): void {
         this.renderTeX = enabled;
-        this.texOverlay.style.display = enabled ? 'block' : 'none';
-        if (!enabled) {
-            this.texOverlay.innerHTML = '';
-        }
+        this.texOverlayManager.setEnabled(enabled);
         this.render();
     }
 
@@ -748,126 +777,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.mapCoordinates.setYCenter(Math.min(this.mapCoordinates.getYCenter(), 0));
     }
 
-    /** Populate the TeX overlay div with KaTeX-rendered math from text primitives. */
-    private syncTeXOverlay(dpr: number): void {
-        if (!this.renderTeX) return;
-
-        const htmlParts: string[] = [];
-        const latexIndices: number[] = []; // primitive indices for each overlay div
-        const layers = this.model.getLayers();
-        const primitives = this.model.getPrimitiveVector();
-
-        for (let pi = 0; pi < primitives.length; pi++) {
-            const prim = primitives[pi]!;
-            if (!(prim instanceof PrimitiveAdvText)) continue;
-
-            const text = prim.getString();
-            // Quick skip: if no $ delimiter, no math to render
-            if (!text.includes('$')) continue;
-
-            const lx = prim.virtualPoint[0]!.x;
-            const ly = prim.virtualPoint[0]!.y;
-            const sx = this.mapCoordinates.mapX(lx, ly);
-            const sy = this.mapCoordinates.mapY(lx, ly);
-
-            // Convert canvas pixels to CSS pixels for overlay positioning
-            const cssX = sx / dpr;
-            const cssY = sy / dpr;
-
-            // Compute font CSS matching the canvas font settings (mirrors draw()).
-            // Use the larger of six and the width-equivalent of siy to ensure
-            // both font size fields affect the visual rendering.
-            const yMag = this.mapCoordinates.getYMagnitude();
-            const effectiveSix = Math.max(
-                prim.getFontWidth(),
-                prim.getFontDimension() * 7 / 10
-            );
-            const canvasFontSize = effectiveSix * 12 * yMag / 7 + 0.5;
-            const cssFontSize = canvasFontSize / dpr;
-            const isBold = prim.isBold();
-            const isItalic = prim.isItalic();
-            const fontName = prim.getFontName() || 'Courier New';
-            const fontStyle = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}`;
-
-            // Layer color — blend with selection green when selected (matches canvas).
-            const layerIdx = prim.getLayer();
-            let textColor = '#000000';
-            if (layerIdx >= 0 && layerIdx < layers.length) {
-                const color = layers[layerIdx].getColor();
-                if (color) {
-                    if (prim.isSelected()) {
-                        // Same blend as GraphicsCanvas.activateSelectColor:
-                        // selectedColor(0,255,0) * 0.6 + layerColor * 0.4
-                        const r = Math.floor(0 * 0.6 + color.getRed() * 0.4);
-                        const g = Math.floor(255 * 0.6 + color.getGreen() * 0.4);
-                        const b = Math.floor(0 * 0.6 + color.getBlue() * 0.4);
-                        textColor = `rgb(${r},${g},${b})`;
-                    } else {
-                        textColor = (color as ColorCanvas).toCSSColor();
-                    }
-                }
-            }
-
-            // Orientation and mirror (mirrors draw() coordinate adjustments).
-            let orientation = prim.getOrientation();
-            let mirror = prim.isMirrored() !== 0;
-            if (mirror) orientation = -orientation;
-            orientation -= this.mapCoordinates.getOrientation() * 90;
-            if (this.mapCoordinates.getMirror()) {
-                mirror = !mirror;
-                orientation = -orientation;
-            }
-            let transformStyle = '';
-            if (orientation !== 0 || mirror) {
-                transformStyle = `transform: rotate(${orientation}deg)` +
-                    (mirror ? ' scaleX(-1)' : '') + '; ' +
-                    'transform-origin: 0 0; ';
-            }
-
-            const segments = renderMixedText(text);
-            const segmentHtml = segments.map(seg => {
-                if (seg.type === 'text') {
-                    // Escape HTML in plain text segments
-                    const escaped = seg.content
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;');
-                    return `<span style="white-space: pre;">${escaped}</span>`;
-                }
-                // Math segments already contain safe KaTeX HTML
-                return seg.content;
-            }).join('');
-
-            htmlParts.push(
-                `<div data-prim-index="${pi}" style="position:absolute; left:${cssX}px; top:${cssY}px; ` +
-                `white-space: nowrap; font: ${fontStyle}${cssFontSize}px ${fontName}; ` +
-                `color: ${textColor}; ${transformStyle}">${segmentHtml}</div>`
-            );
-            latexIndices.push(pi);
-        }
-
-        this.texOverlay.innerHTML = htmlParts.join('');
-
-        // Measure actual KaTeX overlay dimensions after layout and feed them
-        // back to the primitives for accurate click hit-testing.
-        requestAnimationFrame(() => {
-            const overlayDivs = this.texOverlay.querySelectorAll('[data-prim-index]');
-            for (const div of overlayDivs) {
-                const idx = parseInt((div as HTMLElement).dataset['primIndex'] ?? '', 10);
-                const prim = primitives[idx];
-                if (!(prim instanceof PrimitiveAdvText)) continue;
-                const rect = div.getBoundingClientRect();
-                if (rect.width <= 0 && rect.height <= 0) continue;
-                // Convert CSS pixel dimensions to logical units.
-                // The div is positioned at (cssX, cssY) which maps to
-                // (virtualPoint.x, virtualPoint.y) in logical coords.
-                const wLogical = Math.round(rect.width * dpr / this.mapCoordinates.getXMagnitude());
-                const hLogical = Math.round(rect.height * dpr / this.mapCoordinates.getYMagnitude());
-                prim.setTeXOverlaySize(wLogical, hLogical);
-            }
-        });
-    }
-
     render(): void {
         const ctx = this.ctx.getCtx();
         const width = this.canvas.width;
@@ -925,7 +834,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         }
 
         // Sync TeX overlay when LaTeX rendering is enabled
-        this.syncTeXOverlay(window.devicePixelRatio || 1);
+        this.texOverlayManager.sync(this.model, this.mapCoordinates, window.devicePixelRatio || 1);
 
         this.model.setChanged(false);
         this.ctx.clearDirtyRect();
@@ -944,38 +853,11 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         return this.parserActions.getText(true);
     }
 
-    exportSVG(): string {
-        const mp = new MapCoordinates();
-        mp.setMagnitudes(1, 1);
-        const svg = new ExportSVG();
-        const exportView = new Export(this.model);
-        exportView.exportHeader(svg, mp);
-        exportView.exportDrawing(svg, false, mp);
-        svg.exportEnd();
-        return svg.getSvgString();
-    }
+    exportSVG(): string { return this.exportFacade.exportSVG(); }
 
-    exportPGF(): string {
-        const mp = new MapCoordinates();
-        mp.setMagnitudes(1, 1);
-        const pgf = new ExportPGF();
-        const exportView = new Export(this.model);
-        exportView.exportHeader(pgf, mp);
-        exportView.exportDrawing(pgf, false, mp);
-        pgf.exportEnd();
-        return pgf.getPgfString();
-    }
+    exportPGF(): string { return this.exportFacade.exportPGF(); }
 
-    exportTikZ(): string {
-        const mp = new MapCoordinates();
-        mp.setMagnitudes(1, 1);
-        const tikz = new ExportTikZ();
-        const exportView = new Export(this.model);
-        exportView.exportHeader(tikz, mp);
-        exportView.exportDrawing(tikz, false, mp);
-        tikz.exportEnd();
-        return tikz.getTikZString();
-    }
+    exportTikZ(): string { return this.exportFacade.exportTikZ(); }
 
     setTool(toolId: number): void {
         this.currentTool = toolId;
@@ -1169,195 +1051,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     duplicateSelected(): void { this.clipboardController.duplicateSelected(); }
     canPaste(): boolean { return this.clipboardController.canPaste(); }
 
-    // ─── Context Menu ─────────────────────────────────────────────────────────
-
-    private showContextMenu(clientX: number, clientY: number): void {
-        const dpr = window.devicePixelRatio || 1;
-        const rect = this.canvas.getBoundingClientRect();
-        const sx = (clientX - rect.left) * dpr;
-        const sy = (clientY - rect.top) * dpr;
-
-        // Store logical (unsnapped) coords for add/remove node
-        this.contextMenuLogX = this.mapCoordinates.unmapXnosnap(sx);
-        this.contextMenuLogY = this.mapCoordinates.unmapYnosnap(sy);
-
-        const first = this.selectionActions.getFirstSelectedPrimitive();
-        const somethingSelected = first !== null;
-        const hasCb = this.clipboardController.canPaste();
-        const isNodePrim = this.selectionActions.isUniquePrimitiveSelected() &&
-            (first instanceof PrimitivePolygon || first instanceof PrimitiveComplexCurve);
-        const isMacroPrim = this.selectionActions.isUniquePrimitiveSelected() &&
-            first instanceof PrimitiveMacro;
-
-        this.contextMenu.show(clientX, clientY, [
-            {
-                label: 'Properties',
-                enabled: somethingSelected,
-                action: () => {
-                    if (first) this.onPropertiesRequested?.(first);
-                },
-            },
-            { separator: true },
-            {
-                label: 'Cut',
-                enabled: somethingSelected,
-                action: () => this.cutSelected(),
-            },
-            {
-                label: 'Copy',
-                enabled: somethingSelected,
-                action: () => this.copySelected(),
-            },
-            {
-                label: 'Paste',
-                enabled: hasCb,
-                action: () => this.paste(),
-            },
-            {
-                label: 'Duplicate',
-                enabled: somethingSelected,
-                action: () => this.duplicateSelected(),
-            },
-            { separator: true },
-            {
-                label: 'Select All',
-                enabled: true,
-                action: () => { this.selectAll(); },
-            },
-            { separator: true },
-            {
-                label: 'Move',
-                enabled: somethingSelected,
-                action: () => this.startMoveSelected(),
-            },
-            {
-                label: 'Rotate',
-                enabled: somethingSelected,
-                action: () => this.rotateSelected(),
-            },
-            {
-                label: 'Mirror',
-                enabled: somethingSelected,
-                action: () => this.mirrorSelected(),
-            },
-            {
-                label: 'Symbolize',
-                enabled: somethingSelected,
-                visible: somethingSelected && !isMacroPrim,
-                action: () => this.onSymbolizeRequested?.(),
-            },
-            {
-                label: 'Vectorize',
-                enabled: isMacroPrim,
-                visible: isMacroPrim,
-                action: () => this.vectorizeSelectedMacro(),
-            },
-            { separator: true },
-            {
-                label: 'Add Node',
-                enabled: isNodePrim,
-                visible: isNodePrim,
-                action: () => this.addNodeAt(this.contextMenuLogX, this.contextMenuLogY),
-            },
-            {
-                label: 'Remove Node',
-                enabled: isNodePrim,
-                visible: isNodePrim,
-                action: () => this.removeNodeAt(this.contextMenuLogX, this.contextMenuLogY),
-            },
-        ]);
-    }
-
-    private addNodeAt(lx: number, ly: number): void {
-        const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
-        this.undoActions.saveUndoState();
-        first.addPointClosest(lx, ly);
-        this.render();
-    }
-
-    private removeNodeAt(lx: number, ly: number): void {
-        const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
-        this.undoActions.saveUndoState();
-        first.removePoint(lx, ly, 1);
-        this.render();
-    }
-
     /** Convert a selected macro instance back into individual primitives. */
     vectorizeSelectedMacro(): void {
-        const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (!(first instanceof PrimitiveMacro)) return;
-
-        const macroDesc = first.getMacroDesc();
-        if (!macroDesc) return;
-
-        // Get the macro's position, orientation and mirror state
-        const posX = first.virtualPoint[0]!.x;
-        const posY = first.virtualPoint[0]!.y;
-        const orientation = first.getOrientation();
-        const mirrored = first.isMirrored();
-        const layer = first.getLayer();
-
-        // Parse the macro description into a temp DrawingModel
-        const tempModel = new DrawingModel();
-        tempModel.setLibrary(this.model.getLibrary());
-        tempModel.setLayers(this.model.getLayers());
-        const tempParser = new ParserActions(tempModel);
-        tempParser.addString(macroDesc, false);
-
-        // Save pre-vectorize state so the entire operation can be undone in one step.
-        this.undoActions.saveUndoState();
-
-        // Move and transform each primitive from the macro to the canvas position
-        for (const prim of tempModel.getPrimitiveVector()) {
-            if (!prim.virtualPoint[0]) continue;
-
-            // Macro primitives are stored in a local coordinate system with origin at (100, 100).
-            // Compute the primitive's position relative to the macro origin, apply
-            // mirror/rotation, then place it at the macro's global position.
-            let relX = prim.virtualPoint[0].x - 100;
-            let relY = prim.virtualPoint[0].y - 100;
-
-            // Apply mirror if needed
-            if (mirrored) {
-                relX = -relX;
-            }
-
-            // Apply orientation rotation (0=0°, 1=90°, 2=180°, 3=270°)
-            switch (orientation) {
-                case 1:
-                    [relX, relY] = [-relY, relX];
-                    break;
-                case 2:
-                    relX = -relX; relY = -relY;
-                    break;
-                case 3:
-                    [relX, relY] = [relY, -relX];
-                    break;
-            }
-
-            // Move the primitive so its first control point lands at the transformed position.
-            // Also rotate the primitive itself if it's text (other types don't have orientation).
-            const targetX = posX + relX;
-            const targetY = posY + relY;
-            const dx = targetX - prim.virtualPoint[0].x;
-            const dy = targetY - prim.virtualPoint[0].y;
-            prim.movePrimitive(dx, dy);
-
-            // For text primitives, also apply the macro's orientation rotation to the text itself
-            if (prim instanceof PrimitiveAdvText) {
-                prim.setOrientation((prim.getOrientation() + orientation * 90) % 360);
-            }
-
-            prim.setLayer(layer);
-            this.model.addPrimitive(prim, false, null);
-        }
-
-        // Remove the original macro primitive
-        const idx = this.model.getPrimitiveVector().indexOf(first);
-        if (idx >= 0) this.model.getPrimitiveVector().splice(idx, 1);
-        this.render();
+        this.macroVectorizer.vectorize();
     }
 
     // ─── Keyboard (delegated) ────────────────────────────────────────────────
