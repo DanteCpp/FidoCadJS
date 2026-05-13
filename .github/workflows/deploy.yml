@@ -2,9 +2,9 @@ name: Build, Test, and Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, refActorIng]
   pull_request:
-    branches: [main]
+    branches: [main, refActorIng]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
