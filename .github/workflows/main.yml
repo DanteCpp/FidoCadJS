@@ -42,6 +42,7 @@ jobs:
       - run: npm run test:run
 
   build:
+    if: github.event_name == 'push'
     needs: [typecheck, test]
     runs-on: ubuntu-latest
     steps:
@@ -57,6 +58,7 @@ jobs:
           path: dist
 
   deploy:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     environment:
