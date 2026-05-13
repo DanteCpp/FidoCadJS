@@ -120,7 +120,7 @@ FidoCad for Windows was widely adopted in the Italian electronics community. The
 
 In 2007, **Davide Bucci** ([DarwinNE](https://github.com/DarwinNE)) reverse-engineered the FidoCad format to use it on macOS and Linux. He first wrote **FidoReadJ**, a Java applet for viewing FidoCad drawings in a web page. In 2008 he completed **FidoCadJ**, a full-featured editor written in Java. FidoCadJ brought anti-aliased graphics, internationalization (10+ languages), advanced export (PDF, EPS, SVG, PGF for LaTeX, PNG, JPG), more community libraries, and active development. It was ported to Android and runs on Windows, macOS, Linux, and Android.
 
-For a deeper dive into the project's history, see Davide Bucci's article (in italian) at [ElectroYou](https://www.electroyou.it/darwinne/wiki/fidocadj).
+For a deeper dive into the project's history, see Davide Bucci's article (in Italian) at [ElectroYou](https://www.electroyou.it/darwinne/wiki/fidocadj).
 
 ### Community Libraries
 
@@ -148,9 +148,22 @@ FidoCadJS runs in any modern browser with Canvas 2D and ES2022 support. There is
 
 It works on desktop, tablet, and mobile; pointer events are handled uniformly so touch and mouse input behave the same.
 
+### Differences from FidoCadJ (Java)
+
+FidoCadJS targets feature parity with FidoCadJ for editing and `.fcd` interoperability. A few things from the Java upstream are not yet ported:
+
+- **Export formats**: PNG, SVG, PGF/TikZ (LaTeX), and FCD. PDF, EPS, and JPG export from FidoCadJ are not yet implemented.
+- **Locales**: the i18n framework is in place but only the English bundle ships. FidoCadJ has 10+ translations.
+- **Platform integrations**: there is no Android-specific build. The browser version covers mobile via touch events.
+- **Print**: the native print dialog is delegated to the browser's built-in print.
+- **PCB**: PCB trace and pad tools plus the PCB Footprints library are available. The app supports schematic capture and single-layer PCB layout side by side, same as FidoCadJ.
+
+If you need any of the missing pieces, FidoCadJ remains fully supported and can read and write the same `.fcd` files.
+
 ### Roadmap
 
-The project is currently at a **beta** release. Editing, parsing, and SVG export are stable and covered by tests; the FCL round-trip is validated for all 11 primitive types. Work in progress includes additional export formats, more locale bundles, and broader feature coverage versus FidoCadJ. Bug reports and pull requests are welcome (see [Contributing](#contributing)). If you need any of the missing pieces, FidoCadJ remains fully supported and can read/write the same `.fcd` files.
+The project is currently at a **beta** release. Editing, parsing, and SVG export are stable and covered by tests; the FCL round-trip is validated for all 11 primitive types. Work in progress includes additional export formats, more locale bundles, and broader feature coverage versus FidoCadJ. Bug reports and pull requests are welcome (see [Contributing](#contributing)).
+
 ---
 
 ## For Developers
@@ -279,7 +292,7 @@ For detailed test case descriptions, see [TESTS.md](test/TESTS.md).
 - **No unused code:** `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`
 - **TypeScript config:** `@/` path alias maps to `./src/`
 - **File headers:** Every file includes a header block with filename, author, date, description, and copyright
-- **File Lenght** Keep files compact and relevant, no more then 400 lines.
+- **File length**: keep files compact and relevant, no more than 400 lines.
 
 ---
 
@@ -298,7 +311,7 @@ Design decisions and architectural intent remain the responsibility of human con
 1. Fork the repository
 2. Create a feature branch (use `dev` as base; never commit to `main` directly)
 3. Make your changes, following the coding conventions
-4. Run typecheck, unit tests, and e2e tests
+4. Run `npm run typecheck`, `npm run test:run`, and `npm run test:e2e`
 5. Submit a pull request to `dev`
 
 ---
