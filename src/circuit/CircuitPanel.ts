@@ -62,7 +62,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private selectionLTRColor: string = '#008000';
     private selectionRTLColor: string = '#0000ff';
     private renderTeX: boolean = false;
-    private texOverlay: HTMLDivElement;
     private drawing: Drawing;
 
     private selectionActions!: SelectionActions;
@@ -88,6 +87,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private keyboardController: KeyboardController;
     private contextMenu!: ContextMenu;
     private menuBar: MenuBar | null = null;
+    private readonly lifecycle = new AbortController();
 
     constructor(container: HTMLElement) {
         this.container = container;
@@ -147,11 +147,18 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         // Initialize extracted managers
         this.exportFacade = new ExportFacade(this.model);
         this.macroVectorizer = new MacroVectorizer(
-            this.model, this.selectionActions, this.undoActions, () => this.render()
+            this.model,
+            this.selectionActions,
+            this.undoActions,
+            () => this.render(),
         );
         this.contextMenuManager = new ContextMenuManager(
-            this.contextMenu, this.selectionActions, this.undoActions,
-            this.mapCoordinates, this.clipboardController,
+            this.contextMenu,
+            this.selectionActions,
+            this.undoActions,
+            this.mapCoordinates,
+            this.clipboardController,
+            this.canvas,
             {
                 onPropertiesRequested: (prim) => this.onPropertiesRequested?.(prim),
                 onSymbolizeRequested: () => this.onSymbolizeRequested?.(),
@@ -165,13 +172,11 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
                 rotateSelected: () => this.rotateSelected(),
                 mirrorSelected: () => this.mirrorSelected(),
                 vectorizeMacro: () => this.vectorizeSelectedMacro(),
-            }
+            },
         );
 
         // Initialize keyboard controller
-        this.keyboardController = new KeyboardController(
-            this, this.clipboardController
-        );
+        this.keyboardController = new KeyboardController(this, this.clipboardController);
 
         // Initialize input handler (gesture state machine + mouse events)
         const inputCb: InputCallbacks = {
@@ -188,9 +193,14 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             showContextMenu: (cx, cy) => this.contextMenuManager.show(cx, cy),
         };
         this.inputHandler = new InputHandler(
-            this.canvas, this.mapCoordinates, this.model,
-            this.elementsEdt, this.editorActions, this.undoActions,
-            this.selectionActions, inputCb
+            this.canvas,
+            this.mapCoordinates,
+            this.model,
+            this.elementsEdt,
+            this.editorActions,
+            this.undoActions,
+            this.selectionActions,
+            inputCb,
         );
 
         // Set initial cursor
@@ -198,79 +208,109 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
         // Make canvas focusable for keyboard events
         this.canvas.setAttribute('tabIndex', '0');
-        this.canvas.addEventListener('mousedown', () => this.canvas.focus());
-
-        // Prevent browser default context menu; show custom one in SELECTION mode
-        this.canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            // If a drawing tool is active, right-click cancels it (already dispatched
-            // via onMouseDown to handleClick). Sync the UI toolbar state and do NOT
-            // show the context menu.
-            if (this.currentTool !== ElementsEdtActions.SELECTION) {
-                this.setTool(ElementsEdtActions.SELECTION);
-                this.render();
-            } else {
-                this.contextMenuManager.show(e.clientX, e.clientY);
-            }
+        this.canvas.addEventListener('mousedown', () => this.canvas.focus(), {
+            signal: this.lifecycle.signal,
         });
 
+        // Prevent browser default context menu; show custom one in SELECTION mode
+        this.canvas.addEventListener(
+            'contextmenu',
+            (e) => {
+                e.preventDefault();
+                // If a drawing tool is active, right-click cancels it (already dispatched
+                // via onMouseDown to handleClick). Sync the UI toolbar state and do NOT
+                // show the context menu.
+                if (this.currentTool !== ElementsEdtActions.SELECTION) {
+                    this.setTool(ElementsEdtActions.SELECTION);
+                    this.render();
+                } else {
+                    this.contextMenuManager.show(e.clientX, e.clientY);
+                }
+            },
+            { signal: this.lifecycle.signal },
+        );
+
         // Mouse wheel zoom (toward cursor)
-        this.canvas.addEventListener('wheel', (e) => this.inputHandler.onMouseWheel(e), { passive: false });
+        this.canvas.addEventListener('wheel', (e) => this.inputHandler.onMouseWheel(e), {
+            passive: false,
+            signal: this.lifecycle.signal,
+        });
 
         // Drag-to-pan
-        this.canvas.addEventListener('mousedown', (e) => this.inputHandler.onMouseDown(e));
-        this.canvas.addEventListener('mousemove', (e) => this.inputHandler.onMouseMove(e));
-        this.canvas.addEventListener('mouseup', (e) => this.inputHandler.onMouseUp(e));
-        this.canvas.addEventListener('mouseleave', (e) => this.inputHandler.onMouseUp(e));
-        this.canvas.addEventListener('dblclick', (e) => this.inputHandler.onDoubleClick(e));
+        this.canvas.addEventListener('mousedown', (e) => this.inputHandler.onMouseDown(e), {
+            signal: this.lifecycle.signal,
+        });
+        this.canvas.addEventListener('mousemove', (e) => this.inputHandler.onMouseMove(e), {
+            signal: this.lifecycle.signal,
+        });
+        this.canvas.addEventListener('mouseup', (e) => this.inputHandler.onMouseUp(e), {
+            signal: this.lifecycle.signal,
+        });
+        this.canvas.addEventListener('mouseleave', (e) => this.inputHandler.onMouseUp(e), {
+            signal: this.lifecycle.signal,
+        });
+        this.canvas.addEventListener('dblclick', (e) => this.inputHandler.onDoubleClick(e), {
+            signal: this.lifecycle.signal,
+        });
 
         // TeX overlay — positioned on top of canvas for crisp math rendering
-        this.texOverlay = document.createElement('div');
-        this.texOverlay.style.cssText =
-            'position: absolute; top: 0; left: 0; width: 100%; height: 100%; ' +
-            'pointer-events: none; overflow: hidden; z-index: 1; display: none;';
-        this.texOverlay.setAttribute('aria-hidden', 'true');
-        container.style.position = 'relative';
-        container.appendChild(this.texOverlay);
-
-        this.texOverlayManager = new TeXOverlay(this.texOverlay);
+        this.texOverlayManager = TeXOverlay.attach(container);
     }
 
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
     destroy(): void {
+        this.lifecycle.abort();
         this.keyboardController.detach();
         this.canvasManager.destroy();
     }
 
     private updateGhostPreview(lx: number, ly: number): void {
         this.inputHandler.setGhostPrimitive(
-            this.ghostPreview.updateGhost(
-                lx, ly, this.currentTool, this.elementsEdt, this.model
-            )
+            this.ghostPreview.updateGhost(lx, ly, this.currentTool, this.elementsEdt, this.model),
         );
     }
 
-    getModel(): DrawingModel { return this.model; }
-    getParserActions(): ParserActions { return this.parserActions; }
-    getMapCoordinates(): MapCoordinates { return this.mapCoordinates; }
-    getAddElements(): AddElements { return this.elementsEdt.getAddElements(); }
-    getCanvasElement(): HTMLCanvasElement { return this.canvas; }
+    getModel(): DrawingModel {
+        return this.model;
+    }
+    getParserActions(): ParserActions {
+        return this.parserActions;
+    }
+    getMapCoordinates(): MapCoordinates {
+        return this.mapCoordinates;
+    }
+    getAddElements(): AddElements {
+        return this.elementsEdt.getAddElements();
+    }
+    getCanvasElement(): HTMLCanvasElement {
+        return this.canvas;
+    }
 
     setGridVisible(visible: boolean): void {
         this.gridVisible = visible;
         this.render();
     }
 
-    isGridVisible(): boolean { return this.gridVisible; }
+    isGridVisible(): boolean {
+        return this.gridVisible;
+    }
 
     setAntiAlias(antiAlias: boolean): void {
         this.ctx.getCtx().imageSmoothingEnabled = antiAlias;
     }
 
-    setBackgroundColor(c: string): void { this.backgroundColor = c; }
-    setGridColor(c: string): void { this.gridColor = c; }
-    setSelectionLTRColor(c: string): void { this.selectionLTRColor = c; }
-    setSelectionRTLColor(c: string): void { this.selectionRTLColor = c; }
+    setBackgroundColor(c: string): void {
+        this.backgroundColor = c;
+    }
+    setGridColor(c: string): void {
+        this.gridColor = c;
+    }
+    setSelectionLTRColor(c: string): void {
+        this.selectionLTRColor = c;
+    }
+    setSelectionRTLColor(c: string): void {
+        this.selectionRTLColor = c;
+    }
 
     setRenderTeX(enabled: boolean): void {
         this.renderTeX = enabled;
@@ -302,10 +342,16 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.render();
     }
 
-    getZoom(): number { return this.mapCoordinates.getXMagnitude(); }
+    getZoom(): number {
+        return this.mapCoordinates.getXMagnitude();
+    }
 
-    isSnapActive(): boolean { return this.mapCoordinates.getSnap(); }
-    setSnap(s: boolean): void { this.mapCoordinates.setSnap(s); }
+    isSnapActive(): boolean {
+        return this.mapCoordinates.getSnap();
+    }
+    setSnap(s: boolean): void {
+        this.mapCoordinates.setSnap(s);
+    }
 
     getZoomPercent(): number {
         return Math.round((this.mapCoordinates.getXMagnitude() / 20) * 100);
@@ -314,7 +360,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     zoomToFit(): void {
         const dpr = window.devicePixelRatio || 1;
         const margin = Math.round(10 * dpr);
-        const w = Math.max(1, this.container.clientWidth  * dpr - 2 * margin);
+        const w = Math.max(1, this.container.clientWidth * dpr - 2 * margin);
         const h = Math.max(1, this.container.clientHeight * dpr - 2 * margin);
         const newCs = DrawingSize.calculateZoomToFit(this.model, w, h, true);
         this.mapCoordinates.setXMagnitudeNoCheck(newCs.getXMagnitude());
@@ -339,10 +385,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         const width = this.canvas.width;
         const height = this.canvas.height;
 
-        // Mark entire canvas as dirty so hitClip() passes for the first draw.
-        // Each subsequent draw expands the dirty rect via markDirty(), so all
-        // primitives render. Without this, the first primitive's bounds become
-        // the dirty rect and clip everything outside it.
         this.ctx.clearDirtyRect();
         this.ctx.markDirtyFull(width, height);
 
@@ -377,8 +419,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             ctx.lineWidth = 1;
             ctx.setLineDash([4, 4]);
             ctx.strokeRect(
-                Math.min(rx1, rx2), Math.min(ry1, ry2),
-                Math.abs(rx2 - rx1), Math.abs(ry2 - ry1)
+                Math.min(rx1, rx2),
+                Math.min(ry1, ry2),
+                Math.abs(rx2 - rx1),
+                Math.abs(ry2 - ry1),
             );
             ctx.restore();
         }
@@ -395,7 +439,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.texOverlayManager.sync(this.model, this.mapCoordinates, window.devicePixelRatio || 1);
 
         this.model.setChanged(false);
-        this.ctx.clearDirtyRect();
     }
 
     loadCircuit(circuitText: string): void {
@@ -411,11 +454,17 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         return this.parserActions.getText(true);
     }
 
-    exportSVG(): string { return this.exportFacade.exportSVG(); }
+    exportSVG(): string {
+        return this.exportFacade.exportSVG();
+    }
 
-    exportPGF(): string { return this.exportFacade.exportPGF(); }
+    exportPGF(): string {
+        return this.exportFacade.exportPGF();
+    }
 
-    exportTikZ(): string { return this.exportFacade.exportTikZ(); }
+    exportTikZ(): string {
+        return this.exportFacade.exportTikZ();
+    }
 
     setTool(toolId: number): void {
         this.currentTool = toolId;
@@ -541,7 +590,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
                 if (isNewText) {
                     // Remove the newly placed primitive
                     const prims = this.model.getPrimitiveVector();
-                    const filtered = prims.filter(p => p !== prim);
+                    const filtered = prims.filter((p) => p !== prim);
                     this.model.setPrimitiveVector(filtered);
                 } else {
                     // Restore original text
@@ -555,7 +604,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
                 // Live update
                 this.model.setChanged(true);
                 this.render();
-            }
+            },
         );
     }
 
@@ -570,10 +619,18 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     // ─── KeyboardHost interface implementation ───────────────────────────────
 
-    isTextEditActive(): boolean { return this.textEditDialog.isActive(); }
-    getMenuBar(): MenuBar | null { return this.menuBar; }
-    cancelTextEdit(): void { this.onCancelTextEdit?.(); }
-    deselectAll(): void { this.selectionActions.setSelectionAll(false); }
+    isTextEditActive(): boolean {
+        return this.textEditDialog.isActive();
+    }
+    getMenuBar(): MenuBar | null {
+        return this.menuBar;
+    }
+    cancelTextEdit(): void {
+        this.onCancelTextEdit?.();
+    }
+    deselectAll(): void {
+        this.selectionActions.setSelectionAll(false);
+    }
     clearGhostAndSelection(): void {
         this.inputHandler.clearGhostAndSelection();
     }
@@ -586,11 +643,21 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     // ─── Clipboard (delegated) ───────────────────────────────────────────────
 
-    copySelected(): void { this.clipboardController.copySelected(); }
-    cutSelected(): void { this.clipboardController.cutSelected(); }
-    async paste(): Promise<void> { await this.clipboardController.paste(); }
-    duplicateSelected(): void { this.clipboardController.duplicateSelected(); }
-    canPaste(): boolean { return this.clipboardController.canPaste(); }
+    copySelected(): void {
+        this.clipboardController.copySelected();
+    }
+    cutSelected(): void {
+        this.clipboardController.cutSelected();
+    }
+    async paste(): Promise<void> {
+        await this.clipboardController.paste();
+    }
+    duplicateSelected(): void {
+        this.clipboardController.duplicateSelected();
+    }
+    canPaste(): boolean {
+        return this.clipboardController.canPaste();
+    }
 
     /** Convert a selected macro instance back into individual primitives. */
     vectorizeSelectedMacro(): void {

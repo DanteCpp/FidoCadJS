@@ -36,7 +36,9 @@ export class Drawing {
             return;
         }
 
-        // Reset alpha state at start of each render
+        // Reset alpha state at start of each render.
+        // TODO(Phase 4.2): replace static oldalpha with per-render RenderCtx
+        // passed through each primitive's draw() method.
         GraphicPrimitive.resetAlphaForRender();
 
         if (
@@ -63,10 +65,7 @@ export class Drawing {
 
         this.needHoles = this.drawingModel.getDrawOnlyPads();
 
-        if (
-            this.drawingModel.getDrawOnlyLayer() >= 0 &&
-            !this.drawingModel.getDrawOnlyPads()
-        ) {
+        if (this.drawingModel.getDrawOnlyLayer() >= 0 && !this.drawingModel.getDrawOnlyPads()) {
             if (!this.drawingModel.containsLayer(this.drawingModel.getDrawOnlyLayer())) {
                 return;
             }
@@ -116,7 +115,11 @@ export class Drawing {
 }
 
 export function registerDrawingHooks(): void {
-    PrimitiveMacro.drawFn = (model: DrawingModel, g: GraphicsInterface, cs: MapCoordinates): void => {
+    PrimitiveMacro.drawFn = (
+        model: DrawingModel,
+        g: GraphicsInterface,
+        cs: MapCoordinates,
+    ): void => {
         const d = new Drawing(model);
         d.draw(g, cs);
     };

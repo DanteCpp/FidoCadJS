@@ -55,7 +55,7 @@ describe('MapCoordinates', () => {
     });
 
     it('orientation affects mapping when isMacro=true', () => {
-        mc.isMacro = true;
+        mc.setMacro(true);
         mc.setOrientation(1);
         // mapXr with macro: orientation 1, no mirror → vx = -yc * magnitude + center
         // For xc=10, yc=0: vx = -0*1 + 0 = 0
@@ -69,8 +69,8 @@ describe('MapCoordinates', () => {
     });
 
     it('mirror in macro mode flips X mapping', () => {
-        mc.isMacro = true;
-        mc.mirror = true;
+        mc.setMacro(true);
+        mc.setMirror(true);
         // mirror + orientation 0: vx = -xc * magnitude + center = -10 * 1 + 0 = -10
         // mirror + orientation 0: vy = yc * magnitude + center = 0 * 1 + 0 = 0
         const sx = mc.mapXr(110, 100);
@@ -219,10 +219,10 @@ describe('MapCoordinates', () => {
 
     it('mirror and isMacro flags toggle correctly', () => {
         expect(mc.getMirror()).toBe(false);
-        mc.mirror = true;
+        mc.setMirror(true);
         expect(mc.getMirror()).toBe(true);
-        mc.isMacro = true;
-        expect(mc.isMacro).toBe(true);
+        mc.setMacro(true);
+        expect(mc.getMacro()).toBe(true);
     });
 
     // ─── Resize / DPR-change scenarios ───────────────────────────────

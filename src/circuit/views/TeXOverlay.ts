@@ -19,6 +19,22 @@ export class TeXOverlay {
     private overlay: HTMLDivElement;
     private renderTeX: boolean = false;
 
+    /**
+     * Create and attach a TeX overlay to the given host element.
+     * The host must have position: relative (or similar) for absolute
+     * positioning of the overlay to work correctly.
+     */
+    static attach(host: HTMLElement): TeXOverlay {
+        const overlay = document.createElement('div');
+        overlay.style.cssText =
+            'position: absolute; top: 0; left: 0; width: 100%; height: 100%; ' +
+            'pointer-events: none; overflow: hidden; z-index: 1; display: none;';
+        overlay.setAttribute('aria-hidden', 'true');
+        host.style.position = 'relative';
+        host.appendChild(overlay);
+        return new TeXOverlay(overlay);
+    }
+
     constructor(overlay: HTMLDivElement) {
         this.overlay = overlay;
     }
@@ -61,11 +77,8 @@ export class TeXOverlay {
             // Use the larger of six and the width-equivalent of siy to ensure
             // both font size fields affect the visual rendering.
             const yMag = mapCoords.getYMagnitude();
-            const effectiveSix = Math.max(
-                prim.getFontWidth(),
-                prim.getFontDimension() * 7 / 10
-            );
-            const canvasFontSize = effectiveSix * 12 * yMag / 7 + 0.5;
+            const effectiveSix = Math.max(prim.getFontWidth(), (prim.getFontDimension() * 7) / 10);
+            const canvasFontSize = (effectiveSix * 12 * yMag) / 7 + 0.5;
             const cssFontSize = canvasFontSize / dpr;
             const isBold = prim.isBold();
             const isItalic = prim.isItalic();
@@ -102,29 +115,33 @@ export class TeXOverlay {
             }
             let transformStyle = '';
             if (orientation !== 0 || mirror) {
-                transformStyle = `transform: rotate(${orientation}deg)` +
-                    (mirror ? ' scaleX(-1)' : '') + '; ' +
+                transformStyle =
+                    `transform: rotate(${orientation}deg)` +
+                    (mirror ? ' scaleX(-1)' : '') +
+                    '; ' +
                     'transform-origin: 0 0; ';
             }
 
             const segments = renderMixedText(text);
-            const segmentHtml = segments.map(seg => {
-                if (seg.type === 'text') {
-                    // Escape HTML in plain text segments
-                    const escaped = seg.content
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;');
-                    return `<span style="white-space: pre;">${escaped}</span>`;
-                }
-                // Math segments already contain safe KaTeX HTML
-                return seg.content;
-            }).join('');
+            const segmentHtml = segments
+                .map((seg) => {
+                    if (seg.type === 'text') {
+                        // Escape HTML in plain text segments
+                        const escaped = seg.content
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;');
+                        return `<span style="white-space: pre;">${escaped}</span>`;
+                    }
+                    // Math segments already contain safe KaTeX HTML
+                    return seg.content;
+                })
+                .join('');
 
             htmlParts.push(
                 `<div data-prim-index="${pi}" style="position:absolute; left:${cssX}px; top:${cssY}px; ` +
-                `white-space: nowrap; font: ${fontStyle}${cssFontSize}px ${fontName}; ` +
-                `color: ${textColor}; ${transformStyle}">${segmentHtml}</div>`
+                    `white-space: nowrap; font: ${fontStyle}${cssFontSize}px ${fontName}; ` +
+                    `color: ${textColor}; ${transformStyle}">${segmentHtml}</div>`,
             );
         }
 
@@ -141,8 +158,8 @@ export class TeXOverlay {
                 const rect = div.getBoundingClientRect();
                 if (rect.width <= 0 && rect.height <= 0) continue;
                 // Convert CSS pixel dimensions to logical units.
-                const wLogical = Math.round(rect.width * dpr / mapCoords.getXMagnitude());
-                const hLogical = Math.round(rect.height * dpr / mapCoords.getYMagnitude());
+                const wLogical = Math.round((rect.width * dpr) / mapCoords.getXMagnitude());
+                const hLogical = Math.round((rect.height * dpr) / mapCoords.getYMagnitude());
                 prim.setTeXOverlaySize(wLogical, hLogical);
             }
         });

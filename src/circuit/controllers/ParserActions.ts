@@ -25,28 +25,28 @@ import { PrimitivePolygon } from '../../primitives/PrimitivePolygon.js';
 import { MacroDesc } from '../../primitives/MacroDesc.js';
 
 const MAX_TOKENS = 10000;
-// Tracks current macro-expansion depth across the recursive parser callback
-// to defend against malformed libraries with circular or deeply nested macros.
-let macroExpansionDepth = 0;
 
 export class ParserActions {
     private readonly model: DrawingModel;
     openFileName: string | null = null;
+    private macroExpansionDepth = 0;
 
     constructor(pp: DrawingModel) {
         this.model = pp;
+        this.macroExpansionDepth = 0;
         // Inject the macro parser callback to break circular dependency.
+        // Arrow function captures 'this' so per-instance depth counter is used.
         PrimitiveMacro.parserFn = (model, description) => {
-            if (macroExpansionDepth >= Globals.MAX_MACRO_DEPTH) {
+            if (this.macroExpansionDepth >= Globals.MAX_MACRO_DEPTH) {
                 console.warn('Macro expansion exceeds MAX_MACRO_DEPTH; aborting branch');
                 return;
             }
-            macroExpansionDepth++;
+            this.macroExpansionDepth++;
             try {
                 const pa = new ParserActions(model);
                 pa.addString(description, false);
             } finally {
-                macroExpansionDepth--;
+                this.macroExpansionDepth--;
             }
         };
     }
@@ -113,7 +113,8 @@ export class ParserActions {
         const tokens: string[] = new Array(MAX_TOKENS);
         let name: string[] | null = null;
         let value: string[] | null = null;
-        let vn = 0, vv = 0;
+        let vn = 0,
+            vv = 0;
         const oldTokens: string[] = new Array(MAX_TOKENS);
         let oldJ = 0;
 
@@ -154,8 +155,14 @@ export class ParserActions {
 
             try {
                 if (hasFCJ && tokens[0] !== 'FCJ') {
-                    hasFCJ = this.registerPrimitivesWithFCJ(hasFCJ, tokens, g,
-                        oldTokens, oldJ, selectNew);
+                    hasFCJ = this.registerPrimitivesWithFCJ(
+                        hasFCJ,
+                        tokens,
+                        g,
+                        oldTokens,
+                        oldJ,
+                        selectNew,
+                    );
                 }
 
                 if (tokens[0] === 'FCJ') {
@@ -237,7 +244,6 @@ export class ParserActions {
                         macroCounter = 2;
                     }
                     hasFCJ = false;
-
                 } else if (tokens[0] === 'FJC') {
                     this.fidoConfig(tokens, j, layerV);
                 } else if (tokens[0] === 'LI') {
@@ -393,23 +399,48 @@ export class ParserActions {
         const layerV = this.model.getLayers();
 
         switch (token) {
-            case 'LI': return new PrimitiveLine(macroFont, macroFontSize);
-            case 'BE': return new PrimitiveBezier(macroFont, macroFontSize);
-            case 'MC': return new PrimitiveMacro(this.model.getLibrary(), layerV, macroFont, macroFontSize);
-            case 'RV': case 'RP': return new PrimitiveRectangle(macroFont, macroFontSize);
-            case 'EV': case 'EP': return new PrimitiveOval(macroFont, macroFontSize);
-            case 'PV': case 'PP': return new PrimitivePolygon(macroFont, macroFontSize);
-            case 'CV': case 'CP': return new PrimitiveComplexCurve(macroFont, macroFontSize);
-            case 'PL': return new PrimitivePCBLine(macroFont, macroFontSize);
-            case 'PA': return new PrimitivePCBPad(macroFont, macroFontSize);
-            case 'SA': return new PrimitiveConnection(macroFont, macroFontSize);
-            default: return null;
+            case 'LI':
+                return new PrimitiveLine(macroFont, macroFontSize);
+            case 'BE':
+                return new PrimitiveBezier(macroFont, macroFontSize);
+            case 'MC':
+                return new PrimitiveMacro(
+                    this.model.getLibrary(),
+                    layerV,
+                    macroFont,
+                    macroFontSize,
+                );
+            case 'RV':
+            case 'RP':
+                return new PrimitiveRectangle(macroFont, macroFontSize);
+            case 'EV':
+            case 'EP':
+                return new PrimitiveOval(macroFont, macroFontSize);
+            case 'PV':
+            case 'PP':
+                return new PrimitivePolygon(macroFont, macroFontSize);
+            case 'CV':
+            case 'CP':
+                return new PrimitiveComplexCurve(macroFont, macroFontSize);
+            case 'PL':
+                return new PrimitivePCBLine(macroFont, macroFontSize);
+            case 'PA':
+                return new PrimitivePCBPad(macroFont, macroFontSize);
+            case 'SA':
+                return new PrimitiveConnection(macroFont, macroFontSize);
+            default:
+                return null;
         }
     }
 
-    private registerPrimitivesWithFCJ(hasFCJt: boolean, tokens: string[],
-        _gg: GraphicPrimitive, oldTokens: string[], oldJ: number,
-        selectNew: boolean): boolean {
+    private registerPrimitivesWithFCJ(
+        hasFCJt: boolean,
+        tokens: string[],
+        _gg: GraphicPrimitive,
+        oldTokens: string[],
+        oldJ: number,
+        selectNew: boolean,
+    ): boolean {
         let hasFCJ = hasFCJt;
 
         if (hasFCJ && tokens[0] !== 'FCJ') {
@@ -468,7 +499,10 @@ export class ParserActions {
 
             if (macroName !== '') {
                 const md = this.model.getLibrary().get(macroName);
-                if (!md) { macroName = ''; continue; }
+                if (!md) {
+                    macroName = '';
+                    continue;
+                }
                 md.name = longName;
                 md.key = macroName;
                 md.category = categoryName;

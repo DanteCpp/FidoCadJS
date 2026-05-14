@@ -18,8 +18,8 @@ export class DrawingModel {
     private drawOnlyPadsFlag: boolean = false;
     private drawOnlyLayerVal: number = -1;
     private imgCanvas: ImageAsCanvas = new ImageAsCanvas();
-    private macroFont: string = 'Courier New';
-    private macroFontSize: number = 0;
+    private defaultTextFont: string = 'Courier New';
+    private defaultTextFontSize: number = 0;
     private changedFlag: boolean = true;
 
     private primitiveVector: GraphicPrimitive[] = [];
@@ -30,21 +30,28 @@ export class DrawingModel {
         for (const g of this.primitiveVector) tt.doAction(g);
     }
 
-    getLayers(): LayerDesc[] { return this.layerV; }
+    getLayers(): LayerDesc[] {
+        return this.layerV;
+    }
 
     setLayers(v: LayerDesc[]): void {
         this.layerV = v;
         this.applyToAllElements({
             doAction(g: GraphicPrimitive) {
-                if ('setLayers' in g && typeof (g as { setLayers?: unknown }).setLayers === 'function') {
+                if (
+                    'setLayers' in g &&
+                    typeof (g as { setLayers?: unknown }).setLayers === 'function'
+                ) {
                     (g as { setLayers: (v: LayerDesc[]) => void }).setLayers(v);
                 }
-            }
+            },
         });
         this.changedFlag = true;
     }
 
-    getLibrary(): Map<string, MacroDesc> { return this.library; }
+    getLibrary(): Map<string, MacroDesc> {
+        return this.library;
+    }
 
     setLibrary(l: Map<string, MacroDesc>): void {
         this.library = l;
@@ -56,8 +63,11 @@ export class DrawingModel {
         this.changedFlag = true;
     }
 
-    addPrimitive(p: GraphicPrimitive, sort: boolean,
-        ua: { saveUndoState(): void; setModified(b: boolean): void } | null): void {
+    addPrimitive(
+        p: GraphicPrimitive,
+        sort: boolean,
+        ua: { saveUndoState(): void; setModified(b: boolean): void } | null,
+    ): void {
         if (ua !== null) {
             ua.saveUndoState();
         }
@@ -69,22 +79,23 @@ export class DrawingModel {
         }
     }
 
-    setTextFont(f: string, tsize: number,
-        ua: { setModified(b: boolean): void } | null): void {
-        this.macroFont = f;
-        this.macroFontSize = tsize;
+    setTextFont(f: string, tsize: number, ua: { setModified(b: boolean): void } | null): void {
+        this.defaultTextFont = f;
+        this.defaultTextFontSize = tsize;
         for (const g of this.primitiveVector) g.setMacroFont(f, tsize);
         this.changedFlag = true;
         if (ua !== null) ua.setModified(true);
     }
 
-    getTextFont(): string { return this.macroFont; }
+    getTextFont(): string {
+        return this.defaultTextFont;
+    }
 
     getTextFontSize(): number {
-        if (this.primitiveVector.length === 0) return this.macroFontSize;
+        if (this.primitiveVector.length === 0) return this.defaultTextFontSize;
         const size = this.primitiveVector[0]!.getMacroFontSize();
-        this.macroFontSize = size > 0 ? size : 1;
-        return this.macroFontSize;
+        this.defaultTextFontSize = size > 0 ? size : 1;
+        return this.defaultTextFontSize;
     }
 
     sortPrimitiveLayers(): void {
@@ -94,7 +105,9 @@ export class DrawingModel {
             for (let j = l; j < v.length; j++) {
                 for (let i = j - l; i >= 0; i -= l) {
                     if (v[i + l]!.getLayer() >= v[i]!.getLayer()) break;
-                    const s = v[i]!; v[i] = v[i + l]!; v[i + l] = s;
+                    const s = v[i]!;
+                    v[i] = v[i + l]!;
+                    v[i + l] = s;
                 }
             }
         }
@@ -117,17 +130,43 @@ export class DrawingModel {
         }
     }
 
-    getMaxLayer(): number { return this.maxLayerVal; }
-    containsLayer(l: number): boolean { return this.layersUsed[l] ?? false; }
-    isEmpty(): boolean { return this.primitiveVector.length === 0; }
-    getChanged(): boolean { return this.changedFlag; }
-    setChanged(c: boolean): void { this.changedFlag = c; }
-    getPrimitiveVector(): GraphicPrimitive[] { return this.primitiveVector; }
-    setPrimitiveVector(v: GraphicPrimitive[]): void { this.primitiveVector = v; }
-    setDrawOnlyPads(pd: boolean): void { this.drawOnlyPadsFlag = pd; }
-    getDrawOnlyPads(): boolean { return this.drawOnlyPadsFlag; }
-    setDrawOnlyLayer(la: number): void { this.drawOnlyLayerVal = la; }
-    getDrawOnlyLayer(): number { return this.drawOnlyLayerVal; }
-    setImgCanvas(ic: ImageAsCanvas): void { this.imgCanvas = ic; }
-    getImgCanvas(): ImageAsCanvas { return this.imgCanvas; }
+    getMaxLayer(): number {
+        return this.maxLayerVal;
+    }
+    containsLayer(l: number): boolean {
+        return this.layersUsed[l] ?? false;
+    }
+    isEmpty(): boolean {
+        return this.primitiveVector.length === 0;
+    }
+    getChanged(): boolean {
+        return this.changedFlag;
+    }
+    setChanged(c: boolean): void {
+        this.changedFlag = c;
+    }
+    getPrimitiveVector(): GraphicPrimitive[] {
+        return this.primitiveVector;
+    }
+    setPrimitiveVector(v: GraphicPrimitive[]): void {
+        this.primitiveVector = v;
+    }
+    setDrawOnlyPads(pd: boolean): void {
+        this.drawOnlyPadsFlag = pd;
+    }
+    getDrawOnlyPads(): boolean {
+        return this.drawOnlyPadsFlag;
+    }
+    setDrawOnlyLayer(la: number): void {
+        this.drawOnlyLayerVal = la;
+    }
+    getDrawOnlyLayer(): number {
+        return this.drawOnlyLayerVal;
+    }
+    setImgCanvas(ic: ImageAsCanvas): void {
+        this.imgCanvas = ic;
+    }
+    getImgCanvas(): ImageAsCanvas {
+        return this.imgCanvas;
+    }
 }

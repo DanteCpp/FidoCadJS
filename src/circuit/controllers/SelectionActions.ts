@@ -11,6 +11,15 @@ import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import { PrimitiveMacro } from '../../primitives/PrimitiveMacro.js';
 
 /**
+ * Narrow interface to break the circular dependency with ParserActions.
+ * ParserActions satisfies this structurally.
+ */
+export interface SelectionParser {
+    registerConfiguration(extensions: boolean): string;
+    getText(extensions: boolean): string;
+}
+
+/**
  * SelectionActions: handles selection operations on primitives.
  * This controller manages selecting, deselecting, and querying selection state.
  */
@@ -40,7 +49,7 @@ export class SelectionActions {
 
     /** Get a list of all selected primitives */
     getSelectedPrimitives(): GraphicPrimitive[] {
-        return this.model.getPrimitiveVector().filter(p => p.isSelected());
+        return this.model.getPrimitiveVector().filter((p) => p.isSelected());
     }
 
     /** Check if exactly one primitive is selected */
@@ -58,8 +67,10 @@ export class SelectionActions {
     /** Check if selection can be split (contains macros or elements with name/value) */
     selectionCanBeSplitted(): boolean {
         for (const prim of this.model.getPrimitiveVector()) {
-            if (prim.isSelected() &&
-                (prim instanceof PrimitiveMacro || prim.hasName() || prim.hasValue())) {
+            if (
+                prim.isSelected() &&
+                (prim instanceof PrimitiveMacro || prim.hasName() || prim.hasValue())
+            ) {
                 return true;
             }
         }
@@ -67,7 +78,7 @@ export class SelectionActions {
     }
 
     /** Get string representation of selected elements */
-    getSelectedString(extensions: boolean, pa: import('./ParserActions.js').ParserActions): string {
+    getSelectedString(extensions: boolean, pa: SelectionParser): string {
         let s = '[FIDOCAD]\n';
         s += pa.registerConfiguration(extensions);
         for (const prim of this.model.getPrimitiveVector()) {

@@ -41,6 +41,7 @@ export class ContextMenuManager {
     private mapCoordinates: MapCoordinates;
     private clipboardController: ClipboardController;
     private callbacks: ContextMenuCallbacks;
+    private canvas: HTMLCanvasElement;
 
     constructor(
         contextMenu: ContextMenu,
@@ -48,21 +49,22 @@ export class ContextMenuManager {
         undoActions: UndoActions,
         mapCoordinates: MapCoordinates,
         clipboardController: ClipboardController,
-        callbacks: ContextMenuCallbacks
+        canvas: HTMLCanvasElement,
+        callbacks: ContextMenuCallbacks,
     ) {
         this.contextMenu = contextMenu;
         this.selectionActions = selectionActions;
         this.undoActions = undoActions;
         this.mapCoordinates = mapCoordinates;
         this.clipboardController = clipboardController;
+        this.canvas = canvas;
         this.callbacks = callbacks;
     }
 
     /** Show the context menu at the given screen coordinates. */
     show(clientX: number, clientY: number): void {
         const dpr = window.devicePixelRatio || 1;
-        const canvas = document.querySelector('[data-testid="editor-canvas"]') as HTMLCanvasElement;
-        const rect = canvas.getBoundingClientRect();
+        const rect = this.canvas.getBoundingClientRect();
         const sx = (clientX - rect.left) * dpr;
         const sy = (clientY - rect.top) * dpr;
 
@@ -73,10 +75,11 @@ export class ContextMenuManager {
         const first = this.selectionActions.getFirstSelectedPrimitive();
         const somethingSelected = first !== null;
         const hasCb = this.clipboardController.canPaste();
-        const isNodePrim = this.selectionActions.isUniquePrimitiveSelected() &&
+        const isNodePrim =
+            this.selectionActions.isUniquePrimitiveSelected() &&
             (first instanceof PrimitivePolygon || first instanceof PrimitiveComplexCurve);
-        const isMacroPrim = this.selectionActions.isUniquePrimitiveSelected() &&
-            first instanceof PrimitiveMacro;
+        const isMacroPrim =
+            this.selectionActions.isUniquePrimitiveSelected() && first instanceof PrimitiveMacro;
 
         this.contextMenu.show(clientX, clientY, [
             {
@@ -111,7 +114,9 @@ export class ContextMenuManager {
             {
                 label: 'Select All',
                 enabled: true,
-                action: () => { this.callbacks.selectAll(); },
+                action: () => {
+                    this.callbacks.selectAll();
+                },
             },
             { separator: true },
             {
@@ -159,7 +164,8 @@ export class ContextMenuManager {
 
     addNodeAt(lx: number, ly: number): void {
         const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
+        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve))
+            return;
         this.undoActions.saveUndoState();
         first.addPointClosest(lx, ly);
         this.callbacks.onRender();
@@ -167,7 +173,8 @@ export class ContextMenuManager {
 
     removeNodeAt(lx: number, ly: number): void {
         const first = this.selectionActions.getFirstSelectedPrimitive();
-        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve)) return;
+        if (!(first instanceof PrimitivePolygon) && !(first instanceof PrimitiveComplexCurve))
+            return;
         this.undoActions.saveUndoState();
         first.removePoint(lx, ly, 1);
         this.callbacks.onRender();

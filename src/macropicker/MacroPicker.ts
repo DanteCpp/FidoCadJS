@@ -28,7 +28,9 @@ export type ContextMenuAction = 'rename' | 'remove' | 'copy' | 'paste' | 'change
 export class MacroPicker {
     readonly element: HTMLElement;
     onMacroSelected: ((macroKey: string, macroName: string) => void) | null = null;
-    onContextMenuAction: ((action: ContextMenuAction, node: Library | Category | MacroDesc) => void) | null = null;
+    onContextMenuAction:
+        | ((action: ContextMenuAction, node: Library | Category | MacroDesc) => void)
+        | null = null;
 
     private treeContainer: HTMLElement;
     private searchInput: HTMLInputElement;
@@ -45,6 +47,7 @@ export class MacroPicker {
     // Context menu state
     private contextMenuEl: HTMLElement | null = null;
     private contextNode: Library | Category | MacroDesc | null = null;
+    private readonly nodeModelMap = new Map<HTMLElement, Library | Category | MacroDesc>();
     copyTarget: Library | Category | MacroDesc | null = null;
 
     constructor() {
@@ -76,8 +79,7 @@ export class MacroPicker {
 
         // Tree container
         this.treeContainer = document.createElement('div');
-        this.treeContainer.style.cssText =
-            'flex: 1; overflow-y: auto; padding-bottom: 8px;';
+        this.treeContainer.style.cssText = 'flex: 1; overflow-y: auto; padding-bottom: 8px;';
         this.treeContainer.addEventListener('contextmenu', (e) => this.onTreeContextMenu(e));
         this.treeContainer.addEventListener('click', (e) => this.dismissContextMenu(e));
         this.element.appendChild(this.treeContainer);
@@ -88,8 +90,7 @@ export class MacroPicker {
             'height: 200px; flex-shrink: 0; border-top: 1px solid #ccc; ' +
             'background: #fff; position: relative; overflow: hidden;';
         this.previewCanvas = document.createElement('canvas');
-        this.previewCanvas.style.cssText =
-            'display: block; width: 100%; height: 100%;';
+        this.previewCanvas.style.cssText = 'display: block; width: 100%; height: 100%;';
         previewContainer.appendChild(this.previewCanvas);
         this.element.appendChild(previewContainer);
 
@@ -157,7 +158,7 @@ export class MacroPicker {
             'standard library': 0,
             'electrical symbols': 1,
             'ey libraries': 2,
-            'ey_libraries': 2,
+            ey_libraries: 2,
             'ihram 3.1': 3,
         };
         return known[lower] ?? 99;
@@ -200,9 +201,17 @@ export class MacroPicker {
 
         // Paste availability: destination must be user library
         if (this.copyTarget) {
-            if (this.copyTarget instanceof MacroDesc && node instanceof Category && !node.getParentLibrary().isStdLib()) {
+            if (
+                this.copyTarget instanceof MacroDesc &&
+                node instanceof Category &&
+                !node.getParentLibrary().isStdLib()
+            ) {
                 perm.pasteAvailable = true;
-            } else if (this.copyTarget instanceof Category && node instanceof Library && !node.isStdLib()) {
+            } else if (
+                this.copyTarget instanceof Category &&
+                node instanceof Library &&
+                !node.isStdLib()
+            ) {
                 perm.pasteAvailable = true;
             }
         }
@@ -268,7 +277,8 @@ export class MacroPicker {
 
         const nameSpan = document.createElement('span');
         nameSpan.textContent = macro.name;
-        nameSpan.style.cssText = 'flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+        nameSpan.style.cssText =
+            'flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
 
         const keySpan = document.createElement('span');
         keySpan.textContent = macro.key.split('.').pop() ?? macro.key;
@@ -300,7 +310,12 @@ export class MacroPicker {
         return row;
     }
 
-    private buildCollapseHeader(label: string, depth: number, expanded: boolean, modelObj: unknown): HTMLElement {
+    private buildCollapseHeader(
+        label: string,
+        depth: number,
+        expanded: boolean,
+        modelObj: Library | Category | MacroDesc,
+    ): HTMLElement {
         const header = document.createElement('div');
         const indent = depth === 0 ? 6 : 18;
         const bgColor = depth === 0 ? '#e4e4e4' : '#ececec';
@@ -310,7 +325,7 @@ export class MacroPicker {
             `border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 4px; color: #333;`;
 
         // Store model reference for context menu lookups
-        (header as any)._macroPickerModel = modelObj;
+        this.nodeModelMap.set(header, modelObj);
 
         const arrow = document.createElement('span');
         arrow.textContent = expanded ? '▾' : '▸';
@@ -339,7 +354,7 @@ export class MacroPicker {
         // Walk up from the target to find a node with _macroPickerModel
         let el = e.target as HTMLElement | null;
         while (el && el !== this.treeContainer) {
-            const model = (el as any)._macroPickerModel;
+            const model = this.nodeModelMap.get(el);
             if (model) {
                 this.contextNode = model;
                 const perm = this.getOperationPermissions();
@@ -399,13 +414,19 @@ export class MacroPicker {
 
         addItem('Rename', perm.renameAvailable, () => {
             if (this.contextNode) {
-                this.onContextMenuAction?.('rename', this.contextNode as Library | Category | MacroDesc);
+                this.onContextMenuAction?.(
+                    'rename',
+                    this.contextNode as Library | Category | MacroDesc,
+                );
             }
         });
 
         addItem('Delete', perm.removeAvailable, () => {
             if (this.contextNode) {
-                this.onContextMenuAction?.('remove', this.contextNode as Library | Category | MacroDesc);
+                this.onContextMenuAction?.(
+                    'remove',
+                    this.contextNode as Library | Category | MacroDesc,
+                );
             }
         });
 
@@ -474,7 +495,7 @@ export class MacroPicker {
             this.previewModel,
             Math.floor(w * 0.85),
             Math.floor(h * 0.85),
-            true
+            true,
         );
 
         mc.setXCenter(mc.getXCenter() + 10);
@@ -565,14 +586,16 @@ export class MacroPicker {
         for (const libSection of this.treeContainer.children) {
             const libHeader = libSection.children[0] as HTMLElement;
             const libBody = libSection.children[1] as HTMLElement;
-            const libLabel = libHeader.querySelector('span:last-child')?.textContent?.toLowerCase() ?? '';
+            const libLabel =
+                libHeader.querySelector('span:last-child')?.textContent?.toLowerCase() ?? '';
 
             let libHasMatch = false;
 
             for (const catSection of libBody.children) {
                 const catHeader = catSection.children[0] as HTMLElement;
                 const catBody = catSection.children[1] as HTMLElement;
-                const catLabel = catHeader.querySelector('span:last-child')?.textContent?.toLowerCase() ?? '';
+                const catLabel =
+                    catHeader.querySelector('span:last-child')?.textContent?.toLowerCase() ?? '';
 
                 let catHasMatch = false;
 
@@ -580,8 +603,9 @@ export class MacroPicker {
                     const rowEl = macroRow as HTMLElement;
                     const nameEl = rowEl.querySelector('span:first-child');
                     const keyEl = rowEl.querySelector('span:last-child');
-                    const macroText = `${nameEl?.textContent ?? ''} ${keyEl?.textContent ?? ''} ${catLabel} ${libLabel}`.toLowerCase();
-                    const matches = words.every(w => macroText.includes(w));
+                    const macroText =
+                        `${nameEl?.textContent ?? ''} ${keyEl?.textContent ?? ''} ${catLabel} ${libLabel}`.toLowerCase();
+                    const matches = words.every((w) => macroText.includes(w));
                     rowEl.style.display = matches ? '' : 'none';
                     if (matches) catHasMatch = true;
                 }

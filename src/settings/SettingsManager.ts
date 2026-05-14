@@ -8,6 +8,7 @@
 
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { Globals } from '../globals/Globals.js';
+import { Toast } from '../ui/Toast.js';
 
 export interface AppSettings {
     // Drawing
@@ -141,6 +142,7 @@ export class SettingsManager {
             const parsed = JSON.parse(raw);
             Object.assign(this.settings, sanitize(parsed));
         } catch (e) {
+            Toast.show('Failed to load settings. Using defaults.', 'error');
             console.warn('SettingsManager: failed to load settings, using defaults:', e);
         }
     }
@@ -149,6 +151,7 @@ export class SettingsManager {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
         } catch (e) {
+            Toast.show('Failed to save settings. Changes may not persist.', 'error');
             console.warn('SettingsManager: failed to persist settings:', e);
         }
     }

@@ -12,8 +12,8 @@ export class MapCoordinates {
     private xMagnitude: number = 1;
     private yMagnitude: number = 1;
     private orientation: number = 0;
-    mirror: boolean = false;
-    isMacro: boolean = false;
+    private _mirror: boolean = false;
+    private _isMacro: boolean = false;
     private snapActive: boolean = true;
     private xGridStep: number = 5;
     private yGridStep: number = 5;
@@ -38,8 +38,21 @@ export class MapCoordinates {
     setOrientation(o: number): void {
         this.orientation = Math.max(0, Math.min(3, o));
     }
-    getOrientation(): number { return this.orientation; }
-    getMirror(): boolean { return this.mirror; }
+    getOrientation(): number {
+        return this.orientation;
+    }
+    getMirror(): boolean {
+        return this._mirror;
+    }
+    setMirror(b: boolean): void {
+        this._mirror = b;
+    }
+    getMacro(): boolean {
+        return this._isMacro;
+    }
+    setMacro(b: boolean): void {
+        this._isMacro = b;
+    }
 
     push(): void {
         const m = new MapCoordinates();
@@ -48,8 +61,8 @@ export class MapCoordinates {
         m.xMagnitude = this.xMagnitude;
         m.yMagnitude = this.yMagnitude;
         m.orientation = this.orientation;
-        m.mirror = this.mirror;
-        m.isMacro = this.isMacro;
+        m._mirror = this._mirror;
+        m._isMacro = this._isMacro;
         m.snapActive = this.snapActive;
         m.xMin = this.xMin;
         m.xMax = this.xMax;
@@ -71,8 +84,8 @@ export class MapCoordinates {
         this.xMagnitude = m.xMagnitude;
         this.yMagnitude = m.yMagnitude;
         this.orientation = m.orientation;
-        this.mirror = m.mirror;
-        this.isMacro = m.isMacro;
+        this._mirror = m._mirror;
+        this._isMacro = m._isMacro;
         this.snapActive = m.snapActive;
         this.xMin = m.xMin;
         this.xMax = m.xMax;
@@ -82,41 +95,91 @@ export class MapCoordinates {
         this.yGridStep = m.yGridStep;
     }
 
-    setSnap(s: boolean): void { this.snapActive = s; }
-    getSnap(): boolean { return this.snapActive; }
-    setXGridStep(xg: number): void { if (xg > 0) this.xGridStep = xg; }
-    setYGridStep(yg: number): void { if (yg > 0) this.yGridStep = yg; }
-    getXGridStep(): number { return this.xGridStep; }
-    getYGridStep(): number { return this.yGridStep; }
+    setSnap(s: boolean): void {
+        this.snapActive = s;
+    }
+    getSnap(): boolean {
+        return this.snapActive;
+    }
+    setXGridStep(xg: number): void {
+        if (xg > 0) this.xGridStep = xg;
+    }
+    setYGridStep(yg: number): void {
+        if (yg > 0) this.yGridStep = yg;
+    }
+    getXGridStep(): number {
+        return this.xGridStep;
+    }
+    getYGridStep(): number {
+        return this.yGridStep;
+    }
 
-    getXMagnitude(): number { return this.xMagnitude; }
-    getYMagnitude(): number { return this.yMagnitude; }
+    getXMagnitude(): number {
+        return this.xMagnitude;
+    }
+    getYMagnitude(): number {
+        return this.yMagnitude;
+    }
 
     setXMagnitude(xm: number): void {
         const v = Math.abs(xm);
-        this.xMagnitude = Math.max(MapCoordinates.MIN_MAGNITUDE, Math.min(MapCoordinates.MAX_MAGNITUDE, v));
+        this.xMagnitude = Math.max(
+            MapCoordinates.MIN_MAGNITUDE,
+            Math.min(MapCoordinates.MAX_MAGNITUDE, v),
+        );
     }
     setYMagnitude(ym: number): void {
         const v = Math.abs(ym);
-        this.yMagnitude = Math.max(MapCoordinates.MIN_MAGNITUDE, Math.min(MapCoordinates.MAX_MAGNITUDE, v));
+        this.yMagnitude = Math.max(
+            MapCoordinates.MIN_MAGNITUDE,
+            Math.min(MapCoordinates.MAX_MAGNITUDE, v),
+        );
     }
-    setXMagnitudeNoCheck(xm: number): void { this.xMagnitude = xm; }
-    setYMagnitudeNoCheck(ym: number): void { this.yMagnitude = ym; }
+    setXMagnitudeNoCheck(xm: number): void {
+        this.xMagnitude = xm;
+    }
+    setYMagnitudeNoCheck(ym: number): void {
+        this.yMagnitude = ym;
+    }
 
-    setMagnitudes(xm: number, ym: number): void { this.setXMagnitude(xm); this.setYMagnitude(ym); }
-    setMagnitudesNoCheck(xm: number, ym: number): void { this.setXMagnitudeNoCheck(xm); this.setYMagnitudeNoCheck(ym); }
+    setMagnitudes(xm: number, ym: number): void {
+        this.setXMagnitude(xm);
+        this.setYMagnitude(ym);
+    }
+    setMagnitudesNoCheck(xm: number, ym: number): void {
+        this.setXMagnitudeNoCheck(xm);
+        this.setYMagnitudeNoCheck(ym);
+    }
 
-    getXCenter(): number { return this.xCenter; }
-    getYCenter(): number { return this.yCenter; }
-    setXCenter(xm: number): void { this.xCenter = xm; }
-    setYCenter(ym: number): void { this.yCenter = ym; }
+    getXCenter(): number {
+        return this.xCenter;
+    }
+    getYCenter(): number {
+        return this.yCenter;
+    }
+    setXCenter(xm: number): void {
+        this.xCenter = xm;
+    }
+    setYCenter(ym: number): void {
+        this.yCenter = ym;
+    }
 
-    getXMax(): number { return this.xMax; }
-    getYMax(): number { return this.yMax; }
-    getXMin(): number { return this.xMin; }
-    getYMin(): number { return this.yMin; }
+    getXMax(): number {
+        return this.xMax;
+    }
+    getYMax(): number {
+        return this.yMax;
+    }
+    getXMin(): number {
+        return this.xMin;
+    }
+    getYMin(): number {
+        return this.yMin;
+    }
 
-    mapX(xc: number, yc: number): number { return this.mapXi(xc, yc, true); }
+    mapX(xc: number, yc: number): number {
+        return this.mapXi(xc, yc, true);
+    }
 
     mapXi(xc: number, yc: number, track: boolean): number {
         const v = Math.round(this.mapXr(xc, yc));
@@ -131,24 +194,44 @@ export class MapCoordinates {
         let xc = txc;
         let yc = tyc;
         let vx: number;
-        if (this.isMacro) {
+        if (this._isMacro) {
             xc -= 100;
             yc -= 100;
-            if (this.mirror) {
+            if (this._mirror) {
                 switch (this.orientation) {
-                    case 0: vx = -xc * this.xMagnitude; break;
-                    case 1: vx = yc * this.yMagnitude; break;
-                    case 2: vx = xc * this.xMagnitude; break;
-                    case 3: vx = -yc * this.yMagnitude; break;
-                    default: vx = -xc * this.xMagnitude; break;
+                    case 0:
+                        vx = -xc * this.xMagnitude;
+                        break;
+                    case 1:
+                        vx = yc * this.yMagnitude;
+                        break;
+                    case 2:
+                        vx = xc * this.xMagnitude;
+                        break;
+                    case 3:
+                        vx = -yc * this.yMagnitude;
+                        break;
+                    default:
+                        vx = -xc * this.xMagnitude;
+                        break;
                 }
             } else {
                 switch (this.orientation) {
-                    case 0: vx = xc * this.xMagnitude; break;
-                    case 1: vx = -yc * this.yMagnitude; break;
-                    case 2: vx = -xc * this.xMagnitude; break;
-                    case 3: vx = yc * this.yMagnitude; break;
-                    default: vx = xc * this.xMagnitude; break;
+                    case 0:
+                        vx = xc * this.xMagnitude;
+                        break;
+                    case 1:
+                        vx = -yc * this.yMagnitude;
+                        break;
+                    case 2:
+                        vx = -xc * this.xMagnitude;
+                        break;
+                    case 3:
+                        vx = yc * this.yMagnitude;
+                        break;
+                    default:
+                        vx = xc * this.xMagnitude;
+                        break;
                 }
             }
         } else {
@@ -157,7 +240,9 @@ export class MapCoordinates {
         return vx + this.xCenter;
     }
 
-    mapY(xc: number, yc: number): number { return this.mapYi(xc, yc, true); }
+    mapY(xc: number, yc: number): number {
+        return this.mapYi(xc, yc, true);
+    }
 
     mapYi(xc: number, yc: number, track: boolean): number {
         const v = Math.round(this.mapYr(xc, yc));
@@ -172,15 +257,25 @@ export class MapCoordinates {
         let xc = txc;
         let yc = tyc;
         let vy: number;
-        if (this.isMacro) {
+        if (this._isMacro) {
             xc -= 100;
             yc -= 100;
             switch (this.orientation) {
-                case 0: vy = yc * this.yMagnitude; break;
-                case 1: vy = xc * this.xMagnitude; break;
-                case 2: vy = -yc * this.yMagnitude; break;
-                case 3: vy = -xc * this.xMagnitude; break;
-                default: vy = 0; break;
+                case 0:
+                    vy = yc * this.yMagnitude;
+                    break;
+                case 1:
+                    vy = xc * this.xMagnitude;
+                    break;
+                case 2:
+                    vy = -yc * this.yMagnitude;
+                    break;
+                case 3:
+                    vy = -xc * this.xMagnitude;
+                    break;
+                default:
+                    vy = 0;
+                    break;
             }
         } else {
             vy = yc * this.yMagnitude;
@@ -218,10 +313,12 @@ export class MapCoordinates {
     }
 
     toString(): string {
-        return `[xCenter=${this.xCenter}|yCenter=${this.yCenter}|xMagnitude=${this.xMagnitude}`
-            + `|yMagnitude=${this.yMagnitude}|orientation=${this.orientation}|mirror=${this.mirror}`
-            + `|isMacro=${this.isMacro}|snapActive=${this.snapActive}`
-            + `|xMin=${this.xMin}|xMax=${this.xMax}|yMin=${this.yMin}|yMax=${this.yMax}`
-            + `|xGridStep=${this.xGridStep}|yGridStep=${this.yGridStep}]`;
+        return (
+            `[xCenter=${this.xCenter}|yCenter=${this.yCenter}|xMagnitude=${this.xMagnitude}` +
+            `|yMagnitude=${this.yMagnitude}|orientation=${this.orientation}|mirror=${this._mirror}` +
+            `|isMacro=${this._isMacro}|snapActive=${this.snapActive}` +
+            `|xMin=${this.xMin}|xMax=${this.xMax}|yMin=${this.yMin}|yMax=${this.yMax}` +
+            `|xGridStep=${this.xGridStep}|yGridStep=${this.yGridStep}]`
+        );
     }
 }

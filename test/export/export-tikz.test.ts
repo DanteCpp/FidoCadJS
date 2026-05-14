@@ -197,15 +197,16 @@ describe('ExportTikZ', () => {
         expect(result).toContain('\\node[anchor=north west');
         expect(result).toContain('color=layer0');
         expect(result).toContain('at (100,100)');
-        expect(result).toContain('{Hello $R_1$}');
+        // LaTeX special chars are escaped now
+        expect(result).toContain('{Hello \\$R\\_1\\$}');
     });
 
-    it('exportAdvText does not escape LaTeX special chars', () => {
+    it('exportAdvText escapes LaTeX special chars', () => {
         tikz.exportAdvText(50, 50, 10, 10, 'Arial', false, false, false, 0, 0, 'a & b < c');
         tikz.exportEnd();
         const result = tikz.getTikZString();
-        expect(result).toContain('a & b < c');
-        expect(result).not.toContain('&amp;');
+        // '&' escaped to '\&', '<' is not a LaTeX special char
+        expect(result).toContain('a \\& b < c');
     });
 
     it('dash style emits dash pattern option', () => {
@@ -247,7 +248,23 @@ describe('ExportTikZ', () => {
     });
 
     it('exportMacro returns false', () => {
-        const r = tikz.exportMacro(0, 0, false, 0, 'test', '', '', 0, 0, '', 0, 0, '', 10, new Map());
+        const r = tikz.exportMacro(
+            0,
+            0,
+            false,
+            0,
+            'test',
+            '',
+            '',
+            0,
+            0,
+            '',
+            0,
+            0,
+            '',
+            10,
+            new Map(),
+        );
         expect(r).toBe(false);
     });
 

@@ -29,7 +29,6 @@ export class GraphicsCanvas implements GraphicsInterface {
     private fontSize: number = 12;
     private fontItalic: boolean = false;
     private fontBold: boolean = false;
-    private dirtyRect: { x: number; y: number; w: number; h: number } | null = null;
     private selectedColor: ColorCanvas = new ColorCanvas(0, 255, 0);
 
     constructor(canvas: HTMLCanvasElement) {
@@ -40,12 +39,20 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.textInterface = new TextCanvas(this.ctx);
     }
 
-    getCtx(): CanvasRenderingContext2D { return this.ctx; }
+    getCtx(): CanvasRenderingContext2D {
+        return this.ctx;
+    }
 
-    getColor(): ColorInterface { return this.currentColor; }
+    getColor(): ColorInterface {
+        return this.currentColor;
+    }
 
-    setZoom(z: number): void { this.zoom = z; }
-    getZoom(): number { return this.zoom; }
+    setZoom(z: number): void {
+        this.zoom = z;
+    }
+    getZoom(): number {
+        return this.zoom;
+    }
 
     setColor(c: ColorInterface): void {
         this.currentColor = c;
@@ -53,7 +60,9 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.ctx.strokeStyle = (c as ColorCanvas).toCSSColor();
     }
 
-    getTextInterface(): TextInterface { return this.textInterface; }
+    getTextInterface(): TextInterface {
+        return this.textInterface;
+    }
 
     applyStroke(w: number, dashStyle: number): void {
         this.ctx.lineWidth = w;
@@ -69,28 +78,29 @@ export class GraphicsCanvas implements GraphicsInterface {
 
     drawRect(x: number, y: number, width: number, height: number): void {
         this.ctx.strokeRect(x, y, width, height);
-        this.markDirty(x, y, width, height);
     }
 
     fillRect(x: number, y: number, width: number, height: number): void {
         this.ctx.fillRect(x, y, width, height);
-        this.markDirty(x, y, width, height);
     }
 
-    fillRoundRect(x: number, y: number, width: number, height: number, arcWidth: number, arcHeight: number): void {
+    fillRoundRect(
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        arcWidth: number,
+        arcHeight: number,
+    ): void {
         const radii = Math.min(arcWidth / 2, arcHeight / 2);
         this.ctx.beginPath();
         this.ctx.roundRect(x, y, width, height, radii);
         this.ctx.fill();
-        this.markDirty(x, y, width, height);
     }
 
-    hitClip(x: number, y: number, width: number, height: number): boolean {
-        if (!this.dirtyRect) return true;
-        return !(x + width < this.dirtyRect.x ||
-                 x > this.dirtyRect.x + this.dirtyRect.w ||
-                 y + height < this.dirtyRect.y ||
-                 y > this.dirtyRect.y + this.dirtyRect.h);
+    // Dirty-rect tracking removed (Phase 4.5) — always render.
+    hitClip(_x: number, _y: number, _width: number, _height: number): boolean {
+        return true;
     }
 
     drawLine(x1: number, y1: number, x2: number, y2: number): void {
@@ -98,11 +108,6 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.ctx.moveTo(x1, y1);
         this.ctx.lineTo(x2, y2);
         this.ctx.stroke();
-        const minX = Math.min(x1, x2);
-        const minY = Math.min(y1, y2);
-        const w = Math.abs(x2 - x1);
-        const h = Math.abs(y2 - y1);
-        this.markDirty(minX, minY, w, h);
     }
 
     setFont(name: string, size: number, isItalic?: boolean, isBold?: boolean): void {
@@ -115,14 +120,23 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.textInterface.setFont(name, size, isItalic, isBold);
     }
 
-    getFontSize(): number { return this.fontSize; }
-    setFontSize(size: number): void { this.setFont(this.fontName, size, this.fontItalic, this.fontBold); }
-    getFontAscent(): number { return this.textInterface.getFontAscent(); }
-    getFontDescent(): number { return this.textInterface.getFontDescent(); }
-    getStringWidth(s: string): number { return this.textInterface.getStringWidth(s); }
+    getFontSize(): number {
+        return this.fontSize;
+    }
+    setFontSize(size: number): void {
+        this.setFont(this.fontName, size, this.fontItalic, this.fontBold);
+    }
+    getFontAscent(): number {
+        return this.textInterface.getFontAscent();
+    }
+    getFontDescent(): number {
+        return this.textInterface.getFontDescent();
+    }
+    getStringWidth(s: string): number {
+        return this.textInterface.getStringWidth(s);
+    }
     drawString(str: string, x: number, y: number): void {
         this.ctx.fillText(str, x, y);
-        this.markDirty(x, y, this.getStringWidth(str), this.fontSize);
     }
 
     setAlpha(a: number): void {
@@ -133,42 +147,32 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.ctx.beginPath();
         this.ctx.ellipse(x + width / 2, y + height / 2, width / 2, height / 2, 0, 0, Math.PI * 2);
         this.ctx.fill();
-        this.markDirty(x, y, width, height);
     }
 
     drawOval(x: number, y: number, width: number, height: number): void {
         this.ctx.beginPath();
         this.ctx.ellipse(x + width / 2, y + height / 2, width / 2, height / 2, 0, 0, Math.PI * 2);
         this.ctx.stroke();
-        this.markDirty(x, y, width, height);
     }
 
     fill(s: ShapeInterface): void {
         const shape = s as unknown as ShapeCanvas;
         this.ctx.fill(shape.getPath());
-        const bounds = shape.getBounds();
-        this.markDirty(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     draw(s: ShapeInterface): void {
         const shape = s as unknown as ShapeCanvas;
         this.ctx.stroke(shape.getPath());
-        const bounds = shape.getBounds();
-        this.markDirty(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     fillPolygon(p: PolygonInterface): void {
         const poly = p as unknown as PolygonCanvas;
         this.ctx.fill(poly.toPath2D());
-        const bounds = poly.getBounds();
-        this.markDirty(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     drawPolygon(p: PolygonInterface): void {
         const poly = p as unknown as PolygonCanvas;
         this.ctx.stroke(poly.toPath2D());
-        const bounds = poly.getBounds();
-        this.markDirty(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     activateSelectColor(l: LayerDesc): void {
@@ -184,7 +188,7 @@ export class GraphicsCanvas implements GraphicsInterface {
             const blended = new ColorCanvas(
                 Math.floor(sr * 0.6 + lr * 0.4),
                 Math.floor(sg * 0.6 + lg * 0.4),
-                Math.floor(sb * 0.6 + lb * 0.4)
+                Math.floor(sb * 0.6 + lb * 0.4),
             );
             this.setColor(blended);
         }
@@ -196,8 +200,19 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.selectedColor = new ColorCanvas(c.getRed(), c.getGreen(), c.getBlue());
     }
 
-    drawAdvText(xyfactor: number, xa: number, ya: number, _qq: number, h: number, _w: number, _th: number,
-        needsStretching: boolean, orientation: number, mirror: boolean, txt: string): void {
+    drawAdvText(
+        xyfactor: number,
+        xa: number,
+        ya: number,
+        _qq: number,
+        h: number,
+        _w: number,
+        _th: number,
+        needsStretching: boolean,
+        orientation: number,
+        mirror: boolean,
+        txt: string,
+    ): void {
         this.ctx.save();
         this.ctx.translate(xa, ya);
         if (orientation !== 0) {
@@ -213,8 +228,15 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.ctx.restore();
     }
 
-    drawGrid(cs: MapCoordinates, xmin: number, ymin: number, xmax: number, ymax: number,
-        colorDots: ColorInterface, colorLines: ColorInterface): void {
+    drawGrid(
+        cs: MapCoordinates,
+        xmin: number,
+        ymin: number,
+        xmax: number,
+        ymax: number,
+        colorDots: ColorInterface,
+        colorLines: ColorInterface,
+    ): void {
         const xStep = cs.getXGridStep() * cs.getXMagnitude();
         const yStep = cs.getYGridStep() * cs.getYMagnitude();
 
@@ -254,33 +276,25 @@ export class GraphicsCanvas implements GraphicsInterface {
         }
     }
 
-    createPolygon(): PolygonInterface { return new PolygonCanvas(); }
-    createColor(): ColorInterface { return new ColorCanvas(); }
-    createShape(): ShapeInterface { return new ShapeCanvas(); }
+    createPolygon(): PolygonInterface {
+        return new PolygonCanvas();
+    }
+    createColor(): ColorInterface {
+        return new ColorCanvas();
+    }
+    createShape(): ShapeInterface {
+        return new ShapeCanvas();
+    }
 
     getScreenDensity(): number {
         return window.devicePixelRatio * 96 || 96;
     }
 
-    private markDirty(x: number, y: number, w: number, h: number): void {
-        if (!this.dirtyRect) {
-            this.dirtyRect = { x, y, w, h };
-            return;
-        }
-        const minX = Math.min(this.dirtyRect.x, x);
-        const minY = Math.min(this.dirtyRect.y, y);
-        const maxX = Math.max(this.dirtyRect.x + this.dirtyRect.w, x + w);
-        const maxY = Math.max(this.dirtyRect.y + this.dirtyRect.h, y + h);
-        this.dirtyRect = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
-    }
+    /** @deprecated Dirty-rect tracking removed (Phase 4.5). No-op. */
+    clearDirtyRect(): void {}
 
-    clearDirtyRect(): void {
-        this.dirtyRect = null;
-    }
-
-    markDirtyFull(width: number, height: number): void {
-        this.dirtyRect = { x: 0, y: 0, w: width, h: height };
-    }
+    /** @deprecated Dirty-rect tracking removed (Phase 4.5). No-op. */
+    markDirtyFull(_width: number, _height: number): void {}
 
     clear(): void {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);

@@ -13,6 +13,7 @@ import type { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
 import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
+import { escapeLatex } from './AbstractExport.js';
 
 export class ExportPGF implements ExportInterface {
     private buffer: string[] = [];
@@ -31,50 +32,28 @@ export class ExportPGF implements ExportInterface {
         const he = Math.round(totalSize.height);
 
         // PGF header
-        this.buffer.push(
-            `\\begin{pgfpicture}{0cm}{0cm}{${wi}pt}{${he}pt}`
-        );
-        this.buffer.push(
-            `% Created by FidoCadJS, export filter`
-        );
-        this.buffer.push(
-            `\\pgfsetxvec{\\pgfpoint{1pt}{0pt}}`
-        );
-        this.buffer.push(
-            `\\pgfsetyvec{\\pgfpoint{0pt}{1pt}}`
-        );
-        this.buffer.push(
-            `\\pgfsetroundjoin`
-        );
-        this.buffer.push(
-            `\\pgfsetroundcap`
-        );
-        this.buffer.push(
-            `\\pgftranslateto{\\pgfxy(0,${he})}`
-        );
-        this.buffer.push(
-            `\\begin{pgfmagnify}{1}{-1}`
-        );
-        this.buffer.push(
-            `% Layer color definitions`
-        );
+        this.buffer.push(`\\begin{pgfpicture}{0cm}{0cm}{${wi}pt}{${he}pt}`);
+        this.buffer.push(`% Created by FidoCadJS, export filter`);
+        this.buffer.push(`\\pgfsetxvec{\\pgfpoint{1pt}{0pt}}`);
+        this.buffer.push(`\\pgfsetyvec{\\pgfpoint{0pt}{1pt}}`);
+        this.buffer.push(`\\pgfsetroundjoin`);
+        this.buffer.push(`\\pgfsetroundcap`);
+        this.buffer.push(`\\pgftranslateto{\\pgfxy(0,${he})}`);
+        this.buffer.push(`\\begin{pgfmagnify}{1}{-1}`);
+        this.buffer.push(`% Layer color definitions`);
 
         // Layer color definitions
         for (let i = 0; i < this.layerV.length; ++i) {
             const l = this.layerV[i]!;
             const c = l.getColor();
             if (!c) continue;
-            const r = Math.round(100.0 * c.getRed() / 255.0) / 100.0;
-            const g = Math.round(100.0 * c.getGreen() / 255.0) / 100.0;
-            const b = Math.round(100.0 * c.getBlue() / 255.0) / 100.0;
-            this.buffer.push(
-                `\\definecolor{layer${i}}{rgb}{${r},${g},${b}}`
-            );
+            const r = Math.round((100.0 * c.getRed()) / 255.0) / 100.0;
+            const g = Math.round((100.0 * c.getGreen()) / 255.0) / 100.0;
+            const b = Math.round((100.0 * c.getBlue()) / 255.0) / 100.0;
+            this.buffer.push(`\\definecolor{layer${i}}{rgb}{${r},${g},${b}}`);
         }
 
-        this.buffer.push(
-            `% End of color definitions`
-        );
+        this.buffer.push(`% End of color definitions`);
 
         this.currentLayer = -1;
         this.actualWidth = -1;
@@ -109,8 +88,10 @@ export class ExportPGF implements ExportInterface {
     }
 
     exportLine(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         layer: number,
         arrowStart: boolean,
         arrowEnd: boolean,
@@ -118,7 +99,7 @@ export class ExportPGF implements ExportInterface {
         arrowLength: number,
         arrowHalfWidth: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         this.registerColorSize(layer, sW);
         this.registerDash(dashStyle);
@@ -145,15 +126,19 @@ export class ExportPGF implements ExportInterface {
 
         this.buffer.push(
             `\\pgfline{\\pgfxy(${this.cLe(xstart)},${this.cLe(ystart)})}` +
-            `{\\pgfxy(${this.cLe(xend)},${this.cLe(yend)})}`
+                `{\\pgfxy(${this.cLe(xend)},${this.cLe(yend)})}`,
         );
     }
 
     exportBezier(
-        x1: number, y1: number,
-        x2: number, y2: number,
-        x3: number, y3: number,
-        x4: number, y4: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
+        x3: number,
+        y3: number,
+        x4: number,
+        y4: number,
         layer: number,
         arrowStart: boolean,
         arrowEnd: boolean,
@@ -161,12 +146,15 @@ export class ExportPGF implements ExportInterface {
         arrowLength: number,
         arrowHalfWidth: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         this.registerColorSize(layer, sW);
         this.registerDash(dashStyle);
 
-        let _x1 = x1, _y1 = y1, _x4 = x4, _y4 = y4;
+        let _x1 = x1,
+            _y1 = y1,
+            _x4 = x4,
+            _y4 = y4;
 
         if (arrowStart) {
             const p = this.exportArrow(x1, y1, x2, y2, arrowLength, arrowHalfWidth, arrowStyle);
@@ -183,45 +171,33 @@ export class ExportPGF implements ExportInterface {
             }
         }
 
-        this.buffer.push(
-            `\\pgfmoveto{\\pgfxy(${_x1},${_y1})}`
-        );
+        this.buffer.push(`\\pgfmoveto{\\pgfxy(${_x1},${_y1})}`);
         this.buffer.push(
             `\\pgfcurveto{\\pgfxy(${this.cLe(x2)},${this.cLe(y2)})}` +
-            `{\\pgfxy(${this.cLe(x3)},${this.cLe(y3)})}` +
-            `{\\pgfxy(${_x4},${_y4})}`
+                `{\\pgfxy(${this.cLe(x3)},${this.cLe(y3)})}` +
+                `{\\pgfxy(${_x4},${_y4})}`,
         );
-        this.buffer.push(
-            `\\pgfstroke`
-        );
+        this.buffer.push(`\\pgfstroke`);
     }
 
     exportRectangle(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         isFilled: boolean,
         layer: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         this.registerColorSize(layer, sW);
         this.registerDash(dashStyle);
 
-        this.buffer.push(
-            `\\pgfmoveto{\\pgfxy(${this.cLe(x1)},${this.cLe(y1)})}`
-        );
-        this.buffer.push(
-            `\\pgflineto{\\pgfxy(${this.cLe(x2)},${this.cLe(y1)})}`
-        );
-        this.buffer.push(
-            `\\pgflineto{\\pgfxy(${this.cLe(x2)},${this.cLe(y2)})}`
-        );
-        this.buffer.push(
-            `\\pgflineto{\\pgfxy(${this.cLe(x1)},${this.cLe(y2)})}`
-        );
-        this.buffer.push(
-            `\\pgfclosepath`
-        );
+        this.buffer.push(`\\pgfmoveto{\\pgfxy(${this.cLe(x1)},${this.cLe(y1)})}`);
+        this.buffer.push(`\\pgflineto{\\pgfxy(${this.cLe(x2)},${this.cLe(y1)})}`);
+        this.buffer.push(`\\pgflineto{\\pgfxy(${this.cLe(x2)},${this.cLe(y2)})}`);
+        this.buffer.push(`\\pgflineto{\\pgfxy(${this.cLe(x1)},${this.cLe(y2)})}`);
+        this.buffer.push(`\\pgfclosepath`);
         if (isFilled) {
             this.buffer.push(`\\pgffill`);
         } else {
@@ -230,12 +206,14 @@ export class ExportPGF implements ExportInterface {
     }
 
     exportOval(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         isFilled: boolean,
         layer: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         this.registerColorSize(layer, sW);
         this.registerDash(dashStyle);
@@ -243,9 +221,9 @@ export class ExportPGF implements ExportInterface {
         const action = isFilled ? 'fillstroke' : 'stroke';
         this.buffer.push(
             `\\pgfellipse[${action}]` +
-            `{\\pgfxy(${this.cLe((x1 + x2) / 2.0)},${this.cLe((y1 + y2) / 2.0)})}` +
-            `{\\pgfxy(${this.cLe(Math.abs(x2 - x1) / 2.0)},0)}` +
-            `{\\pgfxy(0,${this.cLe(Math.abs(y2 - y1) / 2.0)})}`
+                `{\\pgfxy(${this.cLe((x1 + x2) / 2.0)},${this.cLe((y1 + y2) / 2.0)})}` +
+                `{\\pgfxy(${this.cLe(Math.abs(x2 - x1) / 2.0)},0)}` +
+                `{\\pgfxy(0,${this.cLe(Math.abs(y2 - y1) / 2.0)})}`,
         );
     }
 
@@ -255,22 +233,20 @@ export class ExportPGF implements ExportInterface {
         isFilled: boolean,
         layer: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         this.registerColorSize(layer, sW);
         this.registerDash(dashStyle);
 
         this.buffer.push(
-            `\\pgfmoveto{\\pgfxy(${this.cLe(vertices[0]!.x)},${this.cLe(vertices[0]!.y)})}`
+            `\\pgfmoveto{\\pgfxy(${this.cLe(vertices[0]!.x)},${this.cLe(vertices[0]!.y)})}`,
         );
         for (let i = 1; i < nVertices; ++i) {
             this.buffer.push(
-                `\\pgflineto{\\pgfxy(${this.cLe(vertices[i]!.x)},${this.cLe(vertices[i]!.y)})}`
+                `\\pgflineto{\\pgfxy(${this.cLe(vertices[i]!.x)},${this.cLe(vertices[i]!.y)})}`,
             );
         }
-        this.buffer.push(
-            `\\pgfclosepath`
-        );
+        this.buffer.push(`\\pgfclosepath`);
         if (isFilled) {
             this.buffer.push(`\\pgffill`);
         } else {
@@ -290,9 +266,11 @@ export class ExportPGF implements ExportInterface {
         _arrowLength: number,
         _arrowHalfWidth: number,
         _dashStyle: number,
-        _sW: number
+        _sW: number,
     ): boolean {
-        // Curves are rendered by expanding into polygon primitives
+        // LIMITATION: complex curves are expanded into polygon/line primitives
+        // before reaching the exporter. This method returns false so the
+        // export orchestrator performs the expansion.
         return false;
     }
 
@@ -301,15 +279,17 @@ export class ExportPGF implements ExportInterface {
 
         this.buffer.push(
             `\\pgfcircle[fill]{\\pgfxy(${this.cLe(x)},${this.cLe(y)})}` +
-            `{${this.cLe(nodeSize / 2.0)}pt}`
+                `{${this.cLe(nodeSize / 2.0)}pt}`,
         );
     }
 
     exportPCBLine(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         width: number,
-        layer: number
+        layer: number,
     ): void {
         this.registerColorSize(layer, width);
         // PCB lines are always solid
@@ -317,17 +297,19 @@ export class ExportPGF implements ExportInterface {
 
         this.buffer.push(
             `\\pgfline{\\pgfxy(${this.cLe(x1)},${this.cLe(y1)})}` +
-            `{\\pgfxy(${this.cLe(x2)},${this.cLe(y2)})}`
+                `{\\pgfxy(${this.cLe(x2)},${this.cLe(y2)})}`,
         );
     }
 
     exportPCBPad(
-        x: number, y: number,
+        x: number,
+        y: number,
         style: number,
-        six: number, siy: number,
+        six: number,
+        siy: number,
         indiam: number,
         layer: number,
-        onlyHole: boolean
+        onlyHole: boolean,
     ): void {
         if (onlyHole) {
             // Drill the hole in white
@@ -338,31 +320,33 @@ export class ExportPGF implements ExportInterface {
 
             this.buffer.push(
                 `\\pgfellipse[fillstroke]` +
-                `{\\pgfxy(${this.cLe(x)},${this.cLe(y)})}` +
-                `{\\pgfxy(${this.cLe(indiam / 2.0)},0)}` +
-                `{\\pgfxy(0,${this.cLe(indiam / 2.0)})}`
+                    `{\\pgfxy(${this.cLe(x)},${this.cLe(y)})}` +
+                    `{\\pgfxy(${this.cLe(indiam / 2.0)},0)}` +
+                    `{\\pgfxy(0,${this.cLe(indiam / 2.0)})}`,
             );
         } else {
             this.registerColorSize(layer, 0.33);
 
             switch (style) {
-                case 1: { // Square pad
+                case 1: {
+                    // Square pad
                     const xdd = x - six / 2.0;
                     const ydd = y - siy / 2.0;
                     this.buffer.push(
                         `\\pgfrect[fillstroke]` +
-                        `{\\pgfxy(${this.cLe(xdd)},${this.cLe(ydd)})}` +
-                        `{\\pgfxy(${this.cLe(six)},${this.cLe(siy)})}`
+                            `{\\pgfxy(${this.cLe(xdd)},${this.cLe(ydd)})}` +
+                            `{\\pgfxy(${this.cLe(six)},${this.cLe(siy)})}`,
                     );
                     break;
                 }
-                case 2: { // Rounded pad (rendered as square in PGF)
+                case 2: {
+                    // Rounded pad (rendered as square in PGF)
                     const xdd = x - six / 2.0;
                     const ydd = y - siy / 2.0;
                     this.buffer.push(
                         `\\pgfrect[fillstroke]` +
-                        `{\\pgfxy(${this.cLe(xdd)},${this.cLe(ydd)})}` +
-                        `{\\pgfxy(${this.cLe(six)},${this.cLe(siy)})}`
+                            `{\\pgfxy(${this.cLe(xdd)},${this.cLe(ydd)})}` +
+                            `{\\pgfxy(${this.cLe(six)},${this.cLe(siy)})}`,
                     );
                     break;
                 }
@@ -370,9 +354,9 @@ export class ExportPGF implements ExportInterface {
                 default:
                     this.buffer.push(
                         `\\pgfellipse[fillstroke]` +
-                        `{\\pgfxy(${this.cLe(x)},${this.cLe(y)})}` +
-                        `{\\pgfxy(${this.cLe(six / 2.0)},0)}` +
-                        `{\\pgfxy(0,${this.cLe(siy / 2.0)})}`
+                            `{\\pgfxy(${this.cLe(x)},${this.cLe(y)})}` +
+                            `{\\pgfxy(${this.cLe(six / 2.0)},0)}` +
+                            `{\\pgfxy(0,${this.cLe(siy / 2.0)})}`,
                     );
                     break;
             }
@@ -380,15 +364,17 @@ export class ExportPGF implements ExportInterface {
     }
 
     exportAdvText(
-        x: number, y: number,
-        _sizex: number, _sizey: number,
+        x: number,
+        y: number,
+        _sizex: number,
+        _sizey: number,
         _fontname: string,
         _isBold: boolean,
         _isMirrored: boolean,
         _isItalic: boolean,
         _orientation: number,
         layer: number,
-        text: string
+        text: string,
     ): void {
         this.registerColorSize(layer, -1.0);
 
@@ -405,39 +391,45 @@ export class ExportPGF implements ExportInterface {
          * commands directly in FidoCad text primitives (e.g. \small $R_1$).
          */
 
-        this.buffer.push(
-            `\\begin{pgfmagnify}{1}{-1}`
-        );
+        this.buffer.push(`\\begin{pgfmagnify}{1}{-1}`);
         this.buffer.push(
             `\\pgfputat{\\pgfxy(${this.cLe(x)},${this.cLe(-y)})}` +
-            `{\\pgfbox[left,top]{${text}}}`
+                `{\\pgfbox[left,top]{${escapeLatex(text)}}}`,
         );
-        this.buffer.push(
-            `\\end{pgfmagnify}`
-        );
+        this.buffer.push(`\\end{pgfmagnify}`);
     }
 
     exportMacro(
-        _x: number, _y: number,
+        _x: number,
+        _y: number,
         _isMirrored: boolean,
         _orientation: number,
         _macroName: string,
         _macroDesc: string,
-        _name: string, _xn: number, _yn: number,
-        _value: string, _xv: number, _yv: number,
+        _name: string,
+        _xn: number,
+        _yn: number,
+        _value: string,
+        _xv: number,
+        _yv: number,
         _font: string,
         _fontSize: number,
-        _m: Map<string, any>
+        _m: Map<string, any>,
     ): boolean {
-        // Macros are expanded into primitives by the export orchestrator
+        // LIMITATION: macros are flattened into constituent primitives
+        // before reaching the exporter. This method returns false so the
+        // export orchestrator performs the expansion.
         return false;
     }
 
     exportArrow(
-        x: number, y: number,
-        xc: number, yc: number,
-        l: number, h: number,
-        style: number
+        x: number,
+        y: number,
+        xc: number,
+        yc: number,
+        l: number,
+        h: number,
+        style: number,
     ): PointPr {
         let alpha: number;
 
@@ -458,18 +450,10 @@ export class ExportPGF implements ExportInterface {
         const x2 = x0 + h * Math.sin(alpha);
         const y2 = y0 - h * Math.cos(alpha);
 
-        this.buffer.push(
-            `\\pgfmoveto{\\pgfxy(${this.cLe(x)},${this.cLe(y)})}`
-        );
-        this.buffer.push(
-            `\\pgflineto{\\pgfxy(${this.cLe(x1)},${this.cLe(y1)})}`
-        );
-        this.buffer.push(
-            `\\pgflineto{\\pgfxy(${this.cLe(x2)},${this.cLe(y2)})}`
-        );
-        this.buffer.push(
-            `\\pgfclosepath`
-        );
+        this.buffer.push(`\\pgfmoveto{\\pgfxy(${this.cLe(x)},${this.cLe(y)})}`);
+        this.buffer.push(`\\pgflineto{\\pgfxy(${this.cLe(x1)},${this.cLe(y1)})}`);
+        this.buffer.push(`\\pgflineto{\\pgfxy(${this.cLe(x2)},${this.cLe(y2)})}`);
+        this.buffer.push(`\\pgfclosepath`);
 
         if ((style & Arrow.flagEmpty) === 0) {
             this.buffer.push(`\\pgffill`);
@@ -484,7 +468,7 @@ export class ExportPGF implements ExportInterface {
             const y4 = y - h * Math.cos(alpha);
             this.buffer.push(
                 `\\pgfline{\\pgfxy(${this.cLe(x3)},${this.cLe(y3)})}` +
-                `{\\pgfxy(${this.cLe(x4)},${this.cLe(y4)})}`
+                    `{\\pgfxy(${this.cLe(x4)},${this.cLe(y4)})}`,
             );
         }
 
@@ -536,9 +520,7 @@ export class ExportPGF implements ExportInterface {
             if (dashStyle === 0) {
                 this.buffer.push(`\\pgfsetdash{}{0pt}`);
             } else {
-                this.buffer.push(
-                    `\\pgfsetdash{${this.sDash[dashStyle]}}{${this.dashPhase}pt}`
-                );
+                this.buffer.push(`\\pgfsetdash{${this.sDash[dashStyle]}}{${this.dashPhase}pt}`);
             }
         }
     }
