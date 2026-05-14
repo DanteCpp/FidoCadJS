@@ -31,12 +31,12 @@ export class ExportSVG implements ExportInterface {
         this.buffer.push('<?xml version="1.0" encoding="UTF-8" standalone="no"?> ');
         this.buffer.push(
             '<!DOCTYPE svg PUBLIC "-//W3C//Dtd SVG 1.1//EN" ' +
-            '"http://www.w3.org/Graphics/SVG/1.1/Dtd/svg11.dtd">'
+                '"http://www.w3.org/Graphics/SVG/1.1/Dtd/svg11.dtd">',
         );
         this.buffer.push(
             `<svg width="${this.cLe(wi)}" height="${this.cLe(he)}" ` +
-            'version="1.1" xmlns="http://www.w3.org/2000/svg" ' +
-            'xmlns:xlink="http://www.w3.org/1999/xlink">'
+                'version="1.1" xmlns="http://www.w3.org/2000/svg" ' +
+                'xmlns:xlink="http://www.w3.org/1999/xlink">',
         );
         this.buffer.push(`<!-- Created by FidoCadTS, export filter -->`);
     }
@@ -66,8 +66,10 @@ export class ExportSVG implements ExportInterface {
     }
 
     exportLine(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         layer: number,
         arrowStart: boolean,
         arrowEnd: boolean,
@@ -75,7 +77,7 @@ export class ExportSVG implements ExportInterface {
         arrowLength: number,
         arrowHalfWidth: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         const l = this.layerV[layer];
         this.currentColor = this.getColorHex(l);
@@ -103,16 +105,20 @@ export class ExportSVG implements ExportInterface {
         }
 
         this.buffer.push(
-            `<line x1="${this.cLe(xstart)}" y1="${this.cLe(ystart)}" x2="${this.cLe(xend)}" y2="${this.cLe(yend)}" `
+            `<line x1="${this.cLe(xstart)}" y1="${this.cLe(ystart)}" x2="${this.cLe(xend)}" y2="${this.cLe(yend)}" `,
         );
         this.checkColorAndWidth('fill="none"', dashStyle);
     }
 
     exportBezier(
-        x1: number, y1: number,
-        x2: number, y2: number,
-        x3: number, y3: number,
-        x4: number, y4: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
+        x3: number,
+        y3: number,
+        x4: number,
+        y4: number,
         layer: number,
         arrowStart: boolean,
         arrowEnd: boolean,
@@ -120,14 +126,17 @@ export class ExportSVG implements ExportInterface {
         arrowLength: number,
         arrowHalfWidth: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         const l = this.layerV[layer];
         this.currentColor = this.getColorHex(l);
         this.layerAlpha = l.getAlpha();
         this.strokeWidth = sW;
 
-        let _x1 = x1, _y1 = y1, _x4 = x4, _y4 = y4;
+        let _x1 = x1,
+            _y1 = y1,
+            _x4 = x4,
+            _y4 = y4;
 
         if (arrowStart) {
             const p = this.exportArrow(x1, y1, x2, y2, arrowLength, arrowHalfWidth, arrowStyle);
@@ -146,18 +155,20 @@ export class ExportSVG implements ExportInterface {
 
         this.buffer.push(
             `<path d="M ${this.cLe(_x1)},${this.cLe(_y1)} C ${this.cLe(x2)},${this.cLe(y2)} ` +
-            `${this.cLe(x3)},${this.cLe(y3)} ${this.cLe(_x4)},${this.cLe(_y4)}" `
+                `${this.cLe(x3)},${this.cLe(y3)} ${this.cLe(_x4)},${this.cLe(_y4)}" `,
         );
         this.checkColorAndWidth('fill="none"', dashStyle);
     }
 
     exportRectangle(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         isFilled: boolean,
         layer: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         this.strokeWidth = sW;
         const l = this.layerV[layer];
@@ -173,18 +184,20 @@ export class ExportSVG implements ExportInterface {
 
         this.buffer.push(
             `<rect x="${this.cLe(Math.min(x1, x2))}" y="${this.cLe(Math.min(y1, y2))}" ` +
-            `rx="0" ry="0" width="${this.cLe(rw)}" height="${this.cLe(rh)}" `
+                `rx="0" ry="0" width="${this.cLe(rw)}" height="${this.cLe(rh)}" `,
         );
         this.checkColorAndWidth(fillPattern, dashStyle);
     }
 
     exportOval(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         isFilled: boolean,
         layer: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         const l = this.layerV[layer];
         this.currentColor = this.getColorHex(l);
@@ -195,7 +208,7 @@ export class ExportSVG implements ExportInterface {
 
         this.buffer.push(
             `<ellipse cx="${this.cLe((x1 + x2) / 2.0)}" cy="${this.cLe((y1 + y2) / 2.0)}" ` +
-            `rx="${this.cLe(Math.abs(x2 - x1) / 2.0)}" ry="${this.cLe(Math.abs(y2 - y1) / 2.0)}" `
+                `rx="${this.cLe(Math.abs(x2 - x1) / 2.0)}" ry="${this.cLe(Math.abs(y2 - y1) / 2.0)}" `,
         );
         this.checkColorAndWidth(fillPattern, dashStyle);
     }
@@ -206,7 +219,7 @@ export class ExportSVG implements ExportInterface {
         isFilled: boolean,
         layer: number,
         dashStyle: number,
-        sW: number
+        sW: number,
     ): void {
         const l = this.layerV[layer];
         this.currentColor = this.getColorHex(l);
@@ -235,8 +248,10 @@ export class ExportSVG implements ExportInterface {
         _arrowLength: number,
         _arrowHalfWidth: number,
         _dashStyle: number,
-        _sW: number
+        _sW: number,
     ): boolean {
+        // LIMITATION: complex curves are expanded into polygon/line primitives
+        // before reaching the exporter (24-segment polyline approximation).
         return false;
     }
 
@@ -248,16 +263,18 @@ export class ExportSVG implements ExportInterface {
 
         this.buffer.push(
             `<circle cx="${this.cLe(x)}" cy="${this.cLe(y)}" r="${this.cLe(nodeSize / 2.0)}" ` +
-            `style="stroke:${this.currentColor};stroke-width:${this.strokeWidth}" ` +
-            `fill="${this.currentColor}"/>\n`
+                `style="stroke:${this.currentColor};stroke-width:${this.strokeWidth}" ` +
+                `fill="${this.currentColor}"/>\n`,
         );
     }
 
     exportPCBLine(
-        x1: number, y1: number,
-        x2: number, y2: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
         width: number,
-        layer: number
+        layer: number,
     ): void {
         const l = this.layerV[layer];
         this.currentColor = this.getColorHex(l);
@@ -265,18 +282,20 @@ export class ExportSVG implements ExportInterface {
 
         this.buffer.push(
             `<line x1="${this.cLe(x1)}" y1="${this.cLe(y1)}" x2="${this.cLe(x2)}" y2="${this.cLe(y2)}" ` +
-            `style="stroke:${this.currentColor};stroke-linejoin:round;stroke-linecap:round;` +
-            `stroke-width:${width > 0 ? width : 0.5}"/>\n`
+                `style="stroke:${this.currentColor};stroke-linejoin:round;stroke-linecap:round;` +
+                `stroke-width:${width > 0 ? width : 0.5}"/>\n`,
         );
     }
 
     exportPCBPad(
-        x: number, y: number,
+        x: number,
+        y: number,
         style: number,
-        six: number, siy: number,
+        six: number,
+        siy: number,
         indiam: number,
         layer: number,
-        onlyHole: boolean
+        onlyHole: boolean,
     ): void {
         this.strokeWidth = 0.33;
         const l = this.layerV[layer];
@@ -286,7 +305,7 @@ export class ExportSVG implements ExportInterface {
         if (onlyHole) {
             this.buffer.push(
                 `<circle cx="${this.cLe(x)}" cy="${this.cLe(y)}" r="${this.cLe(indiam / 2.0)}" ` +
-                `style="stroke:white;stroke-width:${this.strokeWidth}" fill="white"/>\n`
+                    `style="stroke:white;stroke-width:${this.strokeWidth}" fill="white"/>\n`,
             );
         } else {
             switch (style) {
@@ -295,8 +314,8 @@ export class ExportSVG implements ExportInterface {
                     const ydd = this.cLe(y - siy / 2.0);
                     this.buffer.push(
                         `<rect x="${xdd}" y="${ydd}" rx="0" ry="0" width="${this.cLe(six)}" ` +
-                        `height="${this.cLe(siy)}" style="stroke:${this.currentColor};stroke-width:` +
-                        `${this.strokeWidth}" fill="${this.currentColor}"/>\n`
+                            `height="${this.cLe(siy)}" style="stroke:${this.currentColor};stroke-width:` +
+                            `${this.strokeWidth}" fill="${this.currentColor}"/>\n`,
                     );
                     break;
                 }
@@ -306,8 +325,8 @@ export class ExportSVG implements ExportInterface {
                     const rd = this.cLe(2.5);
                     this.buffer.push(
                         `<rect x="${xdd}" y="${ydd}" rx="${rd}" ry="${rd}" width="${this.cLe(six)}" ` +
-                        `height="${this.cLe(siy)}" style="stroke:${this.currentColor};stroke-width:` +
-                        `${this.strokeWidth}" fill="${this.currentColor}"/>\n`
+                            `height="${this.cLe(siy)}" style="stroke:${this.currentColor};stroke-width:` +
+                            `${this.strokeWidth}" fill="${this.currentColor}"/>\n`,
                     );
                     break;
                 }
@@ -315,8 +334,8 @@ export class ExportSVG implements ExportInterface {
                 default:
                     this.buffer.push(
                         `<ellipse cx="${this.cLe(x)}" cy="${this.cLe(y)}" rx="${this.cLe(six / 2.0)}" ` +
-                        `ry="${this.cLe(siy / 2.0)}" style="stroke:${this.currentColor};stroke-width:` +
-                        `${this.strokeWidth}" fill="${this.currentColor}"/>\n`
+                            `ry="${this.cLe(siy / 2.0)}" style="stroke:${this.currentColor};stroke-width:` +
+                            `${this.strokeWidth}" fill="${this.currentColor}"/>\n`,
                     );
                     break;
             }
@@ -324,50 +343,57 @@ export class ExportSVG implements ExportInterface {
     }
 
     exportAdvText(
-        x: number, y: number,
-        sizex: number, sizey: number,
+        x: number,
+        y: number,
+        sizex: number,
+        sizey: number,
         fontname: string,
         isBold: boolean,
         isMirrored: boolean,
         isItalic: boolean,
         orientation: number,
         layer: number,
-        text: string
+        text: string,
     ): void {
         const l = this.layerV[layer];
         this.currentColor = this.getColorHex(l);
         this.layerAlpha = l.getAlpha();
 
         const xscale = isMirrored ? -1 : 1;
-        const yscale = (sizey / sizex) === 10 / 7 ? 1.0 : (sizey / sizex) * (22.0 / 40.0);
+        const yscale = sizey / sizex === 10 / 7 ? 1.0 : (sizey / sizex) * (22.0 / 40.0);
 
-        this.buffer.push(
-            `<g transform="translate(${this.cLe(x)},${this.cLe(y)})`
-        );
+        this.buffer.push(`<g transform="translate(${this.cLe(x)},${this.cLe(y)})`);
         if (orientation !== 0) {
             this.buffer.push(` rotate(${-orientation})`);
         }
         this.buffer.push(` scale(${xscale},${yscale})">`);
         this.buffer.push(
             `<text x="0" y="0" font-family="${this.escapeXml(fontname)}" font-size="${sizex * 2}" ` +
-            `fill="${this.currentColor}" style="font-weight:${isBold ? 'bold' : 'normal'};` +
-            `font-style:${isItalic ? 'italic' : 'normal'}">${this.escapeXml(text)}</text>`
+                `fill="${this.currentColor}" style="font-weight:${isBold ? 'bold' : 'normal'};` +
+                `font-style:${isItalic ? 'italic' : 'normal'}">${this.escapeXml(text)}</text>`,
         );
         this.buffer.push('</g>\n');
     }
 
     exportMacro(
-        _x: number, _y: number,
+        _x: number,
+        _y: number,
         _isMirrored: boolean,
         _orientation: number,
         _macroName: string,
         _macroDesc: string,
-        _name: string, _xn: number, _yn: number,
-        _value: string, _xv: number, _yv: number,
+        _name: string,
+        _xn: number,
+        _yn: number,
+        _value: string,
+        _xv: number,
+        _yv: number,
         _font: string,
         _fontSize: number,
-        _m: Map<string, any>
+        _m: Map<string, any>,
     ): boolean {
+        // LIMITATION: macros are flattened into constituent primitives
+        // before reaching the exporter.
         return false;
     }
 
@@ -412,7 +438,7 @@ export class ExportSVG implements ExportInterface {
 
         const sw = this.strokeWidth > 0 ? this.strokeWidth : 0.5;
         this.buffer.push(
-            `;stroke-width:${sw};stroke-linejoin:round;stroke-linecap:round;fill-rule: evenodd;"`
+            `;stroke-width:${sw};stroke-linejoin:round;stroke-linecap:round;fill-rule: evenodd;"`,
         );
 
         if (this.layerAlpha < 1.0) {
@@ -423,10 +449,13 @@ export class ExportSVG implements ExportInterface {
     }
 
     exportArrow(
-        x: number, y: number,
-        xc: number, yc: number,
-        l: number, h: number,
-        style: number
+        x: number,
+        y: number,
+        xc: number,
+        yc: number,
+        l: number,
+        h: number,
+        style: number,
     ): PointPr {
         let alpha: number;
 
@@ -449,8 +478,8 @@ export class ExportSVG implements ExportInterface {
 
         this.buffer.push(
             `<polygon points="${this.roundTo(x)},${this.roundTo(y)} ` +
-            `${this.roundTo(x1)},${this.roundTo(y1)} ` +
-            `${this.roundTo(x2)},${this.roundTo(y2)}" `
+                `${this.roundTo(x1)},${this.roundTo(y1)} ` +
+                `${this.roundTo(x2)},${this.roundTo(y2)}" `,
         );
 
         if (style === 0) {

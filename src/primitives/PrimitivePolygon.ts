@@ -23,13 +23,15 @@ export class PrimitivePolygon extends GraphicPrimitive {
     private isFilled: boolean = false;
     private dashStyle: number = 0;
     private p: PolygonInterface | null = null;
-    storageSize: number = 5;
-    private xmin: number = 0; private ymin: number = 0;
-    private width: number = 0; private height: number = 0;
+    private storageSize: number = 5;
+    private xmin: number = 0;
+    private ymin: number = 0;
+    private width: number = 0;
+    private height: number = 0;
     private w: number = 0;
 
-    constructor(f: string, size: number)
-    constructor(f: boolean, layer: number, dashSt: number, font: string, size: number)
+    constructor(f: string, size: number);
+    constructor(f: boolean, layer: number, dashSt: number, font: string, size: number);
     constructor(...args: unknown[]) {
         super();
         if (args.length === 2) {
@@ -37,8 +39,13 @@ export class PrimitivePolygon extends GraphicPrimitive {
             this.nPoints = 0;
             this.initPrimitive(this.storageSize, args[0] as string, args[1] as number);
         } else {
-            const [f, layer, dashSt, font, size] = args as
-                [boolean, number, number, string, number];
+            const [f, layer, dashSt, font, size] = args as [
+                boolean,
+                number,
+                number,
+                string,
+                number,
+            ];
             this.initPrimitive(this.storageSize, font, size);
             this.nPoints = 0;
             this.isFilled = f;
@@ -47,22 +54,45 @@ export class PrimitivePolygon extends GraphicPrimitive {
         }
     }
 
-    getControlPointNumber(): number { return this.nPoints + 2; }
+    getControlPointNumber(): number {
+        return this.nPoints + 2;
+    }
 
-    getFilled(): boolean { return this.isFilled; }
-    setFilled(v: boolean): void { this.isFilled = v; this.setChanged(true); }
-    getDashStyle(): number { return this.dashStyle; }
-    setDashStyle(v: number): void { this.dashStyle = this.checkDashStyle(v); this.setChanged(true); }
+    getFilled(): boolean {
+        return this.isFilled;
+    }
+    setFilled(v: boolean): void {
+        this.isFilled = v;
+        this.setChanged(true);
+    }
+    getDashStyle(): number {
+        return this.dashStyle;
+    }
+    setDashStyle(v: number): void {
+        this.dashStyle = this.checkDashStyle(v);
+        this.setChanged(true);
+    }
 
     removePoint(x: number, y: number, tolerance: number): void {
         if (this.nPoints <= 3) return;
         let minDistance = GeometricDistances.pointToPoint(
-            this.virtualPoint[0]!.x, this.virtualPoint[0]!.y, x, y);
+            this.virtualPoint[0]!.x,
+            this.virtualPoint[0]!.y,
+            x,
+            y,
+        );
         let selI = -1;
         for (let i = 1; i < this.nPoints; i++) {
             const d = GeometricDistances.pointToPoint(
-                this.virtualPoint[i]!.x, this.virtualPoint[i]!.y, x, y);
-            if (d < minDistance) { minDistance = d; selI = i; }
+                this.virtualPoint[i]!.x,
+                this.virtualPoint[i]!.y,
+                x,
+                y,
+            );
+            if (d < minDistance) {
+                minDistance = d;
+                selI = i;
+            }
         }
         if (minDistance <= tolerance) {
             this.nPoints--;
@@ -77,15 +107,24 @@ export class PrimitivePolygon extends GraphicPrimitive {
     }
 
     addPointClosest(px: number, py: number): void {
-        const xp = this.virtualPoint.slice(0, this.nPoints).map(v => v.x);
-        const yp = this.virtualPoint.slice(0, this.nPoints).map(v => v.y);
+        const xp = this.virtualPoint.slice(0, this.nPoints).map((v) => v.x);
+        const yp = this.virtualPoint.slice(0, this.nPoints).map((v) => v.y);
         let distance = Math.sqrt((px - xp[0]!) ** 2 + (py - yp[0]!) ** 2);
         let minv = 0;
         for (let i = 0; i < this.nPoints; i++) {
             const j = i === this.nPoints - 1 ? -1 : i;
             const d = GeometricDistances.pointToSegment(
-                xp[i]!, yp[i]!, xp[j + 1]!, yp[j + 1]!, px, py);
-            if (d < distance) { distance = d; minv = j + 1; }
+                xp[i]!,
+                yp[i]!,
+                xp[j + 1]!,
+                yp[j + 1]!,
+                px,
+                py,
+            );
+            if (d < distance) {
+                distance = d;
+                minv = j + 1;
+            }
         }
         this.addPoint(px, py);
         for (let i = this.nPoints - 1; i > minv; i--) {
@@ -116,8 +155,10 @@ export class PrimitivePolygon extends GraphicPrimitive {
     }
 
     createPolygon(coordSys: MapCoordinates, g: GraphicsInterface): void {
-        this.xmin = Number.MAX_SAFE_INTEGER; this.ymin = Number.MAX_SAFE_INTEGER;
-        let xmax = -Number.MAX_SAFE_INTEGER, ymax = -Number.MAX_SAFE_INTEGER;
+        this.xmin = Number.MAX_SAFE_INTEGER;
+        this.ymin = Number.MAX_SAFE_INTEGER;
+        let xmax = -Number.MAX_SAFE_INTEGER,
+            ymax = -Number.MAX_SAFE_INTEGER;
         this.p = g.createPolygon();
         this.p.reset();
         for (let j = 0; j < this.nPoints; j++) {
@@ -154,7 +195,10 @@ export class PrimitivePolygon extends GraphicPrimitive {
         if (tokens[0] !== 'PP' && tokens[0] !== 'PV')
             throw new Error(`PP/PV: Invalid primitive: ${tokens[0]}`);
         if (nn < 6) throw new Error('Bad arguments on PP/PV');
-        let j = 1, i = 0, x1 = 0, y1 = 0;
+        let j = 1,
+            i = 0,
+            x1 = 0,
+            y1 = 0;
         while (j < nn - 1) {
             if (j + 1 < nn - 1 && tokens[j + 1] === 'FCJ') break;
             if (i >= Globals.MAX_VERTICES) {
@@ -165,9 +209,9 @@ export class PrimitivePolygon extends GraphicPrimitive {
             }
             const px = Globals.parseCoord(tokens[j++]);
             const py = Globals.parseCoord(tokens[j++]);
-            if (px === null || py === null)
-                throw new Error('PP/PV: invalid coordinate');
-            x1 = px; y1 = py;
+            if (px === null || py === null) throw new Error('PP/PV: invalid coordinate');
+            x1 = px;
+            y1 = py;
             i++;
             this.addPoint(x1, y1);
         }
@@ -188,14 +232,21 @@ export class PrimitivePolygon extends GraphicPrimitive {
 
     getDistanceToPoint(px: number, py: number): number {
         if (this.checkText(px, py)) return 0;
-        const xp = this.virtualPoint.slice(0, this.nPoints).map(v => v.x);
-        const yp = this.virtualPoint.slice(0, this.nPoints).map(v => v.y);
-        if (this.isFilled && GeometricDistances.pointInPolygon(xp, yp, this.nPoints, px, py)) return 1;
+        const xp = this.virtualPoint.slice(0, this.nPoints).map((v) => v.x);
+        const yp = this.virtualPoint.slice(0, this.nPoints).map((v) => v.y);
+        if (this.isFilled && GeometricDistances.pointInPolygon(xp, yp, this.nPoints, px, py))
+            return 1;
         let distance = Math.trunc(Math.sqrt((px - xp[0]!) ** 2 + (py - yp[0]!) ** 2));
         for (let i = 0; i < this.nPoints; i++) {
             const j = i === this.nPoints - 1 ? -1 : i;
             const d = GeometricDistances.pointToSegment(
-                xp[i]!, yp[i]!, xp[j + 1]!, yp[j + 1]!, px, py);
+                xp[i]!,
+                yp[i]!,
+                xp[j + 1]!,
+                yp[j + 1]!,
+                px,
+                py,
+            );
             if (d < distance) distance = d;
         }
         return distance;
@@ -209,7 +260,7 @@ export class PrimitivePolygon extends GraphicPrimitive {
         parts.push(`${this.getLayer()}\n`);
         let cmd = parts.join('');
         if (extensions && (this.dashStyle > 0 || this.hasName() || this.hasValue())) {
-            const text = (this.name.length !== 0 || this.value.length !== 0) ? '1' : '0';
+            const text = this.name.length !== 0 || this.value.length !== 0 ? '1' : '0';
             cmd += `FCJ ${this.dashStyle} ${text}\n`;
         }
         cmd += this.saveText(false);
@@ -225,17 +276,27 @@ export class PrimitivePolygon extends GraphicPrimitive {
             pd.y = cs.mapY(this.virtualPoint[i]!.x, this.virtualPoint[i]!.y);
             vertices.push(pd);
         }
-        exp.exportPolygon(vertices, this.nPoints, this.isFilled, this.getLayer(),
-            this.dashStyle, Globals.lineWidth * cs.getXMagnitude());
+        exp.exportPolygon(
+            vertices,
+            this.nPoints,
+            this.isFilled,
+            this.getLayer(),
+            this.dashStyle,
+            Globals.lineWidth * cs.getXMagnitude(),
+        );
     }
 
-    getNameVirtualPointNumber(): number { return this.nPoints; }
-    getValueVirtualPointNumber(): number { return this.nPoints + 1; }
+    getNameVirtualPointNumber(): number {
+        return this.nPoints;
+    }
+    getValueVirtualPointNumber(): number {
+        return this.nPoints + 1;
+    }
 
     override intersects(rect: RectangleG, isLeftToRightSelection: boolean): boolean {
         if (!this.getCurrentLayer()?.isVisible()) return false;
-        const xp = this.virtualPoint.slice(0, this.nPoints).map(v => v.x);
-        const yp = this.virtualPoint.slice(0, this.nPoints).map(v => v.y);
+        const xp = this.virtualPoint.slice(0, this.nPoints).map((v) => v.x);
+        const yp = this.virtualPoint.slice(0, this.nPoints).map((v) => v.y);
         if (isLeftToRightSelection) {
             for (let i = 0; i < this.nPoints; i++) {
                 if (!rect.contains(xp[i]!, yp[i]!)) return false;
@@ -250,12 +311,16 @@ export class PrimitivePolygon extends GraphicPrimitive {
             if (rect.intersectsLine(xp[i]!, yp[i]!, xp[next]!, yp[next]!)) return true;
         }
         if (this.isFilled) {
-            const rx = rect.getX(), ry = rect.getY();
-            const rw = rect.getWidth(), rh = rect.getHeight();
-            if (GeometricDistances.pointInPolygon(xp, yp, this.nPoints, rx, ry) &&
+            const rx = rect.getX(),
+                ry = rect.getY();
+            const rw = rect.getWidth(),
+                rh = rect.getHeight();
+            if (
+                GeometricDistances.pointInPolygon(xp, yp, this.nPoints, rx, ry) &&
                 GeometricDistances.pointInPolygon(xp, yp, this.nPoints, rx + rw, ry) &&
                 GeometricDistances.pointInPolygon(xp, yp, this.nPoints, rx, ry + rh) &&
-                GeometricDistances.pointInPolygon(xp, yp, this.nPoints, rx + rw, ry + rh)) {
+                GeometricDistances.pointInPolygon(xp, yp, this.nPoints, rx + rw, ry + rh)
+            ) {
                 return true;
             }
         }

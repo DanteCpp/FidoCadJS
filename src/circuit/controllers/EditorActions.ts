@@ -18,15 +18,11 @@ import { MapCoordinates } from '../../geom/MapCoordinates.js';
  */
 export class EditorActions {
     private readonly model: DrawingModel;
-    private readonly undoActions: UndoActions | null;
+    private readonly undoActions: UndoActions;
     private readonly selectionActions: SelectionActions;
     public selTolerance: number = 10;
 
-    constructor(
-        model: DrawingModel,
-        selectionActions: SelectionActions,
-        undoActions: UndoActions | null
-    ) {
+    constructor(model: DrawingModel, selectionActions: SelectionActions, undoActions: UndoActions) {
         this.model = model;
         this.undoActions = undoActions;
         this.selectionActions = selectionActions;
@@ -48,7 +44,7 @@ export class EditorActions {
         const first = this.selectionActions.getFirstSelectedPrimitive();
         if (!first) return;
 
-        this.undoActions?.saveUndoState();
+        this.undoActions.saveUndoState();
 
         const ix = first.getFirstPoint().x;
         const iy = first.getFirstPoint().y;
@@ -65,7 +61,7 @@ export class EditorActions {
         const first = this.selectionActions.getFirstSelectedPrimitive();
         if (!first) return;
 
-        this.undoActions?.saveUndoState();
+        this.undoActions.saveUndoState();
 
         const ix = first.getFirstPoint().x;
 
@@ -80,7 +76,7 @@ export class EditorActions {
      *  @param saveState  Pass false when the caller already saved undo state. */
     moveAllSelected(dx: number, dy: number, saveState: boolean = true): void {
         if (saveState) {
-            this.undoActions?.saveUndoState();
+            this.undoActions.saveUndoState();
         }
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
@@ -91,7 +87,7 @@ export class EditorActions {
 
     /** Delete all selected primitives */
     deleteAllSelected(saveState: boolean): void {
-        if (saveState && this.undoActions) {
+        if (saveState) {
             this.undoActions.saveUndoState();
         }
         const v = this.model.getPrimitiveVector();
@@ -104,12 +100,12 @@ export class EditorActions {
 
     /** Set layer for selected primitives */
     setLayerForSelectedPrimitives(layer: number): boolean {
-        const hasSelected = this.model.getPrimitiveVector().some(
-            p => p.isSelected() && !(p instanceof PrimitiveMacro)
-        );
+        const hasSelected = this.model
+            .getPrimitiveVector()
+            .some((p) => p.isSelected() && !(p instanceof PrimitiveMacro));
         if (!hasSelected) return false;
 
-        this.undoActions?.saveUndoState();
+        this.undoActions.saveUndoState();
 
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected() && !(prim instanceof PrimitiveMacro)) {
@@ -158,7 +154,11 @@ export class EditorActions {
 
         for (const prim of this.model.getPrimitiveVector()) {
             const layer = prim.getLayer();
-            if (layer >= layerV.length || layerV[layer].isVisible() || prim instanceof PrimitiveMacro) {
+            if (
+                layer >= layerV.length ||
+                layerV[layer].isVisible() ||
+                prim instanceof PrimitiveMacro
+            ) {
                 const distance = prim.getDistanceToPoint(px, py);
                 if (distance <= minDistance) {
                     gpsel = prim;
@@ -186,8 +186,12 @@ export class EditorActions {
         for (const prim of this.model.getPrimitiveVector()) {
             const layer = prim.getLayer();
             const layerV = this.model.getLayers();
-            if ((layer >= layerV.length || layerV[layer].isVisible() || prim instanceof PrimitiveMacro) &&
-                prim.selectRect(px, py, w, h)) {
+            if (
+                (layer >= layerV.length ||
+                    layerV[layer].isVisible() ||
+                    prim instanceof PrimitiveMacro) &&
+                prim.selectRect(px, py, w, h)
+            ) {
                 selected = true;
             }
         }
@@ -206,7 +210,7 @@ export class EditorActions {
             }
         }
         if (!hasSelected) return;
-        this.undoActions?.saveUndoState();
+        this.undoActions.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dx = leftmost - prim.getPosition().x;
@@ -227,7 +231,7 @@ export class EditorActions {
             }
         }
         if (!hasSelected) return;
-        this.undoActions?.saveUndoState();
+        this.undoActions.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dx = rightmost - (prim.getPosition().x + prim.getSize().width);
@@ -248,7 +252,7 @@ export class EditorActions {
             }
         }
         if (!hasSelected) return;
-        this.undoActions?.saveUndoState();
+        this.undoActions.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dy = topmost - prim.getPosition().y;
@@ -269,7 +273,7 @@ export class EditorActions {
             }
         }
         if (!hasSelected) return;
-        this.undoActions?.saveUndoState();
+        this.undoActions.saveUndoState();
         for (const prim of this.model.getPrimitiveVector()) {
             if (prim.isSelected()) {
                 const dy = bottommost - (prim.getPosition().y + prim.getSize().height);

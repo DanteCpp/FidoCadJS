@@ -12,12 +12,12 @@
 import type { ParserActions } from '../circuit/controllers/ParserActions.js';
 import { MacroDesc } from '../primitives/MacroDesc.js';
 import { LibUtils } from './LibUtils.js';
+import { Toast } from '../ui/Toast.js';
 
 const REGISTRY_KEY = 'fidocadts.libs.v1';
 const LIB_PREFIX = 'fidocadts.lib.v1.';
 
 export class UserLibraryStorage {
-
     private constructor() {}
 
     /** Load all user libraries from localStorage into the parser's model. */
@@ -29,6 +29,7 @@ export class UserLibraryStorage {
                 try {
                     parserActions.readLibraryString(fclText, prefix);
                 } catch (e) {
+                    Toast.show(`Failed to load user library "${prefix}".`, 'error');
                     console.error(`Failed to load user library "${prefix}":`, e);
                 }
             }
@@ -43,6 +44,7 @@ export class UserLibraryStorage {
             localStorage.setItem(LIB_PREFIX + prefix, fclText);
             UserLibraryStorage.addPrefix(prefix);
         } catch (e) {
+            Toast.show('Failed to save user library. Storage may be full.', 'error');
             console.error('Failed to save user library:', e);
             throw new Error('StorageError');
         }
@@ -77,7 +79,7 @@ export class UserLibraryStorage {
 
     /** Remove a prefix from the registry. */
     private static removePrefix(prefix: string): void {
-        const prefixes = UserLibraryStorage.getUserLibraryPrefixes().filter(p => p !== prefix);
+        const prefixes = UserLibraryStorage.getUserLibraryPrefixes().filter((p) => p !== prefix);
         localStorage.setItem(REGISTRY_KEY, JSON.stringify(prefixes));
     }
 }

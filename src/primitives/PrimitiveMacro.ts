@@ -15,22 +15,45 @@ import { DrawingModel } from '../circuit/model/DrawingModel.js';
 import { MacroDesc } from './MacroDesc.js';
 import { RectangleG } from '../graphic/RectangleG.js';
 
+/**
+ * Backend interface providing all three hooks needed by PrimitiveMacro.
+ * Registered once via PrimitiveMacro.setBackend() — validated at registration
+ * time rather than at first use.
+ */
+export interface MacroBackend {
+    parse(model: DrawingModel, description: string): void;
+    draw(model: DrawingModel, g: GraphicsInterface, coordSys: MapCoordinates): void;
+    export(
+        model: DrawingModel,
+        exp: ExportInterface,
+        exportInvisible: boolean,
+        cs: MapCoordinates,
+    ): void;
+}
+
 /** Injected by ParserActions to break the circular dependency. */
 export type MacroParserFn = (model: DrawingModel, description: string) => void;
 
 /** Injected by Drawing (Phase 2) to render the inner macro model. */
 export type MacroDrawFn = (
-    model: DrawingModel, g: GraphicsInterface, coordSys: MapCoordinates
+    model: DrawingModel,
+    g: GraphicsInterface,
+    coordSys: MapCoordinates,
 ) => void;
 
 /** Injected by Export (Phase 2) to export the inner macro model. */
 export type MacroExportFn = (
-    model: DrawingModel, exp: ExportInterface,
-    exportInvisible: boolean, cs: MapCoordinates
+    model: DrawingModel,
+    exp: ExportInterface,
+    exportInvisible: boolean,
+    cs: MapCoordinates,
 ) => void;
 
 export class PrimitiveMacro extends GraphicPrimitive {
     private static readonly N_POINTS = 3;
+
+    /** Single backend providing parse, draw, and export hooks. */
+    private static backend: MacroBackend | null = null;
 
     /** Set by ParserActions before any macro is parsed. */
     static parserFn: MacroParserFn | null = null;
@@ -39,27 +62,52 @@ export class PrimitiveMacro extends GraphicPrimitive {
     /** Set by Export (Phase 2). */
     static exportFn: MacroExportFn | null = null;
 
-    /** Returns true when all three injection hooks (parse, draw, export) are wired. */
+    /**
+     * Register a complete MacroBackend. Validates all three hooks are present
+     * at registration time, avoiding runtime errors at first use.
+     * Also populates the legacy static slots for backward compatibility.
+     */
+    static setBackend(backend: MacroBackend): void {
+        if (!backend.parse || !backend.draw || !backend.export) {
+            throw new Error('MacroBackend must provide parse, draw, and export hooks');
+        }
+        PrimitiveMacro.backend = backend;
+        PrimitiveMacro.parserFn = backend.parse;
+        PrimitiveMacro.drawFn = backend.draw;
+        PrimitiveMacro.exportFn = backend.export;
+    }
+
+    /** Returns true when a backend (or all legacy hooks) is wired. */
     static isReady(): boolean {
-        return PrimitiveMacro.parserFn !== null
-            && PrimitiveMacro.drawFn !== null
-            && PrimitiveMacro.exportFn !== null;
+        if (PrimitiveMacro.backend) return true;
+        return (
+            PrimitiveMacro.parserFn !== null &&
+            PrimitiveMacro.drawFn !== null &&
+            PrimitiveMacro.exportFn !== null
+        );
     }
 
     /** Asserts that the relevant injection hook is wired, throwing a descriptive error if not. */
     private static assertReady(operation: 'parse' | 'draw' | 'export'): void {
+        if (PrimitiveMacro.backend) return; // backend covers all ops
         switch (operation) {
             case 'parse':
                 if (PrimitiveMacro.parserFn === null)
-                    throw new Error('PrimitiveMacro.parse: parserFn not injected. Ensure ParserActions is constructed first.');
+                    throw new Error(
+                        'PrimitiveMacro.parse: parserFn not injected. Ensure ParserActions is constructed first.',
+                    );
                 break;
             case 'draw':
                 if (PrimitiveMacro.drawFn === null)
-                    throw new Error('PrimitiveMacro.draw: drawFn not injected. Call registerDrawingHooks() before rendering.');
+                    throw new Error(
+                        'PrimitiveMacro.draw: drawFn not injected. Call registerDrawingHooks() before rendering.',
+                    );
                 break;
             case 'export':
                 if (PrimitiveMacro.exportFn === null)
-                    throw new Error('PrimitiveMacro.export: exportFn not injected. Call registerExportHooks() before exporting.');
+                    throw new Error(
+                        'PrimitiveMacro.export: exportFn not injected. Call registerExportHooks() before exporting.',
+                    );
                 break;
         }
     }
@@ -78,7 +126,8 @@ export class PrimitiveMacro extends GraphicPrimitive {
     private exportInvisible: boolean = false;
     /** Tracks whether the inner model's primitives have been set to selected. */
     private selected: boolean = false;
-    private x1: number = 0; private y1: number = 0;
+    private x1: number = 0;
+    private y1: number = 0;
     private bboxMinX: number = 0;
     private bboxMinY: number = 0;
     private bboxMaxX: number = 0;
@@ -99,19 +148,45 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.macroStore(l);
     }
 
-    getControlPointNumber(): number { return PrimitiveMacro.N_POINTS; }
+    getControlPointNumber(): number {
+        return PrimitiveMacro.N_POINTS;
+    }
 
-    setExportInvisible(s: boolean): void { this.exportInvisible = s; }
-    setDrawOnlyPads(pd: boolean): void { this.drawOnlyPads = pd; }
-    setDrawOnlyLayer(la: number): void { this.drawOnlyLayer = la; }
-    getMaxLayer(): number { return this.macroModel.getMaxLayer(); }
-    getOrientation(): number { return this.o; }
-    setOrientation(o: number): void { this.o = o; this.setChanged(true); }
-    isMirrored(): boolean { return this.m; }
-    setMirrored(v: boolean): void { this.m = v; this.setChanged(true); }
-    getMacroName(): string { return this.macroName; }
-    getMacroDesc(): string | null { return this.macroDesc; }
-    setMacroDesc(d: string): void { this.macroDesc = d; }
+    setExportInvisible(s: boolean): void {
+        this.exportInvisible = s;
+    }
+    setDrawOnlyPads(pd: boolean): void {
+        this.drawOnlyPads = pd;
+    }
+    setDrawOnlyLayer(la: number): void {
+        this.drawOnlyLayer = la;
+    }
+    getMaxLayer(): number {
+        return this.macroModel.getMaxLayer();
+    }
+    getOrientation(): number {
+        return this.o;
+    }
+    setOrientation(o: number): void {
+        this.o = o;
+        this.setChanged(true);
+    }
+    isMirrored(): boolean {
+        return this.m;
+    }
+    setMirrored(v: boolean): void {
+        this.m = v;
+        this.setChanged(true);
+    }
+    getMacroName(): string {
+        return this.macroName;
+    }
+    getMacroDesc(): string | null {
+        return this.macroDesc;
+    }
+    setMacroDesc(d: string): void {
+        this.macroDesc = d;
+    }
 
     /** Look up a macro by key, set name and description, and parse the sub-circuit. */
     initializeFromKey(key: string): void {
@@ -126,7 +201,9 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.macroStore(this.layers);
     }
 
-    containsLayer(l: number): boolean { return this.macroModel.containsLayer(l); }
+    containsLayer(l: number): boolean {
+        return this.macroModel.containsLayer(l);
+    }
 
     override setChanged(c: boolean): void {
         super.setChanged(c);
@@ -146,7 +223,9 @@ export class PrimitiveMacro extends GraphicPrimitive {
         }
     }
 
-    setLayers(layerV: LayerDesc[]): void { this.macroModel.setLayers(layerV); }
+    setLayers(layerV: LayerDesc[]): void {
+        this.macroModel.setLayers(layerV);
+    }
 
     private drawMacroContents(g: GraphicsInterface, coordSys: MapCoordinates): void {
         if (this.changed) {
@@ -159,8 +238,8 @@ export class PrimitiveMacro extends GraphicPrimitive {
             this.macroCoord.setXCenter(coordSys.mapXr(this.x1, this.y1));
             this.macroCoord.setYCenter(coordSys.mapYr(this.x1, this.y1));
             this.macroCoord.setOrientation((this.o + coordSys.getOrientation()) % 4);
-            this.macroCoord.mirror = this.m !== coordSys.mirror;
-            this.macroCoord.isMacro = true;
+            this.macroCoord.setMirror(this.m !== coordSys.getMirror());
+            this.macroCoord.setMacro(true);
             this.macroCoord.resetMinMax();
             this.macroModel.setChanged(true);
         }
@@ -188,8 +267,10 @@ export class PrimitiveMacro extends GraphicPrimitive {
             PrimitiveMacro.drawFn(this.macroModel, g, this.macroCoord);
         }
 
-        if (this.macroCoord.getXMax() > this.macroCoord.getXMin() &&
-            this.macroCoord.getYMax() > this.macroCoord.getYMin()) {
+        if (
+            this.macroCoord.getXMax() > this.macroCoord.getXMin() &&
+            this.macroCoord.getYMax() > this.macroCoord.getYMin()
+        ) {
             coordSys.trackPoint(this.macroCoord.getXMax(), this.macroCoord.getYMax());
             coordSys.trackPoint(this.macroCoord.getXMin(), this.macroCoord.getYMin());
         }
@@ -262,19 +343,49 @@ export class PrimitiveMacro extends GraphicPrimitive {
         let vx: number, vy: number;
         if (this.m) {
             switch (this.o) {
-                case 1: vx = py - y1 + 100; vy = px - x1 + 100; break;
-                case 2: vx = px - x1 + 100; vy = -(py - y1) + 100; break;
-                case 3: vx = -(py - y1) + 100; vy = -(px - x1) + 100; break;
-                case 0: vx = -(px - x1) + 100; vy = py - y1 + 100; break;
-                default: vx = 0; vy = 0; break;
+                case 1:
+                    vx = py - y1 + 100;
+                    vy = px - x1 + 100;
+                    break;
+                case 2:
+                    vx = px - x1 + 100;
+                    vy = -(py - y1) + 100;
+                    break;
+                case 3:
+                    vx = -(py - y1) + 100;
+                    vy = -(px - x1) + 100;
+                    break;
+                case 0:
+                    vx = -(px - x1) + 100;
+                    vy = py - y1 + 100;
+                    break;
+                default:
+                    vx = 0;
+                    vy = 0;
+                    break;
             }
         } else {
             switch (this.o) {
-                case 1: vx = py - y1 + 100; vy = -(px - x1) + 100; break;
-                case 2: vx = -(px - x1) + 100; vy = -(py - y1) + 100; break;
-                case 3: vx = -(py - y1) + 100; vy = px - x1 + 100; break;
-                case 0: vx = px - x1 + 100; vy = py - y1 + 100; break;
-                default: vx = 0; vy = 0; break;
+                case 1:
+                    vx = py - y1 + 100;
+                    vy = -(px - x1) + 100;
+                    break;
+                case 2:
+                    vx = -(px - x1) + 100;
+                    vy = -(py - y1) + 100;
+                    break;
+                case 3:
+                    vx = -(py - y1) + 100;
+                    vy = px - x1 + 100;
+                    break;
+                case 0:
+                    vx = px - x1 + 100;
+                    vy = py - y1 + 100;
+                    break;
+                default:
+                    vx = 0;
+                    vy = 0;
+                    break;
             }
         }
 
@@ -299,8 +410,12 @@ export class PrimitiveMacro extends GraphicPrimitive {
 
         // Fall back to bounding box test.
         this.computeBoundingBox();
-        if (vx >= this.bboxMinX && vx <= this.bboxMaxX &&
-            vy >= this.bboxMinY && vy <= this.bboxMaxY) {
+        if (
+            vx >= this.bboxMinX &&
+            vx <= this.bboxMaxX &&
+            vy >= this.bboxMinY &&
+            vy <= this.bboxMaxY
+        ) {
             return 0;
         }
 
@@ -318,11 +433,14 @@ export class PrimitiveMacro extends GraphicPrimitive {
         return Number.MAX_SAFE_INTEGER;
     }
 
-    resetExport(): void { this.alreadyExported = false; }
+    resetExport(): void {
+        this.alreadyExported = false;
+    }
 
     toString(extensions: boolean): string {
         const mirror = this.m ? '1' : '0';
-        let s = `MC ${this.virtualPoint[0]!.x} ${this.virtualPoint[0]!.y} ` +
+        let s =
+            `MC ${this.virtualPoint[0]!.x} ${this.virtualPoint[0]!.y} ` +
             `${this.o} ${mirror} ${this.macroName}\n`;
         s += this.saveText(extensions);
         return s;
@@ -331,19 +449,27 @@ export class PrimitiveMacro extends GraphicPrimitive {
     export(exp: ExportInterface, cs: MapCoordinates): void {
         if (this.alreadyExported) return;
 
-        if (exp.exportMacro(
-            cs.mapX(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),
-            cs.mapY(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),
-            this.m, this.o * 90, this.macroName, this.macroDesc ?? '',
-            this.name,
-            cs.mapX(this.virtualPoint[1]!.x, this.virtualPoint[1]!.y),
-            cs.mapY(this.virtualPoint[1]!.x, this.virtualPoint[1]!.y),
-            this.value,
-            cs.mapX(this.virtualPoint[2]!.x, this.virtualPoint[2]!.y),
-            cs.mapY(this.virtualPoint[2]!.x, this.virtualPoint[2]!.y),
-            this.macroFont,
-            Math.trunc(cs.mapYr(this.getMacroFontSize(), this.getMacroFontSize()) - cs.mapYr(0, 0)),
-            this.library)) {
+        if (
+            exp.exportMacro(
+                cs.mapX(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),
+                cs.mapY(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),
+                this.m,
+                this.o * 90,
+                this.macroName,
+                this.macroDesc ?? '',
+                this.name,
+                cs.mapX(this.virtualPoint[1]!.x, this.virtualPoint[1]!.y),
+                cs.mapY(this.virtualPoint[1]!.x, this.virtualPoint[1]!.y),
+                this.value,
+                cs.mapX(this.virtualPoint[2]!.x, this.virtualPoint[2]!.y),
+                cs.mapY(this.virtualPoint[2]!.x, this.virtualPoint[2]!.y),
+                this.macroFont,
+                Math.trunc(
+                    cs.mapYr(this.getMacroFontSize(), this.getMacroFontSize()) - cs.mapYr(0, 0),
+                ),
+                this.library,
+            )
+        ) {
             this.alreadyExported = true;
             return;
         }
@@ -356,8 +482,8 @@ export class PrimitiveMacro extends GraphicPrimitive {
         mc.setXCenter(cs.mapXr(x1, y1));
         mc.setYCenter(cs.mapYr(x1, y1));
         mc.setOrientation((this.o + cs.getOrientation()) % 4);
-        mc.mirror = this.m !== cs.mirror;
-        mc.isMacro = true;
+        mc.setMirror(this.m !== cs.getMirror());
+        mc.setMacro(true);
         this.macroModel.setDrawOnlyLayer(this.drawOnlyLayer);
         this.macroModel.setDrawOnlyPads(this.drawOnlyPads);
 
@@ -369,8 +495,12 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.exportText(exp, cs, this.drawOnlyLayer);
     }
 
-    getNameVirtualPointNumber(): number { return 1; }
-    getValueVirtualPointNumber(): number { return 2; }
+    getNameVirtualPointNumber(): number {
+        return 1;
+    }
+    getValueVirtualPointNumber(): number {
+        return 2;
+    }
 
     override rotatePrimitive(bCounterClockWise: boolean, ix: number, iy: number): void {
         super.rotatePrimitive(bCounterClockWise, ix, iy);

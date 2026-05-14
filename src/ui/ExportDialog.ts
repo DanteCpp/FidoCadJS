@@ -84,10 +84,10 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     nameRow.appendChild(nameLabel);
 
     const extensionByFormat: Record<ExportFormat, string> = {
-        'png': '.png',
-        'svg': '.svg',
-        'pgf': '.pgf',
-        'tikz': '.tex',
+        png: '.png',
+        svg: '.svg',
+        pgf: '.pgf',
+        tikz: '.tex',
     };
 
     const nameInput = document.createElement('input');
@@ -133,55 +133,76 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
         nameInput.select();
     });
 
+    const dialogAbort = new AbortController();
+
     return new Promise((resolve) => {
         const cleanup = () => {
+            dialogAbort.abort();
             document.body.removeChild(overlay);
         };
 
-        cancelBtn.addEventListener('click', () => {
-            cleanup();
-            resolve(null);
-        });
+        cancelBtn.addEventListener(
+            'click',
+            () => {
+                cleanup();
+                resolve(null);
+            },
+            { signal: dialogAbort.signal },
+        );
 
-        okBtn.addEventListener('click', () => {
-            cleanup();
-            resolve({
-                format: fmtSelect.value as ExportFormat,
-                filename: nameInput.value.trim() || 'circuit',
-            });
-        });
-
-        // Close on Enter in the filename field
-        nameInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+        okBtn.addEventListener(
+            'click',
+            () => {
                 cleanup();
                 resolve({
                     format: fmtSelect.value as ExportFormat,
                     filename: nameInput.value.trim() || 'circuit',
                 });
-            } else if (e.key === 'Escape') {
-                cleanup();
-                resolve(null);
-            }
-        });
+            },
+            { signal: dialogAbort.signal },
+        );
+
+        // Close on Enter in the filename field
+        nameInput.addEventListener(
+            'keydown',
+            (e) => {
+                if (e.key === 'Enter') {
+                    cleanup();
+                    resolve({
+                        format: fmtSelect.value as ExportFormat,
+                        filename: nameInput.value.trim() || 'circuit',
+                    });
+                } else if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(null);
+                }
+            },
+            { signal: dialogAbort.signal },
+        );
 
         // Close on backdrop click
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                cleanup();
-                resolve(null);
-            }
-        });
+        overlay.addEventListener(
+            'click',
+            (e) => {
+                if (e.target === overlay) {
+                    cleanup();
+                    resolve(null);
+                }
+            },
+            { signal: dialogAbort.signal },
+        );
 
         // Close on Escape anywhere
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                cleanup();
-                resolve(null);
-                document.removeEventListener('keydown', onKeyDown);
-            }
-        };
-        document.addEventListener('keydown', onKeyDown);
+        document.addEventListener(
+            'keydown',
+            (e) => {
+                if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(null);
+                }
+            },
+            { signal: dialogAbort.signal },
+        );
     });
 }
 

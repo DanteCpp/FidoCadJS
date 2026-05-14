@@ -221,26 +221,24 @@ describe('ExportPGF', () => {
         expect(result).toContain('\\pgfellipse[fillstroke]');
     });
 
-    it('exportAdvText produces pgfputat with verbatim text', () => {
+    it('exportAdvText produces pgfputat with escaped text', () => {
         pgf.exportAdvText(100, 100, 10, 10, 'Arial', false, false, false, 0, 0, 'Hello $R_1$');
         pgf.exportEnd();
         const result = pgf.getPgfString();
         expect(result).toContain('\\pgfputat');
         expect(result).toContain('\\pgfbox[left,top]');
-        // Text should be verbatim, including LaTeX markup
-        expect(result).toContain('Hello $R_1$');
+        // LaTeX special chars are escaped now
+        expect(result).toContain('Hello \\$R\\_1\\$');
         // Y is negated in PGF output
         expect(result).toContain('\\pgfxy(100,-100)');
     });
 
-    it('exportAdvText does NOT escape XML/LaTeX special chars', () => {
+    it('exportAdvText escapes LaTeX special chars', () => {
         pgf.exportAdvText(50, 50, 10, 10, 'Arial', false, false, false, 0, 0, 'a & b < c');
         pgf.exportEnd();
         const result = pgf.getPgfString();
-        // Verbatim: no escaping applied
-        expect(result).toContain('a & b < c');
-        expect(result).not.toContain('&amp;');
-        expect(result).not.toContain('&lt;');
+        // '&' escaped to '\&', '<' is not a LaTeX special char
+        expect(result).toContain('a \\& b < c');
     });
 
     it('dash styles emit pgfsetdash commands', () => {
@@ -270,7 +268,23 @@ describe('ExportPGF', () => {
     });
 
     it('exportMacro returns false (expansion signal)', () => {
-        const r = pgf.exportMacro(0, 0, false, 0, 'test', '', '', 0, 0, '', 0, 0, '', 10, new Map());
+        const r = pgf.exportMacro(
+            0,
+            0,
+            false,
+            0,
+            'test',
+            '',
+            '',
+            0,
+            0,
+            '',
+            0,
+            0,
+            '',
+            10,
+            new Map(),
+        );
         expect(r).toBe(false);
     });
 

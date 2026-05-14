@@ -160,6 +160,18 @@ FidoCadJS targets feature parity with FidoCadJ for editing and `.fcd` interopera
 
 If you need any of the missing pieces, FidoCadJ remains fully supported and can read and write the same `.fcd` files.
 
+### Known Export Limitations
+
+The SVG, PGF, and TikZ exporters approximate some FidoCad primitives:
+
+| Export format | Limitation |
+|---------------|------------|
+| **TikZ** | Complex curves (CV/CP) and macros (MC) are not supported natively; they are expanded into polygon/line primitives. Text orientation and mirroring are delegated to LaTeX formatting. |
+| **PGF** | Same as TikZ — complex curves and macros are expanded. Font metrics do not match the canvas exactly; LaTeX handles final typesetting. |
+| **SVG** | Complex curves are rendered as polyline approximations (24 segments per control point). Macro instances are fully expanded. Text mirroring uses CSS transforms. |
+
+These limitations are documented in the source with `// LIMITATION:` comments.
+
 ### Roadmap
 
 The project is currently at a **beta** release. Editing, parsing, and SVG export are stable and covered by tests; the FCL round-trip is validated for all 11 primitive types. Work in progress includes additional export formats, more locale bundles, and broader feature coverage versus FidoCadJ. Bug reports and pull requests are welcome (see [Contributing](#contributing)).

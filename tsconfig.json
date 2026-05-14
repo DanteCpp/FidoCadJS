@@ -14,6 +14,7 @@
     "noImplicitReturns": true,
     "exactOptionalPropertyTypes": true,
     "useUnknownInCatchVariables": true,
+    "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
