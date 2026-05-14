@@ -1,0 +1,62 @@
+{
+    "_doc": "Documents the known, accepted differences between FidoCadJS's exporter output and the Java reference's. The Java-parity test fails if the actual TS output drifts from these patterns.",
+    "svg": {
+        "_doc": "Lines below describe DIFFERENCES from Java that we accept. Update when an intentional change is made; otherwise the parity test fails.",
+        "differences": [
+            {
+                "id": "FLOAT_FORMAT",
+                "summary": "Java emits trailing .0 on all numeric attributes; TS uses minimal representation (3 vs 3.0).",
+                "examples": ["width=\"26.0\"", "x1=\"3.0\"", "stroke-dashoffset: 0.0"],
+                "ts_form": ["width=\"26\"", "x1=\"3\"", "stroke-dashoffset: 0"],
+                "severity": "cosmetic"
+            },
+            {
+                "id": "HEADER_NEWLINES",
+                "summary": "Java emits each header element on its own line; TS concatenates the header onto a single line.",
+                "severity": "cosmetic"
+            },
+            {
+                "id": "LINE_CAP_JOIN",
+                "summary": "TS emits stroke-linejoin:round;stroke-linecap:round for line/rect/oval/polygon/bezier elements; Java only emits these for PCBLine.",
+                "severity": "cosmetic_but_visible_at_thick_strokes"
+            },
+            {
+                "id": "TEXT_FONT_SIZE",
+                "summary": "TS uses font-size=sizex*2; Java uses font-size=sizey (smaller). See TOTEST.md S4.",
+                "severity": "real_divergence",
+                "tracking": "TOTEST.md S1/S4 — text scaling formula"
+            },
+            {
+                "id": "TEXT_BASELINE",
+                "summary": "TS places <text> at y=0; Java places it at y=sizey (so the baseline of the text is at the translate origin).",
+                "severity": "real_divergence",
+                "tracking": "TOTEST.md S3 — text element vs DecoratedText emission"
+            },
+            {
+                "id": "TEXT_YSCALE_FORMULA",
+                "summary": "TS computes yscale via a conditional involving sizey/sizex; Java always uses yscale=1 and bakes the aspect ratio into xscale (sizex/22.0/sizey*38.0).",
+                "severity": "real_divergence",
+                "tracking": "TOTEST.md S1 — text scaling formula"
+            },
+            {
+                "id": "DASH_OFFSET_ZERO",
+                "summary": "Java always emits stroke-dashoffset (even when 0); TS emits it only when the phase has changed from -1 (initial state) — practically, it appears on the FIRST element only.",
+                "severity": "cosmetic"
+            },
+            {
+                "id": "TEXT_FONT_WEIGHT_TYPO",
+                "summary": "Java emits a typo `font-weigth=` (sic) on text elements; TS emits the correct font-weight: inside style=. CSS browsers fall back gracefully but Java's output is sub-pixel different in strict renderers.",
+                "severity": "java_bug_we_dont_inherit"
+            }
+        ],
+        "matches": [
+            "SVG root attributes (xmlns, version)",
+            "Translation to bounding-box origin with EXPORT_BORDER/2 margin",
+            "Layer-color emission as #RRGGBB",
+            "PCBPad styles 0/1/2 with hole pass",
+            "Connection circle at correct centre",
+            "Mirror+rotation matrix on text (after Phase 1 fix S2)",
+            "Layer alpha on PCB elements via opacity= (after Phase 1 fix S6)"
+        ]
+    }
+}

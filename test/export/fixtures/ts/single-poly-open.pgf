@@ -1,0 +1,38 @@
+\begin{pgfpicture}{0cm}{0cm}{56pt}{76pt}
+% Created by FidoCadJS
+\pgfsetxvec{\pgfpoint{1pt}{0pt}}
+\pgfsetyvec{\pgfpoint{0pt}{1pt}}
+\pgfsetroundjoin
+\pgfsetroundcap
+\pgftranslateto{\pgfxy(0,76)}
+\begin{pgfmagnify}{1}{-1}
+% Layer color definitions
+\definecolor{layer0}{rgb}{0,0,0}
+\definecolor{layer1}{rgb}{0,0,0.5}
+\definecolor{layer2}{rgb}{1,0,0}
+\definecolor{layer3}{rgb}{0,0.5,0.5}
+\definecolor{layer4}{rgb}{1,0.78,0}
+\definecolor{layer5}{rgb}{0.5,1,0}
+\definecolor{layer6}{rgb}{0,1,1}
+\definecolor{layer7}{rgb}{0,0.5,0}
+\definecolor{layer8}{rgb}{0.6,0.8,0.2}
+\definecolor{layer9}{rgb}{1,0.08,0.58}
+\definecolor{layer10}{rgb}{0.71,0.61,0.05}
+\definecolor{layer11}{rgb}{0,0.5,1}
+\definecolor{layer12}{rgb}{0.88,0.88,0.88}
+\definecolor{layer13}{rgb}{0.64,0.64,0.64}
+\definecolor{layer14}{rgb}{0.37,0.37,0.37}
+\definecolor{layer15}{rgb}{0,0,0}
+% End of color definitions
+\color{layer0}
+\pgfsetlinewidth{0.5pt}
+\pgfsetdash{}{0pt}
+\pgfmoveto{\pgfxy(3,3)}
+\pgflineto{\pgfxy(53,3)}
+\pgflineto{\pgfxy(53,53)}
+\pgflineto{\pgfxy(28,73)}
+\pgflineto{\pgfxy(3,53)}
+\pgfclosepath
+\pgfqstroke
+\end{pgfmagnify}
+\end{pgfpicture}

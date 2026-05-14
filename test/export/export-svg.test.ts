@@ -137,4 +137,156 @@ describe('ExportSVG', () => {
         const result = svg.getSvgString();
         expect(result).toContain('opacity');
     });
+
+    // ---------- Phase 1 — S2: mirror + rotation matrix ----------
+    //
+    // Java reference (~/FidoCadJ/src/fidocadj/export/ExportSVG.java:218):
+    //   double alpha = isMirrored ? orientation : -orientation;
+    //   out.write(" rotate("+alpha+") ");
+    //
+    // The TS port always emits `rotate(${-orientation})` regardless of
+    // mirror, so mirrored+rotated text comes out at the wrong angle.
+
+    describe('exportAdvText mirror + rotation', () => {
+        it('not-mirrored, rotated 90° emits rotate(-90)', () => {
+            svg.exportAdvText(50, 50, 5, 3, 'Arial', false, false, false, 90, 0, 'R');
+            svg.exportEnd();
+            expect(svg.getSvgString()).toContain('rotate(-90)');
+        });
+
+        it('mirrored, rotated 90° emits rotate(90) — Java convention', () => {
+            svg.exportAdvText(50, 50, 5, 3, 'Arial', false, true, false, 90, 0, 'R');
+            svg.exportEnd();
+            const out = svg.getSvgString();
+            expect(out).toContain('rotate(90)');
+            expect(out).not.toContain('rotate(-90)');
+        });
+
+        it('mirrored, not rotated emits no rotate (and negative xscale)', () => {
+            svg.exportAdvText(50, 50, 5, 3, 'Arial', false, true, false, 0, 0, 'M');
+            svg.exportEnd();
+            const out = svg.getSvgString();
+            expect(out).not.toContain('rotate(');
+            expect(out).toContain('scale(-1');
+        });
+
+        it('not-mirrored, rotated 180° emits rotate(-180)', () => {
+            svg.exportAdvText(50, 50, 5, 3, 'Arial', false, false, false, 180, 0, 'U');
+            svg.exportEnd();
+            expect(svg.getSvgString()).toContain('rotate(-180)');
+        });
+    });
+
+    // ---------- Phase 1 — S6: PCB elements honour layer alpha ----------
+    //
+    // exportConnection, exportPCBLine, exportPCBPad build their style=
+    // strings inline (not through checkColorAndWidth) and previously
+    // dropped the layer-alpha → opacity= attribute. A PCB pad on a
+    // translucent layer rendered fully opaque, breaking parity with
+    // exportLine / exportRectangle / exportOval which DO emit opacity.
+
+    describe('PCB elements honour layer alpha', () => {
+        it('exportConnection on layer 12 (alpha 0.95) emits opacity', () => {
+            svg.exportConnection(50, 50, 12, 6);
+            svg.exportEnd();
+            expect(svg.getSvgString()).toContain('opacity="0.95"');
+        });
+
+        it('exportConnection on layer 0 (alpha 1.0) does not emit opacity', () => {
+            svg.exportConnection(50, 50, 0, 6);
+            svg.exportEnd();
+            expect(svg.getSvgString()).not.toContain('opacity');
+        });
+
+        it('exportPCBLine on layer 12 emits opacity', () => {
+            svg.exportPCBLine(10, 10, 100, 100, 5, 12);
+            svg.exportEnd();
+            expect(svg.getSvgString()).toContain('opacity="0.95"');
+        });
+
+        it('exportPCBLine on layer 0 does not emit opacity', () => {
+            svg.exportPCBLine(10, 10, 100, 100, 5, 0);
+            svg.exportEnd();
+            expect(svg.getSvgString()).not.toContain('opacity');
+        });
+
+        it('exportPCBPad oval style on layer 12 emits opacity', () => {
+            svg.exportPCBPad(50, 50, 0, 10, 10, 3, 12, false);
+            svg.exportEnd();
+            expect(svg.getSvgString()).toContain('opacity="0.95"');
+        });
+
+        it('exportPCBPad rect style on layer 12 emits opacity', () => {
+            svg.exportPCBPad(50, 50, 1, 10, 10, 3, 12, false);
+            svg.exportEnd();
+            expect(svg.getSvgString()).toContain('opacity="0.95"');
+        });
+
+        it('exportPCBPad rounded style on layer 12 emits opacity', () => {
+            svg.exportPCBPad(50, 50, 2, 10, 10, 3, 12, false);
+            svg.exportEnd();
+            expect(svg.getSvgString()).toContain('opacity="0.95"');
+        });
+
+        it('exportPCBPad onlyHole does NOT emit opacity (hole is always white)', () => {
+            // The hole pass overpaints with white; the user wants it solid
+            // regardless of the underlying layer's alpha. Matches Java
+            // (which emits a plain `style="stroke:white;..."` with no
+            // opacity in the onlyHole branch).
+            svg.exportPCBPad(50, 50, 0, 10, 10, 3, 12, true);
+            svg.exportEnd();
+            expect(svg.getSvgString()).not.toContain('opacity');
+        });
+
+        it('exportPCBPad oval style on layer 0 does not emit opacity', () => {
+            svg.exportPCBPad(50, 50, 0, 10, 10, 3, 0, false);
+            svg.exportEnd();
+            expect(svg.getSvgString()).not.toContain('opacity');
+        });
+    });
+
+    // ---------- Phase 1 — arrow style bits ----------
+    //
+    // The TS port previously used `style === 0` to decide fill vs no-fill,
+    // dropping the "limiter alone" case into the wrong branch. The fix
+    // matches Java: fill iff flagEmpty (0x02) is NOT set.
+
+    describe('exportArrow honours flag bits', () => {
+        it('style=0 (neither flag) emits filled polygon', () => {
+            svg.exportLine(10, 50, 90, 50, 0, true, false, 0, 10, 4, 0, 1);
+            svg.exportEnd();
+            const out = svg.getSvgString();
+            expect(out).toContain('<polygon');
+            expect(out).toMatch(/<polygon[^>]+fill="#000000"/);
+        });
+
+        it('style=1 (limiter only) emits filled polygon AND limiter line', () => {
+            svg.exportLine(10, 50, 90, 50, 0, true, false, 1, 10, 4, 0, 1);
+            svg.exportEnd();
+            const out = svg.getSvgString();
+            expect(out).toMatch(/<polygon[^>]+fill="#000000"/);
+            // Plus exactly one additional <line> for the limiter cross-bar.
+            const lineMatches = out.match(/<line\b/g);
+            expect(lineMatches).not.toBeNull();
+            expect(lineMatches!.length).toBe(2); // main line + limiter
+        });
+
+        it('style=2 (empty only) emits no-fill polygon and no extra line', () => {
+            svg.exportLine(10, 50, 90, 50, 0, true, false, 2, 10, 4, 0, 1);
+            svg.exportEnd();
+            const out = svg.getSvgString();
+            expect(out).toMatch(/<polygon[^>]+fill="none"/);
+            const lineMatches = out.match(/<line\b/g);
+            expect(lineMatches!.length).toBe(1); // only the main line
+        });
+
+        it('style=3 (empty + limiter) emits no-fill polygon AND limiter line', () => {
+            svg.exportLine(10, 50, 90, 50, 0, true, false, 3, 10, 4, 0, 1);
+            svg.exportEnd();
+            const out = svg.getSvgString();
+            expect(out).toMatch(/<polygon[^>]+fill="none"/);
+            const lineMatches = out.match(/<line\b/g);
+            expect(lineMatches!.length).toBe(2);
+        });
+    });
 });
