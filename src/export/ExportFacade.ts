@@ -15,6 +15,7 @@ import { PointG } from '../graphic/PointG.js';
 import { ExportSVG } from './ExportSVG.js';
 import { ExportPGF } from './ExportPGF.js';
 import { ExportTikZ } from './ExportTikZ.js';
+import { ExportPDF } from './ExportPDF.js';
 import type { DrawingModel } from '../circuit/model/DrawingModel.js';
 
 export class ExportFacade {
@@ -71,5 +72,15 @@ export class ExportFacade {
         exportView.exportDrawing(tikz, false, mp);
         tikz.exportEnd();
         return tikz.getTikZString();
+    }
+
+    exportPDF(): string {
+        const mp = this.makeCenteredMap();
+        const pdf = new ExportPDF();
+        const exportView = new Export(this.model);
+        exportView.exportHeader(pdf, mp);
+        exportView.exportDrawing(pdf, false, mp);
+        pdf.exportEnd();
+        return pdf.getPdfString();
     }
 }

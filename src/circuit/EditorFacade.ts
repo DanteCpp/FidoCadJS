@@ -76,6 +76,7 @@ export interface EditorFacade {
     exportSVG(): string;
     exportPGF(): string;
     exportTikZ(): string;
+    exportPDF(): string;
     getCanvasElement(): HTMLCanvasElement;
 
     // ─── Model access ─────────────────────────────────────────────────────

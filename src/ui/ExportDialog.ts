@@ -13,7 +13,7 @@ import { defaultBitmapOptions, DPI_PRESETS } from '../export/ExportBitmapOptions
 import { getString } from '../i18n/i18n.js';
 
 /** Supported export formats */
-export type ExportFormat = 'png' | 'jpg' | 'svg' | 'pgf' | 'tikz';
+export type ExportFormat = 'png' | 'jpg' | 'svg' | 'pgf' | 'tikz' | 'pdf';
 
 /** User selection returned after the dialog is accepted */
 export interface ExportSelection {
@@ -65,6 +65,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     const formats: Array<{ value: ExportFormat; text: string }> = [
         { value: 'png', text: 'PNG (Bitmap)' },
         { value: 'jpg', text: 'JPG (Bitmap, lossy)' },
+        { value: 'pdf', text: 'PDF (Portable Document Format)' },
         { value: 'svg', text: 'SVG (Vector, Scalable Vector Graphic)' },
         { value: 'pgf', text: 'PGF (Vector, PGF packet for LaTeX)' },
         { value: 'tikz', text: 'TikZ (Vector, TikZ picture for LaTeX)' },
@@ -203,6 +204,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     const extensionByFormat: Record<ExportFormat, string> = {
         png: '.png',
         jpg: '.jpg',
+        pdf: '.pdf',
         svg: '.svg',
         pgf: '.pgf',
         tikz: '.tex',
@@ -350,6 +352,9 @@ export function executeExport(panel: EditorFacade, selection: ExportSelection): 
         case 'jpg':
             exportJPG(panel, filename, bitmapOptions);
             break;
+        case 'pdf':
+            exportPDF(panel, filename);
+            break;
         case 'svg':
             exportSVG(panel, filename);
             break;
@@ -360,6 +365,11 @@ export function executeExport(panel: EditorFacade, selection: ExportSelection): 
             exportTikZ(panel, filename);
             break;
     }
+}
+
+function exportPDF(panel: EditorFacade, filename: string): void {
+    const pdfText = panel.exportPDF();
+    downloadBlob(pdfText, 'application/pdf', ensureExt(filename, '.pdf'));
 }
 
 function exportSVG(panel: EditorFacade, filename: string): void {

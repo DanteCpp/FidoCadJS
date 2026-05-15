@@ -500,6 +500,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         return this.exportFacade.exportTikZ();
     }
 
+    exportPDF(): string {
+        return this.exportFacade.exportPDF();
+    }
+
     setTool(toolId: number): void {
         this.currentTool = toolId;
         this.elementsEdt.setState(toolId);
