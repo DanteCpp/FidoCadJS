@@ -1,0 +1,144 @@
+# ---------------------------------------------------------------------------
+# ci.yml – Reusable CI pipeline for FidoCadJS
+# ---------------------------------------------------------------------------
+# Author   : Dante Loi
+# Date     : 2026-05-15
+# Brief    : Called by dev.yml and main.yml.  Contains all CI jobs so the
+#            branch-specific workflows stay thin and drift-free.
+# ---------------------------------------------------------------------------
+
+name: CI
+
+on:
+  workflow_call:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Stage 1 — fast independent checks (run in parallel)
+  # -----------------------------------------------------------------------
+
+  typecheck:
+    name: Typecheck (tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  audit:
+    name: Audit (npm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+
+  # -----------------------------------------------------------------------
+  # Stage 2 — depends on typecheck (fail-fast when TS is broken)
+  # -----------------------------------------------------------------------
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:run
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # -----------------------------------------------------------------------
+  # Stage 3 — depends on unit tests
+  # -----------------------------------------------------------------------
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  # -----------------------------------------------------------------------
+  # Stage 4 — depends on build
+  # -----------------------------------------------------------------------
+
+  e2e:
+    name: E2E tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: playwright-${{ runner.os }}-
+
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: test/e2e/report/
