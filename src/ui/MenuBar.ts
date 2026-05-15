@@ -171,13 +171,6 @@ export class MenuBar {
                 shortcut: 'Ctrl+E',
                 action: () => this.exportFile(),
             },
-            { kind: 'separator' },
-            {
-                kind: 'action',
-                label: getString('Close'),
-                shortcut: 'Ctrl+W',
-                action: () => this.closeFile(),
-            },
         ];
     }
 
@@ -565,14 +558,5 @@ export class MenuBar {
     printFile(): void {
         // TODO: Implement print functionality
         console.log('Print not yet implemented');
-    }
-
-    closeFile(): void {
-        if (this.panel.getModel().getChanged()) {
-            if (!confirm(getString('Warning_unsaved'))) {
-                return;
-            }
-        }
-        this.onNewCircuit();
     }
 }

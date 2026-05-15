@@ -368,6 +368,17 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
 
     zoomToFit(): void {
+        // When there are no elements, reset to 100 % at the origin.
+        if (this.model.isEmpty()) {
+            this.mapCoordinates.setXMagnitudeNoCheck(20);
+            this.mapCoordinates.setYMagnitudeNoCheck(20);
+            this.mapCoordinates.setXCenter(0);
+            this.mapCoordinates.setYCenter(0);
+            this.render();
+            this.onZoomChange?.();
+            return;
+        }
+
         const dpr = window.devicePixelRatio || 1;
         const margin = Math.round(10 * dpr);
         const w = Math.max(1, this.container.clientWidth * dpr - 2 * margin);

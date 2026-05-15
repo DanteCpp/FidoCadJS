@@ -10,33 +10,35 @@ import type { ParserActions } from './ParserActions.js';
 import { getCurrentLocale } from '../../i18n/i18n.js';
 
 interface LibraryEntry {
-    /** Library file basename, without the `_<locale>` suffix or the .fcl
-     *  extension. The loader picks the matching localized variant when
-     *  available, otherwise falls back to the English (`_en.fcl`) bundle. */
-    basename: string;
+    /** Filename of the English (default) bundle under public/lib/. */
+    englishFile: string;
+    /** FidoCad prefix attached to every macro key in this library. */
     prefix: string;
-    /** Locale codes for which a translated `.fcl` ships under public/lib/.
-     *  English (`_en.fcl`) is the universal fallback. */
-    localizedLocales?: readonly string[];
+    /** Per-locale overrides — filename to use instead of `englishFile` when
+     *  the matching locale is active. */
+    localized?: Readonly<Record<string, string>>;
 }
 
 const BASE = import.meta.env.BASE_URL;
 
 const STANDARD_LIBRARIES: LibraryEntry[] = [
-    { basename: 'FCDstdlib', prefix: '', localizedLocales: ['it'] },
-    { basename: 'elettrotecnica', prefix: 'elettrotecnica', localizedLocales: ['it'] },
-    { basename: 'EY_Libraries', prefix: 'EY_Libraries' },
-    { basename: 'IHRAM', prefix: 'IHRAM' },
-    { basename: 'PCB', prefix: 'PCB', localizedLocales: ['it'] },
+    { englishFile: 'FCDstdlib_en.fcl', prefix: '', localized: { it: 'FCDstdlib.fcl' } },
+    {
+        englishFile: 'elettrotecnica_en.fcl',
+        prefix: 'elettrotecnica',
+        localized: { it: 'elettrotecnica.fcl' },
+    },
+    // EY_Libraries ships in English under the bare name (no `_en` suffix).
+    { englishFile: 'EY_Libraries.fcl', prefix: 'EY_Libraries' },
+    { englishFile: 'IHRAM_en.fcl', prefix: 'IHRAM' },
+    { englishFile: 'PCB_en.fcl', prefix: 'PCB', localized: { it: 'PCB.fcl' } },
 ];
 
-/** Resolve the URL for a library given the active locale. Italian (`it`) uses
- *  the bare `.fcl`; every other locale falls back to `_en.fcl`. */
+/** Resolve the URL for a library given the active locale, falling back to the
+ *  English bundle for any locale without a translation. */
 function resolveLibraryUrl(entry: LibraryEntry, locale: string): string {
-    if (locale === 'it' && entry.localizedLocales?.includes('it')) {
-        return `${BASE}lib/${entry.basename}.fcl`;
-    }
-    return `${BASE}lib/${entry.basename}_en.fcl`;
+    const file = entry.localized?.[locale] ?? entry.englishFile;
+    return `${BASE}lib/${file}`;
 }
 
 export async function loadStandardLibraries(

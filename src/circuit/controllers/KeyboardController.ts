@@ -161,12 +161,6 @@ export class KeyboardController {
             return;
         }
 
-        if (key === 'w' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.host.getMenuBar()?.closeFile();
-            return;
-        }
-
         // ===== UNDO/REDO =====
         if (key === 'z' && isCtrlOrMeta && !e.shiftKey) {
             e.preventDefault();
