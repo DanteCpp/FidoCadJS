@@ -8,6 +8,7 @@
  */
 
 import type { EditorFacade } from '../circuit/EditorFacade.js';
+import { getString } from '../i18n/i18n.js';
 
 /**
  * Show the layer edit dialog.
@@ -29,7 +30,7 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
             'font-family: sans-serif; font-size: 13px;';
 
         const title = document.createElement('h2');
-        title.textContent = 'Layer Options';
+        title.textContent = getString('Layer_options');
         title.style.cssText = 'margin: 0 0 16px 0; font-size: 16px; font-weight: 600;';
         box.appendChild(title);
 
@@ -57,7 +58,7 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
             const visCheck = document.createElement('input');
             visCheck.type = 'checkbox';
             visCheck.checked = layer.isVisible();
-            visCheck.title = 'Visible';
+            visCheck.title = getString('IsVisible');
             row.appendChild(visCheck);
 
             // Layer index
@@ -110,14 +111,14 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
             'display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;';
 
         const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
+        cancelBtn.textContent = getString('Cancel_btn');
         cancelBtn.style.cssText =
             'padding: 8px 18px; border: 1px solid #ccc; border-radius: 4px; ' +
             'background: #f0f0f0; cursor: pointer; font-size: 13px;';
         btnRow.appendChild(cancelBtn);
 
         const okBtn = document.createElement('button');
-        okBtn.textContent = 'OK';
+        okBtn.textContent = getString('Ok_btn');
         okBtn.style.cssText =
             'padding: 8px 18px; border: none; border-radius: 4px; ' +
             'background: #007bff; color: white; cursor: pointer; font-size: 13px; font-weight: 500;';

@@ -6,6 +6,37 @@
 import { beforeAll } from 'vitest';
 
 beforeAll(() => {
+    // localStorage polyfill — jsdom does not always expose a working impl
+    // (e.g. when --localstorage-file is not provided). Tests that exercise
+    // persistence rely on a plain in-memory store.
+    if (
+        typeof localStorage === 'undefined' ||
+        typeof (localStorage as Storage | undefined)?.getItem !== 'function'
+    ) {
+        const store = new Map<string, string>();
+        const polyfill: Storage = {
+            getItem(key) {
+                return store.get(key) ?? null;
+            },
+            setItem(key, value) {
+                store.set(key, String(value));
+            },
+            removeItem(key) {
+                store.delete(key);
+            },
+            clear() {
+                store.clear();
+            },
+            key(_i) {
+                return null;
+            },
+            get length() {
+                return store.size;
+            },
+        };
+        (globalThis as { localStorage?: Storage }).localStorage = polyfill;
+    }
+
     // ResizeObserver stub
     if (typeof ResizeObserver === 'undefined') {
         (globalThis as any).ResizeObserver = class {

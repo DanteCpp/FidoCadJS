@@ -10,6 +10,7 @@
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import type { ExportBitmapOptions } from '../export/ExportBitmapOptions.js';
 import { defaultBitmapOptions, DPI_PRESETS } from '../export/ExportBitmapOptions.js';
+import { getString } from '../i18n/i18n.js';
 
 /** Supported export formats */
 export type ExportFormat = 'png' | 'jpg' | 'svg' | 'pgf' | 'tikz';
@@ -44,7 +45,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
 
     // Title
     const title = document.createElement('h2');
-    title.textContent = 'Export drawing';
+    title.textContent = getString('Circ_exp_t');
     title.style.cssText = 'margin: 0 0 16px 0; font-size: 16px; font-weight: 600;';
     box.appendChild(title);
 
@@ -53,7 +54,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     fmtRow.style.cssText = 'display: flex; align-items: center; gap: 12px; margin-bottom: 14px;';
 
     const fmtLabel = document.createElement('span');
-    fmtLabel.textContent = 'File format:';
+    fmtLabel.textContent = getString('File_format');
     fmtLabel.style.cssText = 'min-width: 90px; font-weight: 500;';
     fmtRow.appendChild(fmtLabel);
 
@@ -86,7 +87,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     const dpiRow = document.createElement('div');
     dpiRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 8px;';
     const dpiLabel = document.createElement('span');
-    dpiLabel.textContent = 'Resolution:';
+    dpiLabel.textContent = getString('Resolution');
     dpiLabel.style.cssText = 'min-width: 90px; font-weight: 500;';
     dpiRow.appendChild(dpiLabel);
 
@@ -118,7 +119,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     bwRow.appendChild(bwCheck);
     const bwLabel = document.createElement('label');
     bwLabel.htmlFor = 'exp-bw';
-    bwLabel.textContent = 'Black & White';
+    bwLabel.textContent = getString('B_W');
     bwLabel.style.cssText = 'font-size: 12px;';
     bwRow.appendChild(bwLabel);
     bitmapSection.appendChild(bwRow);
@@ -134,7 +135,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     aaRow.appendChild(aaCheck);
     const aaLabel = document.createElement('label');
     aaLabel.htmlFor = 'exp-aa';
-    aaLabel.textContent = 'Anti-alias';
+    aaLabel.textContent = getString('Anti_aliasing');
     aaLabel.style.cssText = 'font-size: 12px;';
     aaRow.appendChild(aaLabel);
     bitmapSection.appendChild(aaRow);
@@ -149,7 +150,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     splitRow.appendChild(splitCheck);
     const splitLabel = document.createElement('label');
     splitLabel.htmlFor = 'exp-split';
-    splitLabel.textContent = 'Split layers (one file per layer)';
+    splitLabel.textContent = getString('Split_layers_multiple_files');
     splitLabel.style.cssText = 'font-size: 12px;';
     splitRow.appendChild(splitLabel);
     bitmapSection.appendChild(splitRow);
@@ -161,7 +162,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     qualitySpacer.style.cssText = 'min-width: 90px;';
     qualityRow.appendChild(qualitySpacer);
     const qualityLabel = document.createElement('span');
-    qualityLabel.textContent = 'Quality:';
+    qualityLabel.textContent = getString('Export_jpeg_quality');
     qualityLabel.style.cssText = 'font-size: 12px; font-weight: 500;';
     qualityRow.appendChild(qualityLabel);
     const qualitySlider = document.createElement('input');
@@ -195,7 +196,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     nameRow.style.cssText = 'display: flex; align-items: center; gap: 12px; margin-bottom: 14px;';
 
     const nameLabel = document.createElement('span');
-    nameLabel.textContent = 'File name:';
+    nameLabel.textContent = getString('File_name');
     nameLabel.style.cssText = 'min-width: 90px; font-weight: 500;';
     nameRow.appendChild(nameLabel);
 
@@ -231,14 +232,14 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     btnRow.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;';
 
     const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = getString('Cancel_btn');
     cancelBtn.style.cssText =
         'padding: 8px 18px; border: 1px solid #ccc; border-radius: 4px; ' +
         'background: #f0f0f0; cursor: pointer; font-size: 13px;';
     btnRow.appendChild(cancelBtn);
 
     const okBtn = document.createElement('button');
-    okBtn.textContent = 'Export';
+    okBtn.textContent = getString('Export');
     okBtn.style.cssText =
         'padding: 8px 18px; border: none; border-radius: 4px; ' +
         'background: #007bff; color: white; cursor: pointer; font-size: 13px; font-weight: 500;';

@@ -11,9 +11,11 @@ import { showOptionsDialog } from './OptionsDialog.js';
 import { showExportDialog, executeExport } from './ExportDialog.js';
 import { showLayerDialog } from './DialogLayer.js';
 import { showAboutDialog } from './DialogAbout.js';
+import { getString } from '../i18n/i18n.js';
 
 interface MenuItem {
     kind: 'action' | 'separator';
+    id?: string;
     label?: string;
     shortcut?: string;
     action?: () => void;
@@ -44,11 +46,11 @@ export class MenuBar {
             'display: flex; gap: 4px; padding: 4px 8px; background: #f0f0f0; ' +
             'border-bottom: 1px solid #ccc; font-family: sans-serif; font-size: 12px;';
 
-        this.el.appendChild(this.createMenu('File', this.buildFileMenu()));
-        this.el.appendChild(this.createMenu('Edit', this.buildEditMenu()));
-        this.el.appendChild(this.createMenu('View', this.buildViewMenu()));
-        this.el.appendChild(this.createMenu('Circuit', this.buildCircuitMenu()));
-        this.el.appendChild(this.createMenu('Help', this.buildHelpMenu()));
+        this.el.appendChild(this.createMenu(getString('File'), this.buildFileMenu()));
+        this.el.appendChild(this.createMenu(getString('Edit_menu'), this.buildEditMenu()));
+        this.el.appendChild(this.createMenu(getString('View'), this.buildViewMenu()));
+        this.el.appendChild(this.createMenu(getString('Circuit'), this.buildCircuitMenu()));
+        this.el.appendChild(this.createMenu(getString('Help_menu'), this.buildHelpMenu()));
     }
 
     getElement(): HTMLElement {
@@ -112,9 +114,9 @@ export class MenuBar {
                 dropdown.appendChild(menuItem);
 
                 // Store references to Undo/Redo items for state updates
-                if (item.label === 'Undo') {
+                if (item.id === 'undo') {
                     this.undoMenuItem = menuItem;
-                } else if (item.label === 'Redo') {
+                } else if (item.id === 'redo') {
                     this.redoMenuItem = menuItem;
                 }
             }
@@ -140,39 +142,39 @@ export class MenuBar {
         return [
             {
                 kind: 'action',
-                label: 'New',
+                label: getString('New'),
                 shortcut: 'Ctrl+N',
                 action: () => this.onNewCircuit(),
             },
             {
                 kind: 'action',
-                label: 'Open',
+                label: getString('Open'),
                 shortcut: 'Ctrl+O',
                 action: () => this.importCircuit(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Save FCD',
+                label: getString('Save'),
                 shortcut: 'Ctrl+S',
                 action: () => this.exportCircuit(),
             },
             {
                 kind: 'action',
-                label: 'Save As...',
+                label: getString('SaveName'),
                 shortcut: 'Ctrl+Shift+S',
                 action: () => this.exportCircuit(),
             },
             {
                 kind: 'action',
-                label: 'Export...',
+                label: `${getString('Export')}...`,
                 shortcut: 'Ctrl+E',
                 action: () => this.exportFile(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Close',
+                label: getString('Close'),
                 shortcut: 'Ctrl+W',
                 action: () => this.closeFile(),
             },
@@ -180,17 +182,24 @@ export class MenuBar {
     }
 
     private buildEditMenu(): MenuItem[] {
+        const hasSel = () =>
+            this.panel
+                .getModel()
+                .getPrimitiveVector()
+                .some((p) => p.isSelected());
         return [
             {
                 kind: 'action',
-                label: 'Undo',
+                id: 'undo',
+                label: getString('Undo'),
                 shortcut: 'Ctrl+Z',
                 action: () => this.panel.undo(),
                 enabled: () => this.panel.canUndo(),
             },
             {
                 kind: 'action',
-                label: 'Redo',
+                id: 'redo',
+                label: getString('Redo'),
                 shortcut: 'Ctrl+Y',
                 action: () => this.panel.redo(),
                 enabled: () => this.panel.canRedo(),
@@ -198,116 +207,104 @@ export class MenuBar {
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Cut',
+                label: getString('Cut'),
                 shortcut: 'Ctrl+X',
                 action: () => this.panel.cutSelected(),
-                enabled: () =>
-                    this.panel
-                        .getModel()
-                        .getPrimitiveVector()
-                        .some((p) => p.isSelected()),
+                enabled: hasSel,
             },
             {
                 kind: 'action',
-                label: 'Copy',
+                label: getString('Copy'),
                 shortcut: 'Ctrl+C',
                 action: () => this.panel.copySelected(),
-                enabled: () =>
-                    this.panel
-                        .getModel()
-                        .getPrimitiveVector()
-                        .some((p) => p.isSelected()),
+                enabled: hasSel,
             },
             {
                 kind: 'action',
-                label: 'Paste',
+                label: getString('Paste_btn'),
                 shortcut: 'Ctrl+V',
                 action: () => void this.panel.paste(),
                 enabled: () => this.panel.canPaste(),
             },
             {
                 kind: 'action',
-                label: 'Duplicate',
+                label: getString('Duplicate'),
                 shortcut: 'Ctrl+D',
                 action: () => this.panel.duplicateSelected(),
-                enabled: () =>
-                    this.panel
-                        .getModel()
-                        .getPrimitiveVector()
-                        .some((p) => p.isSelected()),
+                enabled: hasSel,
             },
             {
                 kind: 'action',
-                label: 'Copy as Image',
+                label: getString('Copy_as_image'),
                 shortcut: 'Ctrl+I',
                 action: () => void this.panel.copyAsImage(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Select All',
+                label: getString('SelectAll'),
                 shortcut: 'Ctrl+A',
                 action: () => this.panel.selectAll(),
             },
             {
                 kind: 'action',
-                label: 'Delete',
+                label: getString('Delete'),
                 shortcut: 'Del',
                 action: () => this.panel.deleteSelected(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Rotate',
+                label: getString('Rotate'),
                 shortcut: 'R',
                 action: () => this.panel.rotateSelected(),
             },
             {
                 kind: 'action',
-                label: 'Mirror',
+                label: getString('Mirror_E'),
                 shortcut: 'S',
                 action: () => this.panel.mirrorSelected(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Align Left',
+                label: getString('alignLeftSelected'),
                 action: () => this.panel.alignLeftSelected(),
             },
             {
                 kind: 'action',
-                label: 'Align Right',
+                label: getString('alignRightSelected'),
                 action: () => this.panel.alignRightSelected(),
             },
             {
                 kind: 'action',
-                label: 'Align Top',
+                label: getString('alignTopSelected'),
                 action: () => this.panel.alignTopSelected(),
             },
             {
                 kind: 'action',
-                label: 'Align Bottom',
+                label: getString('alignBottomSelected'),
                 action: () => this.panel.alignBottomSelected(),
             },
             {
                 kind: 'action',
-                label: 'Align Horiz. Center',
+                label: getString('alignHorizontalCenterSelected'),
                 action: () => this.panel.alignHorizontalCenterSelected(),
             },
             {
                 kind: 'action',
-                label: 'Align Vert. Center',
+                label: getString('alignVerticalCenterSelected'),
                 action: () => this.panel.alignVerticalCenterSelected(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Distribute Horizontally',
+                label: getString('distributeHorizontallySelected'),
                 action: () => this.panel.distributeHorizontallySelected(),
             },
             {
                 kind: 'action',
-                label: 'Distribute Vertically',
+                label: getString('distributeVerticallySelected'),
                 action: () => this.panel.distributeVerticallySelected(),
             },
         ];
@@ -317,7 +314,7 @@ export class MenuBar {
         return [
             {
                 kind: 'action',
-                label: `Grid${this.panel.isGridVisible() ? ' ✓' : ''}`,
+                label: `${getString('ShowGrid')}${this.panel.isGridVisible() ? ' ✓' : ''}`,
                 action: () => {
                     this.panel.setGridVisible(!this.panel.isGridVisible());
                     this.updateState();
@@ -325,31 +322,31 @@ export class MenuBar {
             },
             {
                 kind: 'action',
-                label: 'Zoom In',
+                label: getString('ZoomIn'),
                 shortcut: '+',
                 action: () => this.panel.zoomIn(),
             },
             {
                 kind: 'action',
-                label: 'Zoom Out',
+                label: getString('ZoomOut'),
                 shortcut: '-',
                 action: () => this.panel.zoomOut(),
             },
             {
                 kind: 'action',
-                label: 'Zoom Fit',
+                label: getString('Zoom_fit'),
                 shortcut: 'Home',
                 action: () => this.panel.zoomToFit(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Attach Image...',
+                label: `${getString('Attach_image_menu')}...`,
                 action: () => this.attachImageFile(),
             },
             {
                 kind: 'action',
-                label: 'Detach Image',
+                label: getString('Detach_image_menu'),
                 action: () => {
                     this.panel.detachImage();
                     this.updateState();
@@ -359,13 +356,13 @@ export class MenuBar {
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: 'Layer Options...',
+                label: `${getString('Layer_options')}...`,
                 shortcut: 'Ctrl+L',
                 action: () => showLayerDialog(this.panel),
             },
             {
                 kind: 'action',
-                label: 'Options...',
+                label: `${getString('Circ_opt')}...`,
                 shortcut: 'Ctrl+,',
                 action: () => showOptionsDialog(this.panel),
             },
@@ -403,13 +400,13 @@ export class MenuBar {
         return [
             {
                 kind: 'action',
-                label: 'View code',
+                label: getString('Define'),
                 shortcut: 'Ctrl+G',
                 action: () => this.showDefineDialog(),
             },
             {
                 kind: 'action',
-                label: 'Import Library...',
+                label: `${getString('ImportLibrary_menu')}...`,
                 action: () => this.importLibraryFile(),
             },
         ];
@@ -419,7 +416,7 @@ export class MenuBar {
         return [
             {
                 kind: 'action',
-                label: 'About FidoCadJS',
+                label: getString('About_menu'),
                 action: () => showAboutDialog(),
             },
         ];
@@ -482,7 +479,7 @@ export class MenuBar {
             'min-width: 400px; font-family: monospace;';
 
         const title = document.createElement('h3');
-        title.textContent = 'Circuit Definition';
+        title.textContent = getString('Enter_code');
         title.style.cssText = 'margin-top: 0;';
         dialog.appendChild(title);
 
@@ -498,7 +495,7 @@ export class MenuBar {
             'display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end;';
 
         const okBtn = document.createElement('button');
-        okBtn.textContent = 'OK';
+        okBtn.textContent = getString('Ok_btn');
         okBtn.style.cssText =
             'padding: 6px 16px; background: #007bff; color: white; border: none; ' +
             'border-radius: 4px; cursor: pointer; font-size: 12px;';
@@ -509,7 +506,7 @@ export class MenuBar {
         buttonRow.appendChild(okBtn);
 
         const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
+        cancelBtn.textContent = getString('Cancel_btn');
         cancelBtn.style.cssText =
             'padding: 6px 16px; background: #6c757d; color: white; border: none; ' +
             'border-radius: 4px; cursor: pointer; font-size: 12px;';
@@ -571,9 +568,8 @@ export class MenuBar {
     }
 
     closeFile(): void {
-        // TODO: Implement close with dirty check
         if (this.panel.getModel().getChanged()) {
-            if (!confirm('You have unsaved changes. Close anyway?')) {
+            if (!confirm(getString('Warning_unsaved'))) {
                 return;
             }
         }

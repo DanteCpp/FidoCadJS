@@ -8,8 +8,15 @@
 
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { SettingsManager, type AppSettings } from '../settings/SettingsManager.js';
+import {
+    getString,
+    getCurrentLocale,
+    setLocale,
+    SUPPORTED_LOCALES,
+    LOCALE_LABELS,
+} from '../i18n/i18n.js';
 
-type TabId = 'drawing' | 'pcb' | 'appearance';
+type TabId = 'drawing' | 'pcb' | 'appearance' | 'language';
 
 export function showOptionsDialog(panel: EditorFacade): void {
     const mgr = SettingsManager.getInstance();
@@ -26,20 +33,20 @@ export function showOptionsDialog(panel: EditorFacade): void {
     titleBar.style.cssText =
         'padding: 12px 16px 8px; border-bottom: 1px solid #ddd; background: #f5f5f5;';
     const title = document.createElement('h3');
-    title.textContent = 'Options';
+    title.textContent = getString('Cir_opt_t');
     title.style.cssText = 'margin: 0; font-size: 14px; font-weight: bold;';
     titleBar.appendChild(title);
     dialog.appendChild(titleBar);
 
     // ── Tab bar ───────────────────────────────────────────────────────────────
     const tabBar = document.createElement('div');
-    tabBar.style.cssText =
-        'display: flex; border-bottom: 1px solid #ccc; background: #f0f0f0;';
+    tabBar.style.cssText = 'display: flex; border-bottom: 1px solid #ccc; background: #f0f0f0;';
 
     const tabs: { id: TabId; label: string }[] = [
-        { id: 'drawing', label: 'Drawing' },
+        { id: 'drawing', label: getString('Drawing') },
         { id: 'pcb', label: 'PCB' },
-        { id: 'appearance', label: 'Appearance' },
+        { id: 'appearance', label: getString('Theme_management') },
+        { id: 'language', label: getString('Languages_tab') },
     ];
 
     // ── Tab content panels ────────────────────────────────────────────────────
@@ -47,12 +54,13 @@ export function showOptionsDialog(panel: EditorFacade): void {
     contentArea.style.cssText = 'padding: 16px; min-height: 220px;';
 
     // ── Form state (mirrors in-progress edits) ────────────────────────────────
-    let draft: AppSettings = { ...s };
+    const draft: AppSettings = { ...s };
 
     const panels: Record<TabId, HTMLElement> = {
         drawing: buildDrawingPanel(draft),
         pcb: buildPCBPanel(draft),
         appearance: buildAppearancePanel(draft),
+        language: buildLanguagePanel(),
     };
 
     for (const p of Object.values(panels)) {
@@ -103,14 +111,14 @@ export function showOptionsDialog(panel: EditorFacade): void {
         'border-top: 1px solid #ddd; background: #f5f5f5;';
 
     const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = getString('Cancel_btn');
     cancelBtn.style.cssText =
         'padding: 6px 16px; background: #6c757d; color: white; border: none; ' +
         'border-radius: 4px; cursor: pointer; font-size: 12px;';
     cancelBtn.addEventListener('click', () => dialog.close());
 
     const okBtn = document.createElement('button');
-    okBtn.textContent = 'OK';
+    okBtn.textContent = getString('Ok_btn');
     okBtn.style.cssText =
         'padding: 6px 16px; background: #007bff; color: white; border: none; ' +
         'border-radius: 4px; cursor: pointer; font-size: 12px;';
@@ -119,6 +127,11 @@ export function showOptionsDialog(panel: EditorFacade): void {
         mgr.updateSettings(draft);
         mgr.applyToPanel(panel);
         panel.render();
+        // Apply locale change if user picked a different one in the language tab.
+        const select = panels.language.querySelector<HTMLSelectElement>('select[name="locale"]');
+        if (select && select.value !== getCurrentLocale()) {
+            void setLocale(select.value);
+        }
         dialog.close();
     });
 
@@ -137,36 +150,82 @@ function buildDrawingPanel(s: AppSettings): HTMLElement {
     const p = document.createElement('div');
     p.appendChild(numRow('Grid X step', 'gridSizeX', s.gridSizeX, 1, 1));
     p.appendChild(numRow('Grid Y step', 'gridSizeY', s.gridSizeY, 1, 1));
-    p.appendChild(checkRow('Snap to grid', 'snapToGrid', s.snapToGrid));
-    p.appendChild(checkRow('Anti-aliasing', 'antiAlias', s.antiAlias));
-    p.appendChild(numRow('Stroke size', 'strokeSize', s.strokeSize, 0.1, 0.1));
-    p.appendChild(numRow('Connection size', 'connectionSize', s.connectionSize, 0.1, 0.1));
+    p.appendChild(checkRow(getString('SnapToGrid'), 'snapToGrid', s.snapToGrid));
+    p.appendChild(checkRow(getString('Anti_aliasing'), 'antiAlias', s.antiAlias));
+    p.appendChild(numRow(getString('stroke_size_straight'), 'strokeSize', s.strokeSize, 0.1, 0.1));
+    p.appendChild(
+        numRow(getString('connection_size'), 'connectionSize', s.connectionSize, 0.1, 0.1),
+    );
     return p;
 }
 
 function buildPCBPanel(s: AppSettings): HTMLElement {
     const p = document.createElement('div');
-    p.appendChild(numRow('Line width', 'pcbLineWidth', s.pcbLineWidth, 1, 1));
-    p.appendChild(numRow('Pad width', 'pcbPadWidth', s.pcbPadWidth, 1, 1));
-    p.appendChild(numRow('Pad height', 'pcbPadHeight', s.pcbPadHeight, 1, 1));
-    p.appendChild(numRow('Drill diameter', 'pcbPadDrill', s.pcbPadDrill, 1, 1));
+    p.appendChild(numRow(getString('pcbline_width'), 'pcbLineWidth', s.pcbLineWidth, 1, 1));
+    p.appendChild(numRow(getString('pcbpad_width'), 'pcbPadWidth', s.pcbPadWidth, 1, 1));
+    p.appendChild(numRow(getString('pcbpad_height'), 'pcbPadHeight', s.pcbPadHeight, 1, 1));
+    p.appendChild(numRow(getString('pcbpad_intw'), 'pcbPadDrill', s.pcbPadDrill, 1, 1));
     return p;
 }
 
 function buildAppearancePanel(s: AppSettings): HTMLElement {
     const p = document.createElement('div');
-    p.appendChild(colorRow('Background', 'backgroundColor', s.backgroundColor));
-    p.appendChild(colorRow('Grid color', 'gridColor', s.gridColor));
-    p.appendChild(colorRow('Selection L→R', 'selectionLTRColor', s.selectionLTRColor));
-    p.appendChild(colorRow('Selection R→L', 'selectionRTLColor', s.selectionRTLColor));
+    p.appendChild(colorRow(getString('Circuit_backgroud'), 'backgroundColor', s.backgroundColor));
+    p.appendChild(colorRow(getString('Grid_dots_color'), 'gridColor', s.gridColor));
+    p.appendChild(colorRow(getString('Select_LR_color'), 'selectionLTRColor', s.selectionLTRColor));
+    p.appendChild(colorRow(getString('Select_RL_color'), 'selectionRTLColor', s.selectionRTLColor));
     p.appendChild(document.createElement('hr'));
     p.appendChild(checkRow('Render LaTeX math in editor', 'renderTeX', s.renderTeX));
     return p;
 }
 
+function buildLanguagePanel(): HTMLElement {
+    const p = document.createElement('div');
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; margin-bottom: 10px; gap: 8px;';
+
+    const lbl = document.createElement('label');
+    lbl.textContent = getString('Language_select_label');
+    lbl.style.cssText = 'flex: 1; color: #333;';
+    lbl.htmlFor = 'opt-locale';
+
+    const select = document.createElement('select');
+    select.id = 'opt-locale';
+    select.name = 'locale';
+    select.style.cssText =
+        'padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; ' +
+        'font-size: 12px; min-width: 160px;';
+    const current = getCurrentLocale();
+    for (const loc of SUPPORTED_LOCALES) {
+        const opt = document.createElement('option');
+        opt.value = loc;
+        opt.textContent = `${LOCALE_LABELS[loc]} (${loc})`;
+        if (loc === current) opt.selected = true;
+        select.appendChild(opt);
+    }
+
+    row.appendChild(lbl);
+    row.appendChild(select);
+    p.appendChild(row);
+
+    const info = document.createElement('p');
+    info.textContent = getString('Language_restart_info');
+    info.style.cssText = 'margin: 12px 0 0 0; font-size: 11px; color: #666;';
+    p.appendChild(info);
+
+    return p;
+}
+
 // ── Row helpers ───────────────────────────────────────────────────────────────
 
-function numRow(label: string, name: string, value: number, step: number, min: number): HTMLElement {
+function numRow(
+    label: string,
+    name: string,
+    value: number,
+    step: number,
+    min: number,
+): HTMLElement {
     const row = document.createElement('div');
     row.style.cssText = 'display: flex; align-items: center; margin-bottom: 10px; gap: 8px;';
 
@@ -225,7 +284,8 @@ function colorRow(label: string, name: string, value: string): HTMLElement {
     input.id = `opt-${name}`;
     input.name = name;
     input.value = value;
-    input.style.cssText = 'width: 40px; height: 26px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; padding: 1px;';
+    input.style.cssText =
+        'width: 40px; height: 26px; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; padding: 1px;';
 
     row.appendChild(lbl);
     row.appendChild(input);
@@ -236,7 +296,10 @@ function colorRow(label: string, name: string, value: string): HTMLElement {
 
 function collectDraft(draft: AppSettings, panels: Record<TabId, HTMLElement>): void {
     const d = draft as unknown as Record<string, unknown>;
-    for (const panel of Object.values(panels)) {
+    // Skip the language panel — its <select> is applied separately by the
+    // dialog's OK handler.
+    for (const [tabId, panel] of Object.entries(panels)) {
+        if (tabId === 'language') continue;
         for (const input of panel.querySelectorAll<HTMLInputElement>('input')) {
             const key = input.name;
             if (input.type === 'checkbox') {

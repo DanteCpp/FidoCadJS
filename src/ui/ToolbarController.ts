@@ -9,6 +9,7 @@
 import { ElementsEdtActions } from '../circuit/controllers/ElementsEdtActions.js';
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { LayerDropdown } from './LayerDropdown.js';
+import { getString } from '../i18n/i18n.js';
 
 export class ToolbarController {
     private toolbar: HTMLElement;
@@ -19,11 +20,7 @@ export class ToolbarController {
     /** Optional: element to toggle visibility (library panel). */
     private onLibraryToggle: (() => void) | null = null;
 
-    constructor(
-        toolbar: HTMLElement,
-        circuitPanel: EditorFacade,
-        baseUrl: string,
-    ) {
+    constructor(toolbar: HTMLElement, circuitPanel: EditorFacade, baseUrl: string) {
         this.toolbar = toolbar;
         this.circuitPanel = circuitPanel;
         this.baseUrl = baseUrl;
@@ -52,25 +49,30 @@ export class ToolbarController {
         firstRow.style.cssText = 'display: flex; align-items: center; gap: 4px; padding: 2px 0;';
 
         const toolDefs: Array<[string, string, number]> = [
-            ['A: Select and move an object. Space: fit to view. Type R to rotate, S to swap.', 'arrow.png',       ElementsEdtActions.SELECTION],
-            ['Left click: increase zoom, right click: decrease zoom.',              'magnifier.png',   ElementsEdtActions.ZOOM],
-            ['Scroll through a big drawing.',                                       'move.png',        ElementsEdtActions.HAND],
-            ['L: Draw a line.',                                                     'line.png',        ElementsEdtActions.LINE],
-            ['T: Place a text.',                                                    'text.png',        ElementsEdtActions.TEXT],
-            ['B: Draw a four-point Bézier primitive.',                              'bezier.png',      ElementsEdtActions.BEZIER],
-            ['P: Place a polygon.',                                                 'polygon.png',     ElementsEdtActions.POLYGON],
-            ['O: Open or closed curve.',                                            'complexcurve.png',ElementsEdtActions.COMPLEXCURVE],
-            ['E: Place an ellipse (hold Control for a circle).',                    'ellipse.png',     ElementsEdtActions.ELLIPSE],
-            ['G: Place a rectangle.',                                               'rectangle.png',   ElementsEdtActions.RECTANGLE],
-            ['C: Place an electrical connection.',                                  'connection.png',  ElementsEdtActions.CONNECTION],
-            ['I: Place a PCB trace.',                                                 'pcbline.png',      ElementsEdtActions.PCB_LINE],
-            ['Z: Place a PCB pad.',                                                   'pcbpad.png',       ElementsEdtActions.PCB_PAD],
+            [getString('tooltip_selection'), 'arrow.png', ElementsEdtActions.SELECTION],
+            [getString('tooltip_zoom'), 'magnifier.png', ElementsEdtActions.ZOOM],
+            [getString('tooltip_hand'), 'move.png', ElementsEdtActions.HAND],
+            [getString('tooltip_line'), 'line.png', ElementsEdtActions.LINE],
+            [getString('tooltip_text'), 'text.png', ElementsEdtActions.TEXT],
+            [getString('tooltip_bezier'), 'bezier.png', ElementsEdtActions.BEZIER],
+            [getString('tooltip_polygon'), 'polygon.png', ElementsEdtActions.POLYGON],
+            [getString('tooltip_curve'), 'complexcurve.png', ElementsEdtActions.COMPLEXCURVE],
+            [getString('tooltip_ellipse'), 'ellipse.png', ElementsEdtActions.ELLIPSE],
+            [getString('tooltip_rectangle'), 'rectangle.png', ElementsEdtActions.RECTANGLE],
+            [getString('tooltip_connection'), 'connection.png', ElementsEdtActions.CONNECTION],
+            [getString('tooltip_pcbline'), 'pcbline.png', ElementsEdtActions.PCB_LINE],
+            [getString('tooltip_pcbpad'), 'pcbpad.png', ElementsEdtActions.PCB_PAD],
         ];
 
         for (const [tooltip, icon, toolId] of toolDefs) {
-            const btn = this.addIconButton(firstRow, `${this.baseUrl}icons/${icon}`, tooltip, () => {
-                this.circuitPanel.setTool(toolId);
-            });
+            const btn = this.addIconButton(
+                firstRow,
+                `${this.baseUrl}icons/${icon}`,
+                tooltip,
+                () => {
+                    this.circuitPanel.setTool(toolId);
+                },
+            );
             this.toolButtons.set(toolId, btn);
         }
 
@@ -90,13 +92,15 @@ export class ToolbarController {
         secondRow.style.cssText = 'display: flex; align-items: center; gap: 4px; padding: 2px 0;';
 
         // Zoom combobox
-        const zoomLevels = [25, 50, 75, 100, 150, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000, 4000];
+        const zoomLevels = [
+            25, 50, 75, 100, 150, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000, 4000,
+        ];
         const zoomSelect = document.createElement('select');
         zoomSelect.setAttribute('data-testid', 'zoom-select');
         zoomSelect.style.cssText =
             'font-size: 12px; padding: 3px 4px; border-radius: 2px; border: 1px solid #ccc; ' +
             'background: white; width: 72px;';
-        zoomSelect.title = 'Zoom level';
+        zoomSelect.title = getString('Zoom');
         for (const level of zoomLevels) {
             const opt = document.createElement('option');
             opt.value = String(level);
@@ -106,7 +110,7 @@ export class ToolbarController {
         zoomSelect.value = '100';
         zoomSelect.addEventListener('change', () => {
             const pct = Number(zoomSelect.value);
-            this.circuitPanel.setZoom(pct * 20 / 100);
+            this.circuitPanel.setZoom((pct * 20) / 100);
         });
 
         const syncZoomSelect = () => {
@@ -115,7 +119,10 @@ export class ToolbarController {
             let minDist = Math.abs(current - zoomLevels[0]);
             for (const level of zoomLevels) {
                 const d = Math.abs(current - level);
-                if (d < minDist) { minDist = d; closest = level; }
+                if (d < minDist) {
+                    minDist = d;
+                    closest = level;
+                }
             }
             zoomSelect.value = String(closest);
         };
@@ -123,7 +130,7 @@ export class ToolbarController {
         secondRow.appendChild(zoomSelect);
 
         // Fit button
-        this.addTextButton(secondRow, 'Fit', () => {
+        this.addTextButton(secondRow, getString('Zoom_fit'), () => {
             this.circuitPanel.zoomToFit();
             syncZoomSelect();
         });
@@ -132,7 +139,7 @@ export class ToolbarController {
         this.addDivider(secondRow);
 
         // Show Grid toggle
-        const gridBtn = this.addTextButton(secondRow, 'Show Grid', () => {
+        const gridBtn = this.addTextButton(secondRow, getString('ShowGrid'), () => {
             const visible = this.circuitPanel.isGridVisible();
             this.circuitPanel.setGridVisible(!visible);
             this.setToggleActive(gridBtn, this.circuitPanel.isGridVisible());
@@ -140,7 +147,7 @@ export class ToolbarController {
         this.setToggleActive(gridBtn, this.circuitPanel.isGridVisible());
 
         // Snap toggle
-        const snapBtn = this.addTextButton(secondRow, 'Snap', () => {
+        const snapBtn = this.addTextButton(secondRow, getString('SnapToGrid'), () => {
             const active = this.circuitPanel.isSnapActive();
             this.circuitPanel.setSnap(!active);
             this.setToggleActive(snapBtn, this.circuitPanel.isSnapActive());
@@ -148,7 +155,7 @@ export class ToolbarController {
         this.setToggleActive(snapBtn, this.circuitPanel.isSnapActive());
 
         // Library toggle
-        const libBtn = this.addTextButton(secondRow, 'Libs', () => {
+        const libBtn = this.addTextButton(secondRow, getString('Libs'), () => {
             if (this.onLibraryToggle) this.onLibraryToggle();
             // Toggle active visual state (host should also toggle visibility)
             const isActive = libBtn.style.background === 'rgb(176, 200, 232)';
@@ -200,7 +207,12 @@ export class ToolbarController {
         btn.style.border = active ? '1px solid #5a8fc0' : '1px solid transparent';
     }
 
-    private addIconButton(row: HTMLElement, iconSrc: string, tooltip: string, onClick: () => void): HTMLButtonElement {
+    private addIconButton(
+        row: HTMLElement,
+        iconSrc: string,
+        tooltip: string,
+        onClick: () => void,
+    ): HTMLButtonElement {
         const btn = document.createElement('button');
         btn.title = tooltip;
         btn.style.cssText =
@@ -218,7 +230,8 @@ export class ToolbarController {
             if (btn.style.opacity !== '0.4') btn.style.background = '#ddd';
         });
         btn.addEventListener('mouseleave', () => {
-            if (btn.style.opacity !== '0.4' && !btn.style.borderColor) btn.style.background = '#e8e8e8';
+            if (btn.style.opacity !== '0.4' && !btn.style.borderColor)
+                btn.style.background = '#e8e8e8';
         });
         row.appendChild(btn);
         return btn;

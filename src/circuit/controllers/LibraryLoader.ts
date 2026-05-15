@@ -7,31 +7,51 @@
  */
 
 import type { ParserActions } from './ParserActions.js';
+import { getCurrentLocale } from '../../i18n/i18n.js';
 
 interface LibraryEntry {
-    url: string;
+    /** Library file basename, without the `_<locale>` suffix or the .fcl
+     *  extension. The loader picks the matching localized variant when
+     *  available, otherwise falls back to the English (`_en.fcl`) bundle. */
+    basename: string;
     prefix: string;
+    /** Locale codes for which a translated `.fcl` ships under public/lib/.
+     *  English (`_en.fcl`) is the universal fallback. */
+    localizedLocales?: readonly string[];
 }
 
 const BASE = import.meta.env.BASE_URL;
 
 const STANDARD_LIBRARIES: LibraryEntry[] = [
-    { url: `${BASE}lib/FCDstdlib_en.fcl`,       prefix: '' },
-    { url: `${BASE}lib/elettrotecnica_en.fcl`,  prefix: 'elettrotecnica' },
-    { url: `${BASE}lib/EY_Libraries.fcl`,       prefix: 'EY_Libraries' },
-    { url: `${BASE}lib/IHRAM_en.fcl`,           prefix: 'IHRAM' },
-    { url: `${BASE}lib/PCB_en.fcl`,              prefix: 'PCB' },
+    { basename: 'FCDstdlib', prefix: '', localizedLocales: ['it'] },
+    { basename: 'elettrotecnica', prefix: 'elettrotecnica', localizedLocales: ['it'] },
+    { basename: 'EY_Libraries', prefix: 'EY_Libraries' },
+    { basename: 'IHRAM', prefix: 'IHRAM' },
+    { basename: 'PCB', prefix: 'PCB', localizedLocales: ['it'] },
 ];
 
-export async function loadStandardLibraries(parserActions: ParserActions): Promise<void> {
+/** Resolve the URL for a library given the active locale. Italian (`it`) uses
+ *  the bare `.fcl`; every other locale falls back to `_en.fcl`. */
+function resolveLibraryUrl(entry: LibraryEntry, locale: string): string {
+    if (locale === 'it' && entry.localizedLocales?.includes('it')) {
+        return `${BASE}lib/${entry.basename}.fcl`;
+    }
+    return `${BASE}lib/${entry.basename}_en.fcl`;
+}
+
+export async function loadStandardLibraries(
+    parserActions: ParserActions,
+    locale: string = getCurrentLocale(),
+): Promise<void> {
     // Fetch all libraries in parallel, then parse sequentially to avoid
     // race conditions on the shared library map.
     const results = await Promise.allSettled(
-        STANDARD_LIBRARIES.map(async ({ url, prefix }) => {
+        STANDARD_LIBRARIES.map(async (entry) => {
+            const url = resolveLibraryUrl(entry, locale);
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return { prefix, text: await response.text() };
-        })
+            return { prefix: entry.prefix, text: await response.text() };
+        }),
     );
     for (const result of results) {
         if (result.status === 'fulfilled') {
