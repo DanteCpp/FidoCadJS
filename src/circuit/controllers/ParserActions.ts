@@ -78,7 +78,19 @@ export class ParserActions {
             s += `FJC A ${Globals.lineWidth}\n`;
         if (Math.abs(Globals.lineWidthCircles - Globals.lineWidthCirclesDefault) > 1e-5)
             s += `FJC B ${Globals.lineWidthCircles}\n`;
+        s += this.registerImageConfig();
         return s;
+    }
+
+    /** Serialise attached background image metadata as FJC IMG tokens. */
+    private registerImageConfig(): string {
+        const imgCanvas = this.model.getImgCanvas();
+        const state = imgCanvas.getState();
+        if (!state) return '';
+        // FJC IMG x y scale alpha
+        // The data URL is too large for FCD; stored in localStorage.
+        // A hash suffix allows reconnecting on load.
+        return `FJC IMG ${state.x} ${state.y} ${state.scale} ${state.alpha}\n`;
     }
 
     private checkAndRegisterLayers(): string {
@@ -380,6 +392,18 @@ export class ParserActions {
                 ll.setDescription(parts.join(''));
                 ll.setModified(true);
             }
+        } else if (tokens[1] === 'IMG') {
+            // FJC IMG x y scale alpha
+            const x = parseFloat(tokens[2]!);
+            const y = parseFloat(tokens[3]!);
+            const scale = parseFloat(tokens[4]!);
+            const alpha = parseFloat(tokens[5]!);
+            const imgCanvas = this.model.getImgCanvas();
+            if (!isNaN(x)) imgCanvas.setX(x);
+            if (!isNaN(y)) imgCanvas.setY(y);
+            if (!isNaN(scale)) imgCanvas.setScale(scale);
+            if (!isNaN(alpha)) imgCanvas.setAlpha(alpha);
+            // The image data is restored from localStorage on the UI side
         } else if (tokens[1] === 'A') {
             const v = parseFloat(tokens[2]!);
             if (v > 0) Globals.lineWidth = v;

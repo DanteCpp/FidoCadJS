@@ -255,6 +255,16 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
         // TeX overlay — positioned on top of canvas for crisp math rendering
         this.texOverlayManager = TeXOverlay.attach(container);
+
+        // Wire up document title updates when the model is modified
+        this.model.onTitleUpdate = () => this.updateDocumentTitle();
+        this.updateDocumentTitle();
+    }
+
+    /** Update the browser tab title to reflect modified state. */
+    private updateDocumentTitle(): void {
+        const modified = this.model.isModified();
+        document.title = (modified ? '* ' : '') + 'FidoCadJS';
     }
 
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
@@ -443,6 +453,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     loadCircuit(circuitText: string): void {
         this.parserActions.parseString(circuitText);
+        this.model.setModified(true);
         if (this.model.getPrimitiveVector().length > 0) {
             this.zoomToFit();
         } else {
@@ -452,6 +463,29 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     getCircuitText(): string {
         return this.parserActions.getText(true);
+    }
+
+    /** Mark the model as saved (clean). Called after a successful save. */
+    markAsSaved(): void {
+        this.model.setModified(false);
+    }
+
+    /**
+     * Try to activate the macro whose single-letter shortcut matches the given key.
+     * Returns true if a macro was found and activated, false otherwise.
+     */
+    tryMacroKeyShortcut(key: string): boolean {
+        const library = this.model.getLibrary();
+        for (const [macroName, macroDesc] of library) {
+            const macroKey = (macroDesc as any).key;
+            if (macroKey && String(macroKey).toLowerCase() === key.toLowerCase()) {
+                // Switch to macro tool with this macro pre-selected
+                this.setMacroTool(macroName);
+                this.render();
+                return true;
+            }
+        }
+        return false;
     }
 
     exportSVG(): string {
@@ -490,12 +524,14 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     undo(): void {
         this.undoActions.undo();
+        this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
 
     redo(): void {
         this.undoActions.redo();
+        this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
@@ -515,18 +551,62 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     deleteSelected(): void {
         this.editorActions.deleteAllSelected(true);
+        this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
 
     rotateSelected(): void {
         this.editorActions.rotateAllSelected();
+        this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
 
     mirrorSelected(): void {
         this.editorActions.mirrorAllSelected();
+        this.model.setModified(true);
+        this.render();
+        this.onUndoStateChange?.();
+    }
+
+    alignLeftSelected(): void {
+        this.editorActions.alignLeftSelected();
+        this.render();
+        this.onUndoStateChange?.();
+    }
+    alignRightSelected(): void {
+        this.editorActions.alignRightSelected();
+        this.render();
+        this.onUndoStateChange?.();
+    }
+    alignTopSelected(): void {
+        this.editorActions.alignTopSelected();
+        this.render();
+        this.onUndoStateChange?.();
+    }
+    alignBottomSelected(): void {
+        this.editorActions.alignBottomSelected();
+        this.render();
+        this.onUndoStateChange?.();
+    }
+    alignHorizontalCenterSelected(): void {
+        this.editorActions.alignHorizontalCenterSelected();
+        this.render();
+        this.onUndoStateChange?.();
+    }
+    alignVerticalCenterSelected(): void {
+        this.editorActions.alignVerticalCenterSelected();
+        this.render();
+        this.onUndoStateChange?.();
+    }
+    distributeHorizontallySelected(): void {
+        this.editorActions.distributeHorizontallySelected();
+        this.render();
+        this.onUndoStateChange?.();
+    }
+    distributeVerticallySelected(): void {
+        this.editorActions.distributeVerticallySelected();
         this.render();
         this.onUndoStateChange?.();
     }
@@ -659,6 +739,25 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         return this.clipboardController.canPaste();
     }
 
+    async copyAsImage(): Promise<void> {
+        try {
+            const { renderToOffscreen } = await import('../export/ExportBitmap.js');
+            const { defaultBitmapOptions } = await import('../export/ExportBitmapOptions.js');
+            const opts = defaultBitmapOptions();
+            opts.dpi = 150;
+            const canvas = renderToOffscreen(this.model, opts);
+            const blob = await new Promise<Blob>((resolve, reject) => {
+                canvas.toBlob((b) => {
+                    if (b) resolve(b);
+                    else reject(new Error('toBlob returned null'));
+                }, 'image/png');
+            });
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        } catch (e) {
+            console.error('Copy as Image failed:', e);
+        }
+    }
+
     /** Convert a selected macro instance back into individual primitives. */
     vectorizeSelectedMacro(): void {
         this.macroVectorizer.vectorize();
@@ -672,6 +771,58 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     removeKeyboardListeners(): void {
         this.keyboardController.detach();
+    }
+
+    // ─── Background image ────────────────────────────────────────────────────
+
+    async attachImage(file: File): Promise<void> {
+        await this.model.getImgCanvas().attachFile(file);
+        this.render();
+    }
+
+    detachImage(): void {
+        this.model.getImgCanvas().detach();
+        this.render();
+    }
+
+    isImageAttached(): boolean {
+        return this.model.getImgCanvas().isAttached();
+    }
+
+    getImageAlpha(): number {
+        return this.model.getImgCanvas().getAlpha();
+    }
+
+    setImageAlpha(a: number): void {
+        this.model.getImgCanvas().setAlpha(a);
+        this.render();
+    }
+
+    getImageScale(): number {
+        return this.model.getImgCanvas().getScale();
+    }
+
+    setImageScale(s: number): void {
+        this.model.getImgCanvas().setScale(s);
+        this.render();
+    }
+
+    getImageX(): number {
+        return this.model.getImgCanvas().getX();
+    }
+
+    setImageX(x: number): void {
+        this.model.getImgCanvas().setX(x);
+        this.render();
+    }
+
+    getImageY(): number {
+        return this.model.getImgCanvas().getY();
+    }
+
+    setImageY(y: number): void {
+        this.model.getImgCanvas().setY(y);
+        this.render();
     }
 }
 

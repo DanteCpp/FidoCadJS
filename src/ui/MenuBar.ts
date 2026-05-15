@@ -9,6 +9,8 @@
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { showOptionsDialog } from './OptionsDialog.js';
 import { showExportDialog, executeExport } from './ExportDialog.js';
+import { showLayerDialog } from './DialogLayer.js';
+import { showAboutDialog } from './DialogAbout.js';
 
 interface MenuItem {
     kind: 'action' | 'separator';
@@ -22,12 +24,17 @@ export class MenuBar {
     private readonly el: HTMLElement;
     private readonly panel: EditorFacade;
     private readonly onNewCircuit: () => void;
-    private readonly onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined;
+    private readonly onImportLibrary:
+        | ((content: string, fileName: string) => Promise<void>)
+        | undefined;
     private undoMenuItem: HTMLElement | null = null;
     private redoMenuItem: HTMLElement | null = null;
 
-    constructor(panel: EditorFacade, onNewCircuit: () => void,
-                onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined) {
+    constructor(
+        panel: EditorFacade,
+        onNewCircuit: () => void,
+        onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined,
+    ) {
         this.panel = panel;
         this.onNewCircuit = onNewCircuit;
         this.onImportLibrary = onImportLibrary;
@@ -41,6 +48,7 @@ export class MenuBar {
         this.el.appendChild(this.createMenu('Edit', this.buildEditMenu()));
         this.el.appendChild(this.createMenu('View', this.buildViewMenu()));
         this.el.appendChild(this.createMenu('Circuit', this.buildCircuitMenu()));
+        this.el.appendChild(this.createMenu('Help', this.buildHelpMenu()));
     }
 
     getElement(): HTMLElement {
@@ -151,6 +159,12 @@ export class MenuBar {
             },
             {
                 kind: 'action',
+                label: 'Save As...',
+                shortcut: 'Ctrl+Shift+S',
+                action: () => this.exportCircuit(),
+            },
+            {
+                kind: 'action',
                 label: 'Export...',
                 shortcut: 'Ctrl+E',
                 action: () => this.exportFile(),
@@ -187,14 +201,22 @@ export class MenuBar {
                 label: 'Cut',
                 shortcut: 'Ctrl+X',
                 action: () => this.panel.cutSelected(),
-                enabled: () => this.panel.getModel().getPrimitiveVector().some(p => p.isSelected()),
+                enabled: () =>
+                    this.panel
+                        .getModel()
+                        .getPrimitiveVector()
+                        .some((p) => p.isSelected()),
             },
             {
                 kind: 'action',
                 label: 'Copy',
                 shortcut: 'Ctrl+C',
                 action: () => this.panel.copySelected(),
-                enabled: () => this.panel.getModel().getPrimitiveVector().some(p => p.isSelected()),
+                enabled: () =>
+                    this.panel
+                        .getModel()
+                        .getPrimitiveVector()
+                        .some((p) => p.isSelected()),
             },
             {
                 kind: 'action',
@@ -208,7 +230,17 @@ export class MenuBar {
                 label: 'Duplicate',
                 shortcut: 'Ctrl+D',
                 action: () => this.panel.duplicateSelected(),
-                enabled: () => this.panel.getModel().getPrimitiveVector().some(p => p.isSelected()),
+                enabled: () =>
+                    this.panel
+                        .getModel()
+                        .getPrimitiveVector()
+                        .some((p) => p.isSelected()),
+            },
+            {
+                kind: 'action',
+                label: 'Copy as Image',
+                shortcut: 'Ctrl+I',
+                action: () => void this.panel.copyAsImage(),
             },
             { kind: 'separator' },
             {
@@ -235,6 +267,48 @@ export class MenuBar {
                 label: 'Mirror',
                 shortcut: 'S',
                 action: () => this.panel.mirrorSelected(),
+            },
+            { kind: 'separator' },
+            {
+                kind: 'action',
+                label: 'Align Left',
+                action: () => this.panel.alignLeftSelected(),
+            },
+            {
+                kind: 'action',
+                label: 'Align Right',
+                action: () => this.panel.alignRightSelected(),
+            },
+            {
+                kind: 'action',
+                label: 'Align Top',
+                action: () => this.panel.alignTopSelected(),
+            },
+            {
+                kind: 'action',
+                label: 'Align Bottom',
+                action: () => this.panel.alignBottomSelected(),
+            },
+            {
+                kind: 'action',
+                label: 'Align Horiz. Center',
+                action: () => this.panel.alignHorizontalCenterSelected(),
+            },
+            {
+                kind: 'action',
+                label: 'Align Vert. Center',
+                action: () => this.panel.alignVerticalCenterSelected(),
+            },
+            { kind: 'separator' },
+            {
+                kind: 'action',
+                label: 'Distribute Horizontally',
+                action: () => this.panel.distributeHorizontallySelected(),
+            },
+            {
+                kind: 'action',
+                label: 'Distribute Vertically',
+                action: () => this.panel.distributeVerticallySelected(),
             },
         ];
     }
@@ -270,11 +344,59 @@ export class MenuBar {
             { kind: 'separator' },
             {
                 kind: 'action',
+                label: 'Attach Image...',
+                action: () => this.attachImageFile(),
+            },
+            {
+                kind: 'action',
+                label: 'Detach Image',
+                action: () => {
+                    this.panel.detachImage();
+                    this.updateState();
+                },
+                enabled: () => this.panel.isImageAttached(),
+            },
+            { kind: 'separator' },
+            {
+                kind: 'action',
+                label: 'Layer Options...',
+                shortcut: 'Ctrl+L',
+                action: () => showLayerDialog(this.panel),
+            },
+            {
+                kind: 'action',
                 label: 'Options...',
                 shortcut: 'Ctrl+,',
                 action: () => showOptionsDialog(this.panel),
             },
         ];
+    }
+
+    /** Open a file picker for the user to select a background image. */
+    private attachImageFile(): void {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.addEventListener('change', async (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+            try {
+                await this.panel.attachImage(file);
+                // Store the data URL in localStorage for FCD round-trip
+                const imgCanvas = this.panel.getModel().getImgCanvas();
+                const state = imgCanvas.getState();
+                if (state) {
+                    try {
+                        localStorage.setItem('fidocadjs_bg_image', state.dataUrl);
+                    } catch {
+                        // localStorage may be full — ignore
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to attach image:', err);
+            }
+        });
+        input.click();
     }
 
     private buildCircuitMenu(): MenuItem[] {
@@ -289,6 +411,16 @@ export class MenuBar {
                 kind: 'action',
                 label: 'Import Library...',
                 action: () => this.importLibraryFile(),
+            },
+        ];
+    }
+
+    private buildHelpMenu(): MenuItem[] {
+        return [
+            {
+                kind: 'action',
+                label: 'About FidoCadJS',
+                action: () => showAboutDialog(),
             },
         ];
     }
@@ -321,7 +453,9 @@ export class MenuBar {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const text = event.target?.result as string;
-                this.onImportLibrary!(text, file.name).catch(err => console.error('Import failed:', err));
+                this.onImportLibrary!(text, file.name).catch((err) =>
+                    console.error('Import failed:', err),
+                );
             };
             reader.readAsText(file);
         });
@@ -337,8 +471,9 @@ export class MenuBar {
         a.download = 'circuit.fcd';
         a.click();
         URL.revokeObjectURL(url);
+        // Mark the model as saved
+        (this.panel as any).markAsSaved?.();
     }
-
 
     private showDefineDialog(): void {
         const dialog = document.createElement('dialog');
@@ -359,7 +494,8 @@ export class MenuBar {
         dialog.appendChild(textarea);
 
         const buttonRow = document.createElement('div');
-        buttonRow.style.cssText = 'display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end;';
+        buttonRow.style.cssText =
+            'display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end;';
 
         const okBtn = document.createElement('button');
         okBtn.textContent = 'OK';
