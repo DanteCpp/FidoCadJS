@@ -47,7 +47,7 @@ export class InPlaceTextEditor {
         layers: LayerDesc[],
         onCommit: (value: string) => void,
         onCancel: () => void,
-        onLiveUpdate: () => void
+        onLiveUpdate: () => void,
     ): void {
         // If already editing, commit the current edit first
         if (this.isEditing) {
@@ -79,7 +79,7 @@ export class InPlaceTextEditor {
 
         // Compute font CSS
         const yMag = coordSys.getYMagnitude();
-        const canvasFontSize = prim.getFontWidth() * 12 * yMag / 7 + 0.5;
+        const canvasFontSize = (prim.getFontWidth() * 12 * yMag) / 7 + 0.5;
         const cssFontSize = canvasFontSize / dpr;
         const isBold = prim.isBold();
         const isItalic = prim.isItalic();
@@ -143,36 +143,34 @@ export class InPlaceTextEditor {
                 'padding: 1px 4px; border-radius: 2px; pointer-events: none; ' +
                 'white-space: nowrap;';
             this.badge.style.left = cssX + 'px';
-            this.badge.style.top = (cssY - 14) + 'px';
+            this.badge.style.top = cssY - 14 + 'px';
             this.container.appendChild(this.badge);
         }
 
         this.textarea.value = this.originalValue;
 
-        // Wire event handlers
-        const self = this;
-
+        // Wire event handlers (arrow functions capture `this` lexically)
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
-                self.close(true);
+                this.close(true);
             } else if (e.key === 'Escape') {
                 e.preventDefault();
-                self.close(false);
+                this.close(false);
             }
         };
 
         const handleInput = () => {
-            if (self.currentPrim && !self.closed) {
-                self.currentPrim.setString(self.textarea.value);
-                self.currentPrim.setChanged(true);
-                self.liveUpdateHandler?.();
+            if (this.currentPrim && !this.closed) {
+                this.currentPrim.setString(this.textarea.value);
+                this.currentPrim.setChanged(true);
+                this.liveUpdateHandler?.();
             }
         };
 
         const handleBlur = () => {
-            if (!self.closed) {
-                self.close(true);
+            if (!this.closed) {
+                this.close(true);
             }
         };
 

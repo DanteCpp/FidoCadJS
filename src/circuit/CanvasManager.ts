@@ -42,7 +42,7 @@ export class CanvasManager {
         }
 
         // Force initial layout computation
-        container.offsetWidth;
+        void container.offsetWidth;
     }
 
     /** Set the callback invoked after every resize (for render + clampCenter). */

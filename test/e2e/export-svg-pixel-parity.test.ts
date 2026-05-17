@@ -104,7 +104,11 @@ function decodePNG(buf: Buffer): { width: number; height: number; data: Uint8Arr
 mkdirSync(ARTEFACTS, { recursive: true });
 
 test.describe('SVG pixel parity vs Java reference', () => {
-    test.beforeEach(async ({ page }) => {
+    // Pixel-parity is Chromium-specific: other engines rasterise SVG
+    // differently (different text metrics, antialiasing, fill/stroke
+    // resolution), and these tolerances were tuned against Chromium.
+    test.beforeEach(async ({ page, browserName }) => {
+        test.skip(browserName !== 'chromium', 'Pixel-parity is Chromium-specific');
         await gotoApp(page);
     });
 
