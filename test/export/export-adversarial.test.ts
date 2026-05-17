@@ -98,7 +98,7 @@ describe('ExportSVG adversarial input', () => {
             );
             svg.exportEnd();
             const out = svg.getSvgString();
-            expect(out).not.toMatch(/<script>/);
+            expect(out).not.toMatch(/<script>/i);
             expect(out).toContain('&lt;script&gt;');
             expect(out).toContain('&quot;');
             // The text should still contain the user-supplied entity (now
