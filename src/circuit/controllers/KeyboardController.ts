@@ -39,24 +39,37 @@ export class KeyboardController {
     private handleDocumentKeyDown(e: KeyboardEvent): void {
         const target = e.target as HTMLElement;
         const tagName = target.tagName.toLowerCase();
-        const isInput = tagName === 'input' || tagName === 'textarea' ||
-            tagName === 'select' || target.isContentEditable;
+        const isInput =
+            tagName === 'input' ||
+            tagName === 'textarea' ||
+            tagName === 'select' ||
+            target.isContentEditable;
 
         if (isInput) {
             const key = e.key.toLowerCase();
             const isCtrlOrMeta = e.ctrlKey || e.metaKey;
 
             // Global file-level shortcuts that should work app-wide
-            if (isCtrlOrMeta && (key === 'n' || key === 'o' || key === 's' ||
-                key === 'e' || key === 'p' || key === 'w')) {
+            if (
+                isCtrlOrMeta &&
+                (key === 'n' ||
+                    key === 'o' ||
+                    key === 's' ||
+                    key === 'e' ||
+                    key === 'p' ||
+                    key === 'w')
+            ) {
                 this.onKeyDown(e);
                 return;
             }
 
             // Escape cancels the TEXT tool even while focus is in a text
             // input (user just placed text and is editing it).
-            if (e.key === 'Escape' && !this.host.isTextEditActive() &&
-                this.host.getTool() === ElementsEdtActions.TEXT) {
+            if (
+                e.key === 'Escape' &&
+                !this.host.isTextEditActive() &&
+                this.host.getTool() === ElementsEdtActions.TEXT
+            ) {
                 this.onKeyDown(e);
                 return;
             }
@@ -105,6 +118,12 @@ export class KeyboardController {
             return;
         }
 
+        if (key === 'i' && isCtrlOrMeta && !e.shiftKey) {
+            e.preventDefault();
+            void this.host.copyAsImage();
+            return;
+        }
+
         // ===== FILE OPERATIONS =====
         if (key === 'n' && isCtrlOrMeta) {
             e.preventDefault();
@@ -139,12 +158,6 @@ export class KeyboardController {
         if (key === 'p' && isCtrlOrMeta) {
             e.preventDefault();
             this.host.getMenuBar()?.printFile();
-            return;
-        }
-
-        if (key === 'w' && isCtrlOrMeta) {
-            e.preventDefault();
-            this.host.getMenuBar()?.closeFile();
             return;
         }
 
@@ -296,7 +309,8 @@ export class KeyboardController {
         // ===== NUDGE WITH ALT + ARROW KEYS =====
         if (isAlt) {
             const nudgeStep = 1;
-            let dx = 0, dy = 0;
+            let dx = 0,
+                dy = 0;
 
             if (key === 'arrowleft') {
                 e.preventDefault();
@@ -314,6 +328,15 @@ export class KeyboardController {
 
             if (dx !== 0 || dy !== 0) {
                 this.host.nudgeSelected(dx, dy);
+                return;
+            }
+        }
+
+        // ===== MACRO SINGLE-LETTER SHORTCUTS =====
+        // Try library macro keys (single letter, no modifier)
+        if (key.length === 1 && !isCtrlOrMeta && !isAlt) {
+            if (this.host.tryMacroKeyShortcut(key)) {
+                e.preventDefault();
                 return;
             }
         }

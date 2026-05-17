@@ -8,14 +8,18 @@
  */
 
 import type { EditorFacade } from '../circuit/EditorFacade.js';
+import type { ExportBitmapOptions } from '../export/ExportBitmapOptions.js';
+import { defaultBitmapOptions, DPI_PRESETS } from '../export/ExportBitmapOptions.js';
+import { getString } from '../i18n/i18n.js';
 
 /** Supported export formats */
-export type ExportFormat = 'png' | 'svg' | 'pgf' | 'tikz';
+export type ExportFormat = 'png' | 'jpg' | 'svg' | 'pgf' | 'tikz' | 'pdf';
 
 /** User selection returned after the dialog is accepted */
 export interface ExportSelection {
     format: ExportFormat;
     filename: string;
+    bitmapOptions: ExportBitmapOptions;
 }
 
 /**
@@ -41,7 +45,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
 
     // Title
     const title = document.createElement('h2');
-    title.textContent = 'Export drawing';
+    title.textContent = getString('Circ_exp_t');
     title.style.cssText = 'margin: 0 0 16px 0; font-size: 16px; font-weight: 600;';
     box.appendChild(title);
 
@@ -50,7 +54,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
     fmtRow.style.cssText = 'display: flex; align-items: center; gap: 12px; margin-bottom: 14px;';
 
     const fmtLabel = document.createElement('span');
-    fmtLabel.textContent = 'File format:';
+    fmtLabel.textContent = getString('File_format');
     fmtLabel.style.cssText = 'min-width: 90px; font-weight: 500;';
     fmtRow.appendChild(fmtLabel);
 
@@ -60,6 +64,8 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
 
     const formats: Array<{ value: ExportFormat; text: string }> = [
         { value: 'png', text: 'PNG (Bitmap)' },
+        { value: 'jpg', text: 'JPG (Bitmap, lossy)' },
+        { value: 'pdf', text: 'PDF (Portable Document Format)' },
         { value: 'svg', text: 'SVG (Vector, Scalable Vector Graphic)' },
         { value: 'pgf', text: 'PGF (Vector, PGF packet for LaTeX)' },
         { value: 'tikz', text: 'TikZ (Vector, TikZ picture for LaTeX)' },
@@ -74,17 +80,131 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
 
     box.appendChild(fmtRow);
 
+    // ---- Bitmap options section (shown only for png/jpg) ----
+    const bitmapSection = document.createElement('div');
+    bitmapSection.style.cssText = 'margin-bottom: 14px;';
+
+    // DPI / pixel size mode row
+    const dpiRow = document.createElement('div');
+    dpiRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 8px;';
+    const dpiLabel = document.createElement('span');
+    dpiLabel.textContent = getString('Resolution');
+    dpiLabel.style.cssText = 'min-width: 90px; font-weight: 500;';
+    dpiRow.appendChild(dpiLabel);
+
+    const dpiSelect = document.createElement('select');
+    dpiSelect.style.cssText =
+        'padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; width: 80px;';
+    for (const d of DPI_PRESETS) {
+        const o = document.createElement('option');
+        o.value = String(d);
+        o.textContent = `${d} DPI`;
+        if (d === 150) o.selected = true;
+        dpiSelect.appendChild(o);
+    }
+    dpiRow.appendChild(dpiSelect);
+
+    const dpiModeLabel = document.createElement('span');
+    dpiModeLabel.textContent = 'DPI';
+    dpiModeLabel.style.cssText = 'font-size: 12px; color: #555;';
+    dpiRow.appendChild(dpiModeLabel);
+    bitmapSection.appendChild(dpiRow);
+
+    // B&W checkbox
+    const bwRow = document.createElement('div');
+    bwRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 6px;';
+    bwRow.appendChild(document.createElement('span')); // spacer
+    const bwCheck = document.createElement('input');
+    bwCheck.type = 'checkbox';
+    bwCheck.id = 'exp-bw';
+    bwRow.appendChild(bwCheck);
+    const bwLabel = document.createElement('label');
+    bwLabel.htmlFor = 'exp-bw';
+    bwLabel.textContent = getString('B_W');
+    bwLabel.style.cssText = 'font-size: 12px;';
+    bwRow.appendChild(bwLabel);
+    bitmapSection.appendChild(bwRow);
+
+    // Anti-alias checkbox
+    const aaRow = document.createElement('div');
+    aaRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 6px;';
+    aaRow.appendChild(document.createElement('span')); // spacer
+    const aaCheck = document.createElement('input');
+    aaCheck.type = 'checkbox';
+    aaCheck.checked = true;
+    aaCheck.id = 'exp-aa';
+    aaRow.appendChild(aaCheck);
+    const aaLabel = document.createElement('label');
+    aaLabel.htmlFor = 'exp-aa';
+    aaLabel.textContent = getString('Anti_aliasing');
+    aaLabel.style.cssText = 'font-size: 12px;';
+    aaRow.appendChild(aaLabel);
+    bitmapSection.appendChild(aaRow);
+
+    // Split layers checkbox
+    const splitRow = document.createElement('div');
+    splitRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 6px;';
+    splitRow.appendChild(document.createElement('span')); // spacer
+    const splitCheck = document.createElement('input');
+    splitCheck.type = 'checkbox';
+    splitCheck.id = 'exp-split';
+    splitRow.appendChild(splitCheck);
+    const splitLabel = document.createElement('label');
+    splitLabel.htmlFor = 'exp-split';
+    splitLabel.textContent = getString('Split_layers_multiple_files');
+    splitLabel.style.cssText = 'font-size: 12px;';
+    splitRow.appendChild(splitLabel);
+    bitmapSection.appendChild(splitRow);
+
+    // JPEG quality slider (only visible for jpg)
+    const qualityRow = document.createElement('div');
+    qualityRow.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 6px;';
+    const qualitySpacer = document.createElement('span');
+    qualitySpacer.style.cssText = 'min-width: 90px;';
+    qualityRow.appendChild(qualitySpacer);
+    const qualityLabel = document.createElement('span');
+    qualityLabel.textContent = getString('Export_jpeg_quality');
+    qualityLabel.style.cssText = 'font-size: 12px; font-weight: 500;';
+    qualityRow.appendChild(qualityLabel);
+    const qualitySlider = document.createElement('input');
+    qualitySlider.type = 'range';
+    qualitySlider.min = '10';
+    qualitySlider.max = '100';
+    qualitySlider.value = '92';
+    qualitySlider.style.cssText = 'width: 100px;';
+    qualityRow.appendChild(qualitySlider);
+    const qualityValue = document.createElement('span');
+    qualityValue.textContent = '92%';
+    qualityValue.style.cssText = 'font-size: 12px; min-width: 32px;';
+    qualityRow.appendChild(qualityValue);
+    qualitySlider.addEventListener('input', () => {
+        qualityValue.textContent = qualitySlider.value + '%';
+    });
+    bitmapSection.appendChild(qualityRow);
+
+    box.appendChild(bitmapSection);
+
+    // Show/hide bitmap section based on format
+    const updateBitmapVisibility = () => {
+        const isBitmap = fmtSelect.value === 'png' || fmtSelect.value === 'jpg';
+        bitmapSection.style.display = isBitmap ? '' : 'none';
+        qualityRow.style.display = fmtSelect.value === 'jpg' ? '' : 'none';
+    };
+    fmtSelect.addEventListener('change', updateBitmapVisibility);
+
     // ---- Filename ----
     const nameRow = document.createElement('div');
     nameRow.style.cssText = 'display: flex; align-items: center; gap: 12px; margin-bottom: 14px;';
 
     const nameLabel = document.createElement('span');
-    nameLabel.textContent = 'File name:';
+    nameLabel.textContent = getString('File_name');
     nameLabel.style.cssText = 'min-width: 90px; font-weight: 500;';
     nameRow.appendChild(nameLabel);
 
     const extensionByFormat: Record<ExportFormat, string> = {
         png: '.png',
+        jpg: '.jpg',
+        pdf: '.pdf',
         svg: '.svg',
         pgf: '.pgf',
         tikz: '.tex',
@@ -103,21 +223,25 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
         const fmt = fmtSelect.value as ExportFormat;
         const base = nameInput.value.replace(/\.[^.]+$/, '');
         nameInput.value = base + extensionByFormat[fmt];
+        updateBitmapVisibility();
     });
+
+    // Initial visibility
+    updateBitmapVisibility();
 
     // ---- Buttons ----
     const btnRow = document.createElement('div');
     btnRow.style.cssText = 'display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;';
 
     const cancelBtn = document.createElement('button');
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = getString('Cancel_btn');
     cancelBtn.style.cssText =
         'padding: 8px 18px; border: 1px solid #ccc; border-radius: 4px; ' +
         'background: #f0f0f0; cursor: pointer; font-size: 13px;';
     btnRow.appendChild(cancelBtn);
 
     const okBtn = document.createElement('button');
-    okBtn.textContent = 'Export';
+    okBtn.textContent = getString('Export');
     okBtn.style.cssText =
         'padding: 8px 18px; border: none; border-radius: 4px; ' +
         'background: #007bff; color: white; cursor: pointer; font-size: 13px; font-weight: 500;';
@@ -141,6 +265,20 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
             document.body.removeChild(overlay);
         };
 
+        const buildSelection = (): ExportSelection => {
+            const opts = defaultBitmapOptions();
+            opts.dpi = Number(dpiSelect.value) as (typeof DPI_PRESETS)[number];
+            opts.blackAndWhite = bwCheck.checked;
+            opts.antiAlias = aaCheck.checked;
+            opts.splitLayers = splitCheck.checked;
+            opts.jpegQuality = Number(qualitySlider.value) / 100;
+            return {
+                format: fmtSelect.value as ExportFormat,
+                filename: nameInput.value.trim() || 'circuit',
+                bitmapOptions: opts,
+            };
+        };
+
         cancelBtn.addEventListener(
             'click',
             () => {
@@ -154,10 +292,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
             'click',
             () => {
                 cleanup();
-                resolve({
-                    format: fmtSelect.value as ExportFormat,
-                    filename: nameInput.value.trim() || 'circuit',
-                });
+                resolve(buildSelection());
             },
             { signal: dialogAbort.signal },
         );
@@ -168,10 +303,7 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
             (e) => {
                 if (e.key === 'Enter') {
                     cleanup();
-                    resolve({
-                        format: fmtSelect.value as ExportFormat,
-                        filename: nameInput.value.trim() || 'circuit',
-                    });
+                    resolve(buildSelection());
                 } else if (e.key === 'Escape') {
                     cleanup();
                     resolve(null);
@@ -211,11 +343,17 @@ export function showExportDialog(_panel: EditorFacade): Promise<ExportSelection 
  * Creates a Blob, triggers a download, or for PNG renders the canvas.
  */
 export function executeExport(panel: EditorFacade, selection: ExportSelection): void {
-    const { format, filename } = selection;
+    const { format, filename, bitmapOptions } = selection;
 
     switch (format) {
         case 'png':
-            exportPNG(panel, filename);
+            exportPNG(panel, filename, bitmapOptions);
+            break;
+        case 'jpg':
+            exportJPG(panel, filename, bitmapOptions);
+            break;
+        case 'pdf':
+            exportPDF(panel, filename);
             break;
         case 'svg':
             exportSVG(panel, filename);
@@ -227,6 +365,11 @@ export function executeExport(panel: EditorFacade, selection: ExportSelection): 
             exportTikZ(panel, filename);
             break;
     }
+}
+
+function exportPDF(panel: EditorFacade, filename: string): void {
+    const pdfText = panel.exportPDF();
+    downloadBlob(pdfText, 'application/pdf', ensureExt(filename, '.pdf'));
 }
 
 function exportSVG(panel: EditorFacade, filename: string): void {
@@ -244,22 +387,24 @@ function exportTikZ(panel: EditorFacade, filename: string): void {
     downloadBlob(tikzText, 'text/plain', ensureExt(filename, '.tex'));
 }
 
-function exportPNG(panel: EditorFacade, filename: string): void {
-    // For PNG, we render the canvas to a blob via toBlob
-    const canvas = panel.getCanvasElement();
+async function exportPNG(
+    panel: EditorFacade,
+    filename: string,
+    opts: ExportBitmapOptions,
+): Promise<void> {
+    const { exportBitmapBlobs } = await import('../export/ExportBitmap.js');
+    const results = await exportBitmapBlobs(panel.getModel(), opts, 'png');
+    downloadBlobs(results, filename, '.png');
+}
 
-    canvas.toBlob((blob) => {
-        if (!blob) {
-            console.error('Failed to create PNG blob');
-            return;
-        }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = ensureExt(filename, '.png');
-        a.click();
-        URL.revokeObjectURL(url);
-    }, 'image/png');
+async function exportJPG(
+    panel: EditorFacade,
+    filename: string,
+    opts: ExportBitmapOptions,
+): Promise<void> {
+    const { exportBitmapBlobs } = await import('../export/ExportBitmap.js');
+    const results = await exportBitmapBlobs(panel.getModel(), opts, 'jpg');
+    downloadBlobs(results, filename, '.jpg');
 }
 
 function downloadBlob(content: string, mimeType: string, filename: string): void {
@@ -270,6 +415,36 @@ function downloadBlob(content: string, mimeType: string, filename: string): void
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+}
+
+import type { BitmapLayerResult } from '../export/ExportBitmap.js';
+
+/**
+ * Download one or more blob results.
+ * For split-layers export, each layer gets a suffixed filename.
+ */
+function downloadBlobs(results: BitmapLayerResult[], baseFilename: string, ext: string): void {
+    for (const r of results) {
+        let fname: string;
+        if (results.length > 1 && r.layerIndex >= 0) {
+            // Split-layers: suffix with layer name
+            const safeName = r.layerName.replace(/[^a-zA-Z0-9_-]/g, '_');
+            fname = ensureExt(
+                baseFilename.replace(new RegExp(ext.replace('.', '\\.') + '$'), '') +
+                    '_' +
+                    safeName,
+                ext,
+            );
+        } else {
+            fname = ensureExt(baseFilename, ext);
+        }
+        const url = URL.createObjectURL(r.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fname;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 }
 
 function ensureExt(filename: string, ext: string): string {

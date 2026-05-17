@@ -13,7 +13,7 @@ import { MacroPicker } from './macropicker/MacroPicker.js';
 import { MenuBar } from './ui/MenuBar.js';
 import { ToolbarController } from './ui/ToolbarController.js';
 import { PropertiesPanelController } from './ui/PropertiesPanelController.js';
-import { loadLocale } from './i18n/i18n.js';
+import { loadLocale, getPreferredLocale, onLocaleChange } from './i18n/i18n.js';
 import { AccessResources } from './i18n/AccessResources.js';
 import { SettingsManager } from './settings/SettingsManager.js';
 import { Globals } from './globals/Globals.js';
@@ -40,14 +40,59 @@ class FidoCadJS {
     private propertiesController!: PropertiesPanelController;
 
     constructor() {
-        // Load the English locale bundle before any UI is built
+        // Load the user's preferred locale (saved → browser → English) before
+        // any UI is built.
         Globals.messages = new AccessResources();
-        loadLocale('en').then(() => {
-            this.initUI();
-        }).catch((e) => {
-            console.error('Failed to load locale:', e);
-            this.initUI();
-        });
+        loadLocale(getPreferredLocale())
+            .then(() => {
+                this.initUI();
+                // Rebuild the menu bar and toolbar when the user changes language.
+                onLocaleChange(() => this.rebuildLocalizedUI());
+            })
+            .catch((e) => {
+                console.error('Failed to load locale:', e);
+                this.initUI();
+            });
+    }
+
+    private rebuildLocalizedUI(): void {
+        // Rebuild menu bar, toolbar and macro-picker labels to pick up new
+        // translations. Listeners attached by these components are re-bound by
+        // their constructors / build() methods.
+        try {
+            const newMenu = new MenuBar(
+                this.circuitPanel,
+                () => this.newCircuit(),
+                (content, fileName) => this.importLibrary(content, fileName),
+            );
+            this.menuBar.getElement().replaceWith(newMenu.getElement());
+            this.menuBar = newMenu;
+            this.circuitPanel.setMenuBar(this.menuBar);
+            this.circuitPanel.onUndoStateChange = () => this.menuBar.updateState();
+            // Rebuild the toolbar in place.
+            this.toolbarEl.innerHTML = '';
+            this.toolbarController.build();
+            // Reload standard libraries in the new locale (Italian bundles
+            // ship alongside the English defaults; other locales fall back to
+            // English). Errors are non-fatal — the UI just keeps the old
+            // library contents.
+            this.reloadStandardLibrariesForLocale().catch((e) =>
+                console.error('Library reload failed:', e),
+            );
+        } catch (e) {
+            console.error('Locale-driven UI rebuild failed:', e);
+        }
+    }
+
+    private async reloadStandardLibrariesForLocale(): Promise<void> {
+        // Clear out the existing standard-library macros and re-fetch them.
+        // User libraries persist in localStorage and are reloaded afterwards.
+        const parser = this.circuitPanel.getParserActions();
+        this.circuitPanel.getModel().getLibrary().clear();
+        await loadStandardLibraries(parser);
+        UserLibraryStorage.loadUserLibraries(parser);
+        this.libraryModel.forceUpdate();
+        this.macroPicker.refresh(this.libraryModel);
     }
 
     private initUI(): void {
@@ -103,14 +148,19 @@ class FidoCadJS {
         (window as any).__FidoCadJS__ = { circuitPanel: this.circuitPanel };
 
         // Create menu bar
-        this.menuBar = new MenuBar(this.circuitPanel, () => this.newCircuit(),
-            (content, fileName) => this.importLibrary(content, fileName));
+        this.menuBar = new MenuBar(
+            this.circuitPanel,
+            () => this.newCircuit(),
+            (content, fileName) => this.importLibrary(content, fileName),
+        );
         this.circuitPanel.setMenuBar(this.menuBar);
         app.insertBefore(this.menuBar.getElement(), this.toolbarEl);
 
         // Build toolbar via controller
         this.toolbarController = new ToolbarController(
-            this.toolbarEl, this.circuitPanel, import.meta.env.BASE_URL
+            this.toolbarEl,
+            this.circuitPanel,
+            import.meta.env.BASE_URL,
         );
         this.toolbarController.setLibraryToggleCallback(() => {
             const visible = this.libraryPanel.style.display !== 'none';
@@ -123,7 +173,8 @@ class FidoCadJS {
 
         // Build properties panel controller
         this.propertiesController = new PropertiesPanelController(
-            this.propertiesSidebar, this.circuitPanel
+            this.propertiesSidebar,
+            this.circuitPanel,
         );
         this.propertiesController.onGetFontFamilies = () => this.getAvailableFontFamilies();
 
@@ -132,8 +183,7 @@ class FidoCadJS {
 
         // Thin status bar
         const statusBar = document.createElement('div');
-        statusBar.style.cssText =
-            'height: 4px; background: #e0e0e0; border-top: 1px solid #ccc;';
+        statusBar.style.cssText = 'height: 4px; background: #e0e0e0; border-top: 1px solid #ccc;';
         app.appendChild(statusBar);
 
         // Load standard FCL libraries asynchronously
@@ -161,12 +211,14 @@ class FidoCadJS {
                 this.circuitPanel,
                 this.circuitPanel.getModel(),
                 this.libraryModel,
-                () => this.macroPicker.refresh(this.libraryModel)
+                () => this.macroPicker.refresh(this.libraryModel),
             );
             dlg.show();
         };
-        console.log(`Libraries loaded: ${this.libraryModel.getAllLibraries().length} libraries, ` +
-            `${this.libraryModel.getAllMacros().size} macros`);
+        console.log(
+            `Libraries loaded: ${this.libraryModel.getAllLibraries().length} libraries, ` +
+                `${this.libraryModel.getAllMacros().size} macros`,
+        );
     }
 
     private newCircuit(): void {
@@ -187,8 +239,10 @@ class FidoCadJS {
 
         const existingPrefixes = UserLibraryStorage.getUserLibraryPrefixes();
         if (existingPrefixes.includes(prefix)) {
-            const ok = await ConfirmDialog.show('Overwrite Library',
-                `A user library with prefix "${prefix}" already exists. Overwrite it?`);
+            const ok = await ConfirmDialog.show(
+                'Overwrite Library',
+                `A user library with prefix "${prefix}" already exists. Overwrite it?`,
+            );
             if (!ok) return;
         }
 
@@ -210,64 +264,90 @@ class FidoCadJS {
     }
 
     private async handleMacroPickerContextAction(
-        action: ContextMenuAction, node: Library | Category | MacroDesc
+        action: ContextMenuAction,
+        node: Library | Category | MacroDesc,
     ): Promise<void> {
         switch (action) {
             case 'rename': {
-                const name = node instanceof MacroDesc ? node.name :
-                    node instanceof Category ? node.getName() : node.getName();
-                const title = node instanceof MacroDesc ? 'Rename macro' :
-                    node instanceof Category ? 'Rename category' : 'Rename library';
-                const newName = await PromptDialog.show(title,
-                    node instanceof MacroDesc ? 'Please input new macro name.' :
-                        node instanceof Category ? 'Please input new category name.' :
-                            'Please input new library name.',
+                const name =
+                    node instanceof MacroDesc
+                        ? node.name
+                        : node instanceof Category
+                          ? node.getName()
+                          : node.getName();
+                const title =
+                    node instanceof MacroDesc
+                        ? 'Rename macro'
+                        : node instanceof Category
+                          ? 'Rename category'
+                          : 'Rename library';
+                const newName = await PromptDialog.show(
+                    title,
+                    node instanceof MacroDesc
+                        ? 'Please input new macro name.'
+                        : node instanceof Category
+                          ? 'Please input new category name.'
+                          : 'Please input new library name.',
                     name,
-                    (v) => v.trim().length === 0 ? 'Name must not be empty.' : null
+                    (v) => (v.trim().length === 0 ? 'Name must not be empty.' : null),
                 );
                 if (newName !== null && newName !== name) {
                     try {
                         this.libraryModel.rename(node, newName);
                         this.macroPicker.refresh(this.libraryModel);
-                    } catch (ex: any) { alert(ex.message); }
+                    } catch (ex: any) {
+                        alert(ex.message);
+                    }
                 }
                 break;
             }
             case 'remove': {
                 let confirmMsg: string;
                 if (node instanceof MacroDesc) confirmMsg = `Really remove macro ${node.name}?`;
-                else if (node instanceof Category) confirmMsg = `Really remove category ${node.getName()}?`;
+                else if (node instanceof Category)
+                    confirmMsg = `Really remove category ${node.getName()}?`;
                 else confirmMsg = `Really remove library ${node.getName()}?`;
                 const ok = await ConfirmDialog.show('Delete', confirmMsg);
                 if (ok) {
                     try {
                         this.libraryModel.remove(node);
                         this.macroPicker.refresh(this.libraryModel);
-                    } catch (ex: any) { alert(ex.message); }
+                    } catch (ex: any) {
+                        alert(ex.message);
+                    }
                 }
                 break;
             }
             case 'changeKey': {
                 if (!(node instanceof MacroDesc)) return;
                 const oldKey = LibraryModel.getPlainMacroKey(node);
-                const ok = await ConfirmDialog.show('Change Key',
-                    'Warning: the macro could not be visualized correctly if it is already in use in your drawing. Continue?');
-                if (!ok) return;
-                const newKey = await PromptDialog.show('Change Key', 'Key:', oldKey,
-                    (v) => {
-                        if (v.trim().length === 0) return 'Key must not be empty.';
-                        if (LibUtils.checkKeyInvalidChars(v)) return 'The key must not contain spaces or "."';
-                        const fullKey = `${node.filename}.${v}`.toLowerCase();
-                        if (LibUtils.checkKeyDuplicate(this.libraryModel.getAllMacros(), node.filename, fullKey))
-                            return 'Key already exists.';
-                        return null;
-                    }
+                const ok = await ConfirmDialog.show(
+                    'Change Key',
+                    'Warning: the macro could not be visualized correctly if it is already in use in your drawing. Continue?',
                 );
+                if (!ok) return;
+                const newKey = await PromptDialog.show('Change Key', 'Key:', oldKey, (v) => {
+                    if (v.trim().length === 0) return 'Key must not be empty.';
+                    if (LibUtils.checkKeyInvalidChars(v))
+                        return 'The key must not contain spaces or "."';
+                    const fullKey = `${node.filename}.${v}`.toLowerCase();
+                    if (
+                        LibUtils.checkKeyDuplicate(
+                            this.libraryModel.getAllMacros(),
+                            node.filename,
+                            fullKey,
+                        )
+                    )
+                        return 'Key already exists.';
+                    return null;
+                });
                 if (newKey !== null && newKey !== oldKey) {
                     try {
                         this.libraryModel.changeKey(node, newKey);
                         this.macroPicker.refresh(this.libraryModel);
-                    } catch (ex: any) { alert(ex.message); }
+                    } catch (ex: any) {
+                        alert(ex.message);
+                    }
                 }
                 break;
             }
@@ -314,17 +394,44 @@ class FidoCadJS {
 
     private async getAvailableFontFamilies(): Promise<string[]> {
         const fallbackFonts = [
-            'Arial', 'Arial Black', 'Arial Narrow',
-            'Calibri', 'Cambria', 'Candara', 'Century Gothic',
-            'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel',
-            'Courier New', 'DejaVu Sans', 'DejaVu Sans Mono',
-            'DejaVu Serif', 'Franklin Gothic Medium', 'Garamond',
-            'Georgia', 'Helvetica', 'Helvetica Neue', 'Impact',
-            'Lucida Console', 'Lucida Sans Unicode', 'Menlo',
-            'Microsoft Sans Serif', 'Monaco', 'Monospace',
-            'Palatino Linotype', 'Sans-serif', 'Segoe UI',
-            'Segoe UI Mono', 'Serif', 'Tahoma', 'Times New Roman',
-            'Trebuchet MS', 'Verdana', 'Webdings', 'Wingdings',
+            'Arial',
+            'Arial Black',
+            'Arial Narrow',
+            'Calibri',
+            'Cambria',
+            'Candara',
+            'Century Gothic',
+            'Comic Sans MS',
+            'Consolas',
+            'Constantia',
+            'Corbel',
+            'Courier New',
+            'DejaVu Sans',
+            'DejaVu Sans Mono',
+            'DejaVu Serif',
+            'Franklin Gothic Medium',
+            'Garamond',
+            'Georgia',
+            'Helvetica',
+            'Helvetica Neue',
+            'Impact',
+            'Lucida Console',
+            'Lucida Sans Unicode',
+            'Menlo',
+            'Microsoft Sans Serif',
+            'Monaco',
+            'Monospace',
+            'Palatino Linotype',
+            'Sans-serif',
+            'Segoe UI',
+            'Segoe UI Mono',
+            'Serif',
+            'Tahoma',
+            'Times New Roman',
+            'Trebuchet MS',
+            'Verdana',
+            'Webdings',
+            'Wingdings',
         ];
 
         try {
@@ -334,10 +441,11 @@ class FidoCadJS {
                 const families = new Set<string>();
                 for (const fd of fontData) families.add(fd.family);
                 for (const f of fallbackFonts) families.add(f);
-                return [...families].sort((a, b) =>
-                    a.toLowerCase().localeCompare(b.toLowerCase()));
+                return [...families].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
             }
-        } catch { /* permission denied — fall through */ }
+        } catch {
+            /* permission denied — fall through */
+        }
 
         return fallbackFonts;
     }
@@ -346,10 +454,16 @@ class FidoCadJS {
 // Initialize app when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        try { new FidoCadJS(); }
-        catch (e) { console.error('Failed to initialize FidoCadJS:', e); }
+        try {
+            new FidoCadJS();
+        } catch (e) {
+            console.error('Failed to initialize FidoCadJS:', e);
+        }
     });
 } else {
-    try { new FidoCadJS(); }
-    catch (e) { console.error('Failed to initialize FidoCadJS:', e); }
+    try {
+        new FidoCadJS();
+    } catch (e) {
+        console.error('Failed to initialize FidoCadJS:', e);
+    }
 }

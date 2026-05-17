@@ -50,6 +50,14 @@ export interface EditorFacade {
     deleteSelected(): void;
     rotateSelected(): void;
     mirrorSelected(): void;
+    alignLeftSelected(): void;
+    alignRightSelected(): void;
+    alignTopSelected(): void;
+    alignBottomSelected(): void;
+    alignHorizontalCenterSelected(): void;
+    alignVerticalCenterSelected(): void;
+    distributeHorizontallySelected(): void;
+    distributeVerticallySelected(): void;
 
     // ─── Clipboard ────────────────────────────────────────────────────────
     copySelected(): void;
@@ -57,15 +65,18 @@ export interface EditorFacade {
     paste(): Promise<void>;
     duplicateSelected(): void;
     canPaste(): boolean;
+    copyAsImage(): Promise<void>;
 
     // ─── File ─────────────────────────────────────────────────────────────
     getCircuitText(): string;
     loadCircuit(text: string): void;
+    markAsSaved(): void;
 
     // ─── Export ───────────────────────────────────────────────────────────
     exportSVG(): string;
     exportPGF(): string;
     exportTikZ(): string;
+    exportPDF(): string;
     getCanvasElement(): HTMLCanvasElement;
 
     // ─── Model access ─────────────────────────────────────────────────────
@@ -89,4 +100,17 @@ export interface EditorFacade {
 
     // ─── Render ───────────────────────────────────────────────────────────
     render(): void;
+
+    // ─── Background image ─────────────────────────────────────────────────
+    attachImage(file: File): Promise<void>;
+    detachImage(): void;
+    isImageAttached(): boolean;
+    getImageAlpha(): number;
+    setImageAlpha(a: number): void;
+    getImageScale(): number;
+    setImageScale(s: number): void;
+    getImageX(): number;
+    setImageX(x: number): void;
+    getImageY(): number;
+    setImageY(y: number): void;
 }

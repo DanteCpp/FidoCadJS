@@ -21,6 +21,7 @@ export class DrawingModel {
     private defaultTextFont: string = 'Courier New';
     private defaultTextFontSize: number = 0;
     private changedFlag: boolean = true;
+    private modifiedSinceSaveFlag: boolean = false;
 
     private primitiveVector: GraphicPrimitive[] = [];
     private layerV: LayerDesc[] = [];
@@ -145,6 +146,21 @@ export class DrawingModel {
     setChanged(c: boolean): void {
         this.changedFlag = c;
     }
+
+    /** Whether the model has been modified since the last save. */
+    isModified(): boolean {
+        return this.modifiedSinceSaveFlag;
+    }
+
+    /** Mark the model as modified or clean (after save). */
+    setModified(m: boolean): void {
+        this.modifiedSinceSaveFlag = m;
+        this.onTitleUpdate?.();
+    }
+
+    /** Callback to update the document title. Set by CircuitPanel. */
+    onTitleUpdate: (() => void) | null = null;
+
     getPrimitiveVector(): GraphicPrimitive[] {
         return this.primitiveVector;
     }

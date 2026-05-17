@@ -47,6 +47,7 @@ export interface KeyboardHost {
     copySelected(): void;
     paste(): void;
     duplicateSelected(): void;
+    copyAsImage(): Promise<void>;
 
     // State cleanup (for Escape)
     deselectAll(): void;
@@ -54,4 +55,7 @@ export interface KeyboardHost {
 
     // Re-render
     render(): void;
+
+    // Macro single-letter shortcut
+    tryMacroKeyShortcut(key: string): boolean;
 }

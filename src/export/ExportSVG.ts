@@ -11,6 +11,7 @@ import type { DimensionG } from '../graphic/DimensionG.js';
 import type { PointDouble } from '../graphic/PointDouble.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
+import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
 
 export class ExportSVG implements ExportInterface {
@@ -264,7 +265,7 @@ export class ExportSVG implements ExportInterface {
         this.buffer.push(
             `<circle cx="${this.cLe(x)}" cy="${this.cLe(y)}" r="${this.cLe(nodeSize / 2.0)}" ` +
                 `style="stroke:${this.currentColor};stroke-width:${this.strokeWidth}" ` +
-                `fill="${this.currentColor}"/>\n`,
+                `fill="${this.currentColor}"${this.opacityAttr()}/>\n`,
         );
     }
 
@@ -283,7 +284,7 @@ export class ExportSVG implements ExportInterface {
         this.buffer.push(
             `<line x1="${this.cLe(x1)}" y1="${this.cLe(y1)}" x2="${this.cLe(x2)}" y2="${this.cLe(y2)}" ` +
                 `style="stroke:${this.currentColor};stroke-linejoin:round;stroke-linecap:round;` +
-                `stroke-width:${width > 0 ? width : 0.5}"/>\n`,
+                `stroke-width:${width > 0 ? width : 0.5}"${this.opacityAttr()}/>\n`,
         );
     }
 
@@ -303,11 +304,14 @@ export class ExportSVG implements ExportInterface {
         this.layerAlpha = l.getAlpha();
 
         if (onlyHole) {
+            // Hole pass overpaints with solid white — must NOT inherit
+            // layer alpha (matches Java).
             this.buffer.push(
                 `<circle cx="${this.cLe(x)}" cy="${this.cLe(y)}" r="${this.cLe(indiam / 2.0)}" ` +
                     `style="stroke:white;stroke-width:${this.strokeWidth}" fill="white"/>\n`,
             );
         } else {
+            const op = this.opacityAttr();
             switch (style) {
                 case 1: {
                     const xdd = this.cLe(x - six / 2.0);
@@ -315,7 +319,7 @@ export class ExportSVG implements ExportInterface {
                     this.buffer.push(
                         `<rect x="${xdd}" y="${ydd}" rx="0" ry="0" width="${this.cLe(six)}" ` +
                             `height="${this.cLe(siy)}" style="stroke:${this.currentColor};stroke-width:` +
-                            `${this.strokeWidth}" fill="${this.currentColor}"/>\n`,
+                            `${this.strokeWidth}" fill="${this.currentColor}"${op}/>\n`,
                     );
                     break;
                 }
@@ -326,7 +330,7 @@ export class ExportSVG implements ExportInterface {
                     this.buffer.push(
                         `<rect x="${xdd}" y="${ydd}" rx="${rd}" ry="${rd}" width="${this.cLe(six)}" ` +
                             `height="${this.cLe(siy)}" style="stroke:${this.currentColor};stroke-width:` +
-                            `${this.strokeWidth}" fill="${this.currentColor}"/>\n`,
+                            `${this.strokeWidth}" fill="${this.currentColor}"${op}/>\n`,
                     );
                     break;
                 }
@@ -335,11 +339,16 @@ export class ExportSVG implements ExportInterface {
                     this.buffer.push(
                         `<ellipse cx="${this.cLe(x)}" cy="${this.cLe(y)}" rx="${this.cLe(six / 2.0)}" ` +
                             `ry="${this.cLe(siy / 2.0)}" style="stroke:${this.currentColor};stroke-width:` +
-                            `${this.strokeWidth}" fill="${this.currentColor}"/>\n`,
+                            `${this.strokeWidth}" fill="${this.currentColor}"${op}/>\n`,
                     );
                     break;
             }
         }
+    }
+
+    /** Returns ` opacity="<a>"` for translucent layers, or `''`. */
+    private opacityAttr(): string {
+        return this.layerAlpha < 1.0 ? ` opacity="${this.layerAlpha}"` : '';
     }
 
     exportAdvText(
@@ -364,7 +373,10 @@ export class ExportSVG implements ExportInterface {
 
         this.buffer.push(`<g transform="translate(${this.cLe(x)},${this.cLe(y)})`);
         if (orientation !== 0) {
-            this.buffer.push(` rotate(${-orientation})`);
+            // Mirror flips the rotation sign — matches Java
+            // ExportSVG.exportAdvText (see FidoCadJ source).
+            const alpha = isMirrored ? orientation : -orientation;
+            this.buffer.push(` rotate(${alpha})`);
         }
         this.buffer.push(` scale(${xscale},${yscale})">`);
         this.buffer.push(
@@ -482,9 +494,26 @@ export class ExportSVG implements ExportInterface {
                 `${this.roundTo(x2)},${this.roundTo(y2)}" `,
         );
 
-        if (style === 0) {
+        // Fill iff flagEmpty is NOT set. Matches Java ExportSVG.exportArrow
+        // (FidoCadJ:814). Earlier code used `style === 0`, which wrongly
+        // excluded style=1 (limiter alone) from being filled.
+        if ((style & Arrow.flagEmpty) === 0) {
             this.checkColorAndWidth(`fill="${this.currentColor}"`, 0);
         } else {
+            this.checkColorAndWidth('fill="none"', 0);
+        }
+
+        // Limiter cross-line: a stroke perpendicular to the arrow at its
+        // base point. Matches Java ExportSVG.exportArrow (FidoCadJ:825).
+        if ((style & Arrow.flagLimiter) !== 0) {
+            const x3 = x - h * Math.sin(alpha);
+            const y3 = y + h * Math.cos(alpha);
+            const x4 = x + h * Math.sin(alpha);
+            const y4 = y - h * Math.cos(alpha);
+            this.buffer.push(
+                `<line x1="${this.cLe(x3)}" y1="${this.cLe(y3)}" ` +
+                    `x2="${this.cLe(x4)}" y2="${this.cLe(y4)}" `,
+            );
             this.checkColorAndWidth('fill="none"', 0);
         }
 

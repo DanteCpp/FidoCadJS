@@ -281,4 +281,114 @@ export class EditorActions {
             }
         }
     }
+
+    /** Align selected primitives to horizontal center of the selection bounding box. */
+    alignHorizontalCenterSelected(): void {
+        let minX = Number.MAX_VALUE;
+        let maxX = Number.MIN_VALUE;
+        let hasSelected = false;
+        for (const prim of this.model.getPrimitiveVector()) {
+            if (prim.isSelected()) {
+                hasSelected = true;
+                const x = prim.getPosition().x;
+                const x2 = x + prim.getSize().width;
+                if (x < minX) minX = x;
+                if (x2 > maxX) maxX = x2;
+            }
+        }
+        if (!hasSelected) return;
+        const centerX = (minX + maxX) / 2;
+        this.undoActions.saveUndoState();
+        for (const prim of this.model.getPrimitiveVector()) {
+            if (prim.isSelected()) {
+                const primCenter = prim.getPosition().x + prim.getSize().width / 2;
+                const dx = centerX - primCenter;
+                prim.movePrimitive(dx, 0);
+            }
+        }
+    }
+
+    /** Align selected primitives to vertical center of the selection bounding box. */
+    alignVerticalCenterSelected(): void {
+        let minY = Number.MAX_VALUE;
+        let maxY = Number.MIN_VALUE;
+        let hasSelected = false;
+        for (const prim of this.model.getPrimitiveVector()) {
+            if (prim.isSelected()) {
+                hasSelected = true;
+                const y = prim.getPosition().y;
+                const y2 = y + prim.getSize().height;
+                if (y < minY) minY = y;
+                if (y2 > maxY) maxY = y2;
+            }
+        }
+        if (!hasSelected) return;
+        const centerY = (minY + maxY) / 2;
+        this.undoActions.saveUndoState();
+        for (const prim of this.model.getPrimitiveVector()) {
+            if (prim.isSelected()) {
+                const primCenter = prim.getPosition().y + prim.getSize().height / 2;
+                const dy = centerY - primCenter;
+                prim.movePrimitive(0, dy);
+            }
+        }
+    }
+
+    /** Distribute selected primitives evenly between the leftmost and rightmost X positions. */
+    distributeHorizontallySelected(): void {
+        const selected: GraphicPrimitive[] = [];
+        for (const prim of this.model.getPrimitiveVector()) {
+            if (prim.isSelected()) selected.push(prim);
+        }
+        if (selected.length < 3) return; // Need at least 3 to distribute
+
+        // Sort by X position (primary) then Y (secondary)
+        selected.sort((a, b) => {
+            const dx = a.getPosition().x - b.getPosition().x;
+            if (dx !== 0) return dx;
+            return a.getPosition().y - b.getPosition().y;
+        });
+
+        const firstX = selected[0]!.getPosition().x + selected[0]!.getSize().width / 2;
+        const lastX =
+            selected[selected.length - 1]!.getPosition().x +
+            selected[selected.length - 1]!.getSize().width / 2;
+        const step = (lastX - firstX) / (selected.length - 1);
+
+        this.undoActions.saveUndoState();
+        for (let i = 1; i < selected.length - 1; i++) {
+            const targetX = firstX + step * i;
+            const currentX = selected[i]!.getPosition().x + selected[i]!.getSize().width / 2;
+            selected[i]!.movePrimitive(targetX - currentX, 0);
+        }
+    }
+
+    /** Distribute selected primitives evenly between the topmost and bottommost Y positions. */
+    distributeVerticallySelected(): void {
+        const selected: GraphicPrimitive[] = [];
+        for (const prim of this.model.getPrimitiveVector()) {
+            if (prim.isSelected()) selected.push(prim);
+        }
+        if (selected.length < 3) return;
+
+        // Sort by Y position (primary) then X (secondary)
+        selected.sort((a, b) => {
+            const dy = a.getPosition().y - b.getPosition().y;
+            if (dy !== 0) return dy;
+            return a.getPosition().x - b.getPosition().x;
+        });
+
+        const firstY = selected[0]!.getPosition().y + selected[0]!.getSize().height / 2;
+        const lastY =
+            selected[selected.length - 1]!.getPosition().y +
+            selected[selected.length - 1]!.getSize().height / 2;
+        const step = (lastY - firstY) / (selected.length - 1);
+
+        this.undoActions.saveUndoState();
+        for (let i = 1; i < selected.length - 1; i++) {
+            const targetY = firstY + step * i;
+            const currentY = selected[i]!.getPosition().y + selected[i]!.getSize().height / 2;
+            selected[i]!.movePrimitive(0, targetY - currentY);
+        }
+    }
 }

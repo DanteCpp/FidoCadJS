@@ -16,7 +16,16 @@ export default tseslint.config(
     ...tseslint.configs.recommended,
     prettierConfig,
     {
-        ignores: ['dist/', 'node_modules/', 'coverage/', 'test/e2e/report/', '*.js', '*.cjs'],
+        ignores: [
+            'dist/',
+            'node_modules/',
+            'coverage/',
+            'test/e2e/report/',
+            'src/vendor/**',
+            '*.js',
+            '*.cjs',
+            '*.mjs',
+        ],
     },
     {
         rules: {

@@ -30,6 +30,16 @@ export default defineConfig({
             reporter: ['text', 'lcov', 'html'],
             include: ['src/**/*.ts'],
             exclude: ['src/vendor/**'],
+            // Starting thresholds — chosen against the present coverage
+            // numbers so the gate is enforcing the current floor rather
+            // than aspirational. Ratchet upward as Phase 5+ work lands.
+            // Failures here block `npm run test:coverage`.
+            thresholds: {
+                lines: 55,
+                statements: 55,
+                functions: 58,
+                branches: 75,
+            },
         },
     },
 });

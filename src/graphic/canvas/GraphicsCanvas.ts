@@ -72,7 +72,10 @@ export class GraphicsCanvas implements GraphicsInterface {
         if (pattern[1] === 0) {
             this.ctx.setLineDash([]);
         } else {
-            this.ctx.setLineDash(pattern);
+            // Dash patterns are in logical units; scale to pixels.
+            // w = Globals.lineWidth * xMagnitude, so scale = w / Globals.lineWidth.
+            const scale = w / (Globals.lineWidth || 0.5);
+            this.ctx.setLineDash(pattern.map((d) => d * scale));
         }
     }
 

@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# dependabot.yml – Automated dependency updates for FidoCadJS
+# ---------------------------------------------------------------------------
+# Author    : Dante Loi
+# Date      : 2026-05-17
+# Brief     : Weekly Dependabot updates for npm packages and GitHub
+#             Actions. Minor + patch bumps are grouped into a single
+#             PR per ecosystem to reduce review noise; major bumps
+#             arrive as individual PRs so each can be assessed alone.
+# Copyright : (c) 2026 Dante Loi
+# ---------------------------------------------------------------------------
+
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      actions-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: ci(deps)
+      include: scope
