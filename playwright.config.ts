@@ -16,7 +16,10 @@ export default defineConfig({
     testDir: './test/e2e',
     timeout: 60_000,
     expect: { timeout: 10_000 },
-    retries: 0,
+    // On CI, retry once: Firefox can crash transiently on the ubuntu
+    // GitHub-hosted runners (AbnormalShutdown / IPC close). Locally a
+    // retry just masks real flakiness, so keep retries off.
+    retries: process.env.CI ? 1 : 0,
     workers: 3,
     reporter: [['list'], ['html', { outputFolder: 'test/e2e/report' }]],
     use: {
