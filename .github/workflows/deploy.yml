@@ -1,0 +1,64 @@
+# ---------------------------------------------------------------------------
+# deploy.yml – GitHub Pages deployment for FidoCadJS
+# ---------------------------------------------------------------------------
+# Author    : Dante Loi
+# Date      : 2026-05-17
+# Brief     : Publishes the production build to GitHub Pages when CI
+#             succeeds on main. Vite is already configured with the
+#             /FidoCadJS/ base path, so no extra path config is needed.
+# Copyright : (c) 2026 Dante Loi
+# Details   : Listens for a successful CI run on main via workflow_run,
+#             rebuilds dist locally (cheap and self-contained, avoids
+#             cross-workflow artifact-download plumbing), then uses the
+#             standard configure-pages / upload-pages-artifact /
+#             deploy-pages trio.
+#             One-time repo setting required: Settings → Pages → Source
+#             = "GitHub Actions".
+# ---------------------------------------------------------------------------
+
+name: Deploy to Pages
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/cache@v4
+        id: deps
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - if: steps.deps.outputs.cache-hit != 'true'
+        run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

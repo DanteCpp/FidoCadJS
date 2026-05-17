@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# codeql.yml – CodeQL static analysis for FidoCadJS
+# ---------------------------------------------------------------------------
+# Author    : Dante Loi
+# Date      : 2026-05-17
+# Brief     : GitHub-hosted SAST. Catches XSS, prototype pollution, taint
+#             flows, and other classes of bug that `npm audit` cannot.
+# Copyright : (c) 2026 Dante Loi
+# Details   : Runs on push to main, on PRs targeting main or dev, and
+#             once a week (Mondays 03:00 UTC) so CVE rules added to
+#             CodeQL after the last push still get picked up.
+# ---------------------------------------------------------------------------
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze (JavaScript/TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
