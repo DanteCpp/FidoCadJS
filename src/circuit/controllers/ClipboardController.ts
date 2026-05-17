@@ -46,7 +46,9 @@ export class ClipboardController {
         this.internalClipboard = text;
         // Also push to the system clipboard so it can be pasted into other apps
         if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(text).catch(() => { /* ignore permission errors */ });
+            navigator.clipboard.writeText(text).catch(() => {
+                /* ignore permission errors */
+            });
         }
     }
 
@@ -59,12 +61,20 @@ export class ClipboardController {
 
     async paste(): Promise<void> {
         let text = '';
-        // Prefer system clipboard
+        // Prefer system clipboard, but race against a short timeout: Firefox
+        // can leave readText() pending indefinitely when permissions have not
+        // been granted, which would block the fallback to internal clipboard
+        // and stall duplicate/paste flows.
         if (navigator.clipboard?.readText) {
             try {
-                text = await navigator.clipboard.readText();
+                text = await Promise.race([
+                    navigator.clipboard.readText(),
+                    new Promise<string>((_, reject) =>
+                        setTimeout(() => reject(new Error('clipboard read timeout')), 200),
+                    ),
+                ]);
             } catch {
-                // permission denied or non-secure context – fall back
+                // permission denied / non-secure context / timeout – fall back
             }
         }
         // Fall back to internal clipboard if system read yielded nothing

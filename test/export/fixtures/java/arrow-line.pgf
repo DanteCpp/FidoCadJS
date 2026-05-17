@@ -1,0 +1,38 @@
+\begin{pgfpicture}{0cm}{0cm}{86pt}{7pt}
+% Created by FidoCadJ ver. 0.24.9 gamma, export filter by Davide Bucci
+\pgfsetxvec{\pgfpoint{1pt}{0pt}}
+\pgfsetyvec{\pgfpoint{0pt}{1pt}}
+\pgfsetroundjoin 
+\pgfsetroundcap
+\pgftranslateto{\pgfxy(0,7)}
+\begin{pgfmagnify}{1}{-1}
+% Layer color definitions
+\definecolor{layer0}{rgb}{0.0,0.0,0.0}
+\definecolor{layer1}{rgb}{0.0,0.0,0.5}
+\definecolor{layer2}{rgb}{1.0,0.0,0.0}
+\definecolor{layer3}{rgb}{0.0,0.5,0.5}
+\definecolor{layer4}{rgb}{1.0,0.78,0.0}
+\definecolor{layer5}{rgb}{0.5,1.0,0.0}
+\definecolor{layer6}{rgb}{0.0,1.0,1.0}
+\definecolor{layer7}{rgb}{0.0,0.5,0.0}
+\definecolor{layer8}{rgb}{0.6,0.8,0.2}
+\definecolor{layer9}{rgb}{1.0,0.08,0.58}
+\definecolor{layer10}{rgb}{0.71,0.61,0.05}
+\definecolor{layer11}{rgb}{0.0,0.5,1.0}
+\definecolor{layer12}{rgb}{0.88,0.88,0.88}
+\definecolor{layer13}{rgb}{0.64,0.64,0.64}
+\definecolor{layer14}{rgb}{0.37,0.37,0.37}
+\definecolor{layer15}{rgb}{0.0,0.0,0.0}
+% End of color definitions
+\color{layer0}
+\pgfsetlinewidth{0.5pt}
+\pgfsetdash{}{0pt}
+\pgfmoveto{\pgfxy(3.0,3.0)}
+\pgflineto{\pgfxy(6.0,0.9999999999999996)}
+\pgflineto{\pgfxy(6.0,5.0)}
+\pgfclosepath 
+\pgffill 
+\pgfline{\pgfxy(2.9999999999999996,1.0)}{\pgfxy(3.0000000000000004,5.0)}
+\pgfline{\pgfxy(6.0,2.9999999999999996)}{\pgfxy(83.0,3.0)}
+\end{pgfmagnify}
+\end{pgfpicture}

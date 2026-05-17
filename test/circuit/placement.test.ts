@@ -21,19 +21,33 @@ function clickCanvas(panel: CircuitPanel, sx: number, sy: number, button: number
     const clientX = rect.left + sx;
     const clientY = rect.top + sy;
 
-    canvas.dispatchEvent(new MouseEvent('mousedown', {
-        clientX, clientY, button, bubbles: true,
-    }));
-    canvas.dispatchEvent(new MouseEvent('mouseup', {
-        clientX, clientY, button, bubbles: true,
-    }));
+    canvas.dispatchEvent(
+        new MouseEvent('mousedown', {
+            clientX,
+            clientY,
+            button,
+            bubbles: true,
+        }),
+    );
+    canvas.dispatchEvent(
+        new MouseEvent('mouseup', {
+            clientX,
+            clientY,
+            button,
+            bubbles: true,
+        }),
+    );
 }
 
 /**
  * Simulate a click sequence for multi-point tools (line needs 2 clicks, bezier needs 4).
  * Each click is a mousedown + mouseup pair.
  */
-function clickSequence(panel: CircuitPanel, points: Array<[number, number]>, button: number = 0): void {
+function clickSequence(
+    panel: CircuitPanel,
+    points: Array<[number, number]>,
+    button: number = 0,
+): void {
     for (const [sx, sy] of points) {
         clickCanvas(panel, sx, sy, button);
     }
@@ -53,8 +67,8 @@ describe('Primitive placement via tools', () => {
     function makePanel(): CircuitPanel {
         const panel = new CircuitPanel(container);
         // Force initial layout
-        container.offsetWidth;
-        container.offsetHeight;
+        void container.offsetWidth;
+        void container.offsetHeight;
         return panel;
     }
 
@@ -66,7 +80,10 @@ describe('Primitive placement via tools', () => {
             const model = panel.getModel();
             expect(model.getPrimitiveVector().length).toBe(0);
 
-            clickSequence(panel, [[100, 100], [300, 300]]);
+            clickSequence(panel, [
+                [100, 100],
+                [300, 300],
+            ]);
 
             expect(model.getPrimitiveVector().length).toBe(1);
         });
@@ -76,14 +93,20 @@ describe('Primitive placement via tools', () => {
 
             // Place first line
             panel.setTool(ElementsEdtActions.LINE);
-            clickSequence(panel, [[50, 50], [150, 150]]);
+            clickSequence(panel, [
+                [50, 50],
+                [150, 150],
+            ]);
 
             // Switch away and back to reset the line tool state
             panel.setTool(ElementsEdtActions.SELECTION);
             panel.setTool(ElementsEdtActions.LINE);
 
             // Place second line
-            clickSequence(panel, [[200, 200], [400, 200]]);
+            clickSequence(panel, [
+                [200, 200],
+                [400, 200],
+            ]);
 
             expect(panel.getModel().getPrimitiveVector().length).toBe(2);
         });
@@ -94,7 +117,10 @@ describe('Primitive placement via tools', () => {
             const panel = makePanel();
             panel.setTool(ElementsEdtActions.RECTANGLE);
 
-            clickSequence(panel, [[100, 100], [300, 200]]);
+            clickSequence(panel, [
+                [100, 100],
+                [300, 200],
+            ]);
 
             expect(panel.getModel().getPrimitiveVector().length).toBe(1);
         });
@@ -105,7 +131,10 @@ describe('Primitive placement via tools', () => {
             const panel = makePanel();
             panel.setTool(ElementsEdtActions.ELLIPSE);
 
-            clickSequence(panel, [[100, 100], [250, 200]]);
+            clickSequence(panel, [
+                [100, 100],
+                [250, 200],
+            ]);
 
             expect(panel.getModel().getPrimitiveVector().length).toBe(1);
         });
@@ -116,7 +145,12 @@ describe('Primitive placement via tools', () => {
             const panel = makePanel();
             panel.setTool(ElementsEdtActions.BEZIER);
 
-            clickSequence(panel, [[50, 50], [100, 200], [300, 200], [350, 50]]);
+            clickSequence(panel, [
+                [50, 50],
+                [100, 200],
+                [300, 200],
+                [350, 50],
+            ]);
 
             expect(panel.getModel().getPrimitiveVector().length).toBe(1);
         });
@@ -155,7 +189,10 @@ describe('Primitive placement via tools', () => {
             const panel = makePanel();
             panel.setTool(ElementsEdtActions.PCB_LINE);
 
-            clickSequence(panel, [[50, 50], [300, 50]]);
+            clickSequence(panel, [
+                [50, 50],
+                [300, 50],
+            ]);
 
             expect(panel.getModel().getPrimitiveVector().length).toBe(1);
         });
@@ -235,9 +272,16 @@ describe('Primitive placement via tools', () => {
 
             // Place dots across a wide coordinate range (0 to 500)
             const points = [
-                [10, 10], [50, 10], [100, 50], [200, 100],
-                [350, 20], [500, 80], [10, 400], [400, 450],
-                [20, 500], [450, 10],
+                [10, 10],
+                [50, 10],
+                [100, 50],
+                [200, 100],
+                [350, 20],
+                [500, 80],
+                [10, 400],
+                [400, 450],
+                [20, 500],
+                [450, 10],
             ];
             for (const [sx, sy] of points) {
                 clickCanvas(panel, sx, sy);
@@ -264,8 +308,8 @@ describe('Macro placement', () => {
 
     function makePanelWithMacro(): CircuitPanel {
         const panel = new CircuitPanel(container);
-        container.offsetWidth;
-        container.offsetHeight;
+        void container.offsetWidth;
+        void container.offsetHeight;
 
         // Register a simple test macro (a single line)
         const key = 'test.testmacro';

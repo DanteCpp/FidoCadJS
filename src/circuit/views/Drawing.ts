@@ -36,6 +36,9 @@ export class Drawing {
             return;
         }
 
+        // Draw background image (if attached) behind all layers
+        this.drawingModel.getImgCanvas().draw(gG, cs);
+
         // Reset alpha state at start of each render.
         // TODO(Phase 4.2): replace static oldalpha with per-render RenderCtx
         // passed through each primitive's draw() method.

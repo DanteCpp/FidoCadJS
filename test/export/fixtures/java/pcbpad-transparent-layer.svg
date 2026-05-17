@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?> 
+<!DOCTYPE svg PUBLIC "-//W3C//Dtd SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/Dtd/svg11.dtd">
+<svg width="91.0" height="48.0" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Created by FidoCadJ -->
+<ellipse cx="46.0" cy="23.0" rx="5.0" ry="5.0" style="stroke:#e1e1e1;stroke-width:0.33" fill="#e1e1e1"/>
+<circle cx="26.0" cy="3.0" r="1.0" style="stroke:#e1e1e1;stroke-width:0.33" fill="#e1e1e1"/>
+<line x1="6.0" y1="43.0" x2="86.0" y2="43.0" style="stroke:#e1e1e1;stroke-linejoin:round;stroke-linecap:round;stroke-width:5"/>
+<circle cx="46.0" cy="23.0" r="1.5" style="stroke:white;stroke-width:0.33" fill="white"/>
+</svg>
