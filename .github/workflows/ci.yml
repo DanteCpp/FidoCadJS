@@ -18,10 +18,13 @@
 name: CI
 
 on:
+  # PR-only model: pushes to feature branches do not trigger CI; open a
+  # PR (to dev or main) to get checks. Direct pushes to main (e.g. merge
+  # commits) still run CI so deploy.yml can react to a green main build.
   push:
-    branches: [main, dev, refactor]
+    branches: [main]
   pull_request:
-    branches: [main, dev, refactor]
+    branches: [main, dev]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
