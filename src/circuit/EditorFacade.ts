@@ -71,6 +71,10 @@ export interface EditorFacade {
     getCircuitText(): string;
     loadCircuit(text: string): void;
     markAsSaved(): void;
+    getFileName(): string;
+    setFileName(name: string): void;
+    getFileHandle(): FileSystemFileHandle | null;
+    setFileHandle(handle: FileSystemFileHandle | null): void;
 
     // ─── Export ───────────────────────────────────────────────────────────
     exportSVG(): string;

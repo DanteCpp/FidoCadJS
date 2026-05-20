@@ -13,6 +13,11 @@ import { showLayerDialog } from './DialogLayer.js';
 import { showAboutDialog } from './DialogAbout.js';
 import { getString } from '../i18n/i18n.js';
 
+/** Ensure a filename ends with the `.fcd` circuit extension. */
+function ensureFcdExt(name: string): string {
+    return /\.fcd$/i.test(name) ? name : `${name}.fcd`;
+}
+
 interface MenuItem {
     kind: 'action' | 'separator';
     id?: string;
@@ -157,13 +162,13 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Save'),
                 shortcut: 'Ctrl+S',
-                action: () => this.exportCircuit(),
+                action: () => void this.saveCircuit(),
             },
             {
                 kind: 'action',
                 label: getString('SaveName'),
                 shortcut: 'Ctrl+Shift+S',
-                action: () => this.exportCircuit(),
+                action: () => void this.saveCircuitAs(),
             },
             {
                 kind: 'action',
@@ -426,6 +431,10 @@ export class MenuBar {
             reader.onload = (event) => {
                 const text = event.target?.result as string;
                 this.panel.loadCircuit(text);
+                // Remember the opened file's name for a later Save; the picker
+                // handle (if any) no longer matches this content.
+                this.panel.setFileName(file.name);
+                this.panel.setFileHandle(null);
             };
             reader.readAsText(file);
         });
@@ -452,17 +461,161 @@ export class MenuBar {
         input.click();
     }
 
-    private exportCircuit(): void {
-        const circuitText = this.panel.getCircuitText();
-        const blob = new Blob([circuitText], { type: 'text/plain' });
+    /**
+     * Save to the file previously chosen via "Save As". If none exists yet
+     * (no stored file handle), fall back to "Save As" so the user is prompted.
+     */
+    private async saveCircuit(): Promise<void> {
+        const handle = this.panel.getFileHandle();
+        if (handle) {
+            try {
+                await this.writeToHandle(handle);
+                this.panel.markAsSaved();
+                return;
+            } catch (err) {
+                // Handle may be stale (e.g. permission lost); re-prompt.
+                console.warn('Save to existing file failed, prompting again:', err);
+            }
+        }
+        await this.saveCircuitAs();
+    }
+
+    /**
+     * Prompt the user for a destination and save the circuit there.
+     * Uses the File System Access API (native picker) when available, and
+     * falls back to a filename prompt + anchor download otherwise.
+     */
+    private async saveCircuitAs(): Promise<void> {
+        const suggestedName = ensureFcdExt(this.panel.getFileName());
+
+        const picker = (
+            window as unknown as {
+                showSaveFilePicker?: (opts: {
+                    suggestedName?: string;
+                    types?: {
+                        description?: string;
+                        accept: Record<string, string[]>;
+                    }[];
+                }) => Promise<FileSystemFileHandle>;
+            }
+        ).showSaveFilePicker;
+
+        if (typeof picker === 'function') {
+            try {
+                const handle = await picker({
+                    suggestedName,
+                    types: [
+                        {
+                            description: 'FidoCadJ circuit',
+                            accept: { 'text/plain': ['.fcd'] },
+                        },
+                    ],
+                });
+                await this.writeToHandle(handle);
+                this.panel.setFileHandle(handle);
+                this.panel.setFileName(handle.name || suggestedName);
+                this.panel.markAsSaved();
+            } catch (err) {
+                // User cancelled the picker — do nothing.
+                if ((err as DOMException)?.name === 'AbortError') return;
+                console.error('Save As failed:', err);
+            }
+            return;
+        }
+
+        // Fallback: prompt for a filename, then download via an anchor.
+        const chosen = await this.promptFileName(suggestedName);
+        if (chosen === null) return;
+        const fileName = ensureFcdExt(chosen.trim() || suggestedName);
+        this.downloadText(this.panel.getCircuitText(), fileName);
+        this.panel.setFileName(fileName);
+        this.panel.markAsSaved();
+    }
+
+    /** Write the current circuit text to a File System Access API handle. */
+    private async writeToHandle(handle: FileSystemFileHandle): Promise<void> {
+        const writable = await handle.createWritable();
+        await writable.write(this.panel.getCircuitText());
+        await writable.close();
+    }
+
+    /** Trigger a browser download of the given text with the given filename. */
+    private downloadText(text: string, fileName: string): void {
+        const blob = new Blob([text], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'circuit.fcd';
+        a.download = fileName;
         a.click();
         URL.revokeObjectURL(url);
-        // Mark the model as saved
-        (this.panel as any).markAsSaved?.();
+    }
+
+    /**
+     * Show a small modal asking for a filename. Resolves to the entered name,
+     * or null if the user cancels.
+     */
+    private promptFileName(defaultName: string): Promise<string | null> {
+        return new Promise((resolve) => {
+            const dialog = document.createElement('dialog');
+            dialog.style.cssText =
+                'padding: 16px; border: 1px solid #ccc; border-radius: 4px; ' +
+                'box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 320px; font-family: sans-serif;';
+
+            const title = document.createElement('h3');
+            title.textContent = getString('SaveName');
+            title.style.cssText = 'margin-top: 0; font-size: 14px;';
+            dialog.appendChild(title);
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = defaultName;
+            input.style.cssText =
+                'width: 100%; padding: 6px 8px; border: 1px solid #ccc; ' +
+                'border-radius: 4px; font-size: 13px; box-sizing: border-box;';
+            dialog.appendChild(input);
+
+            const buttonRow = document.createElement('div');
+            buttonRow.style.cssText =
+                'display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end;';
+
+            let settled = false;
+            const finish = (value: string | null) => {
+                if (settled) return;
+                settled = true;
+                dialog.close();
+                resolve(value);
+            };
+
+            const okBtn = document.createElement('button');
+            okBtn.textContent = getString('Ok_btn');
+            okBtn.style.cssText =
+                'padding: 6px 16px; background: #007bff; color: white; border: none; ' +
+                'border-radius: 4px; cursor: pointer; font-size: 12px;';
+            okBtn.addEventListener('click', () => finish(input.value));
+            buttonRow.appendChild(okBtn);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = getString('Cancel_btn');
+            cancelBtn.style.cssText =
+                'padding: 6px 16px; background: #6c757d; color: white; border: none; ' +
+                'border-radius: 4px; cursor: pointer; font-size: 12px;';
+            cancelBtn.addEventListener('click', () => finish(null));
+            buttonRow.appendChild(cancelBtn);
+
+            dialog.appendChild(buttonRow);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') finish(input.value);
+            });
+
+            document.body.appendChild(dialog);
+            dialog.addEventListener('close', () => {
+                finish(null);
+                document.body.removeChild(dialog);
+            });
+            dialog.showModal();
+            input.focus();
+            input.select();
+        });
     }
 
     private showDefineDialog(): void {
@@ -540,12 +693,11 @@ export class MenuBar {
     }
 
     saveFile(): void {
-        this.exportCircuit();
+        void this.saveCircuit();
     }
 
     saveFileAs(): void {
-        // For now, same as save - could add filename prompt later
-        this.exportCircuit();
+        void this.saveCircuitAs();
     }
 
     async exportFile(): Promise<void> {

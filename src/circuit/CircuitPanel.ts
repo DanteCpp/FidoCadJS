@@ -55,6 +55,8 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private ctx: GraphicsCanvas;
     private model: DrawingModel;
     private parserActions: ParserActions;
+    private currentFileName: string = 'circuit.fcd';
+    private currentFileHandle: FileSystemFileHandle | null = null;
     private mapCoordinates: MapCoordinates;
     private gridVisible: boolean = true;
     private backgroundColor: string = '#ffffff';
@@ -479,6 +481,27 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     /** Mark the model as saved (clean). Called after a successful save. */
     markAsSaved(): void {
         this.model.setModified(false);
+    }
+
+    /** Name of the file currently associated with this circuit. */
+    getFileName(): string {
+        return this.currentFileName;
+    }
+
+    setFileName(name: string): void {
+        this.currentFileName = name;
+    }
+
+    /**
+     * Handle to the file last chosen via the File System Access API, if any.
+     * Lets a plain "Save" write back to the same file without re-prompting.
+     */
+    getFileHandle(): FileSystemFileHandle | null {
+        return this.currentFileHandle;
+    }
+
+    setFileHandle(handle: FileSystemFileHandle | null): void {
+        this.currentFileHandle = handle;
     }
 
     /**
