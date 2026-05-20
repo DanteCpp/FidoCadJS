@@ -377,6 +377,10 @@ class FidoCadJS {
             this.propertiesController.show(prim);
         };
 
+        this.circuitPanel.onBatchPropertiesRequested = (prims) => {
+            this.propertiesController.showBatch(prims);
+        };
+
         this.circuitPanel.onTextEditRequested = (prim, _sx, _sy) => {
             this.propertiesController.show(prim);
         };

@@ -49,6 +49,9 @@ export interface KeyboardHost {
     duplicateSelected(): void;
     copyAsImage(): Promise<void>;
 
+    // Selection
+    selectAll(): void;
+
     // State cleanup (for Escape)
     deselectAll(): void;
     clearGhostAndSelection(): void;
