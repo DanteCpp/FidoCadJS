@@ -174,6 +174,16 @@ export class KeyboardController {
             return;
         }
 
+        // ===== SELECT ALL =====
+        // Ctrl/Cmd+A: select the whole drawing (when focus is on the canvas).
+        // The document-level guard already lets native Ctrl+A run inside text
+        // inputs, so this only fires when editing the circuit itself.
+        if (key === 'a' && isCtrlOrMeta) {
+            e.preventDefault();
+            this.host.selectAll();
+            return;
+        }
+
         // ===== TOOL SELECTION (single key, case-insensitive) =====
         // A or Escape: Selection tool
         if (key === 'a' && !isCtrlOrMeta) {

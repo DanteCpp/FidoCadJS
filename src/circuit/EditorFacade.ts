@@ -14,6 +14,7 @@ import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { DrawingModel } from './model/DrawingModel.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
 import type { AddElements } from './controllers/AddElements.js';
+import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
 
 export interface EditorFacade {
     // ─── Callback properties ──────────────────────────────────────────────
@@ -47,6 +48,7 @@ export interface EditorFacade {
 
     // ─── Selection ────────────────────────────────────────────────────────
     selectAll(): void;
+    getSelectedPrimitives(): GraphicPrimitive[];
     deleteSelected(): void;
     rotateSelected(): void;
     mirrorSelected(): void;
@@ -71,6 +73,10 @@ export interface EditorFacade {
     getCircuitText(): string;
     loadCircuit(text: string): void;
     markAsSaved(): void;
+    getFileName(): string;
+    setFileName(name: string): void;
+    getFileHandle(): FileSystemFileHandle | null;
+    setFileHandle(handle: FileSystemFileHandle | null): void;
 
     // ─── Export ───────────────────────────────────────────────────────────
     exportSVG(): string;

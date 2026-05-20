@@ -55,6 +55,8 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private ctx: GraphicsCanvas;
     private model: DrawingModel;
     private parserActions: ParserActions;
+    private currentFileName: string = 'circuit.fcd';
+    private currentFileHandle: FileSystemFileHandle | null = null;
     private mapCoordinates: MapCoordinates;
     private gridVisible: boolean = true;
     private backgroundColor: string = '#ffffff';
@@ -78,6 +80,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     onUndoStateChange: (() => void) | null = null;
     onCoordinatesChange: ((lx: number, ly: number) => void) | null = null;
     onPropertiesRequested: ((prim: GraphicPrimitive) => void) | null = null;
+    onBatchPropertiesRequested: ((prims: GraphicPrimitive[]) => void) | null = null;
     onTextEditRequested: ((prim: PrimitiveAdvText, sx: number, sy: number) => void) | null = null;
     onExistingTextEditRequested: ((prim: PrimitiveAdvText) => void) | null = null;
     onSymbolizeRequested: (() => void) | null = null;
@@ -161,6 +164,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             this.canvas,
             {
                 onPropertiesRequested: (prim) => this.onPropertiesRequested?.(prim),
+                onBatchPropertiesRequested: (prims) => this.onBatchPropertiesRequested?.(prims),
                 onSymbolizeRequested: () => this.onSymbolizeRequested?.(),
                 onRender: () => this.render(),
                 copySelected: () => this.copySelected(),
@@ -246,7 +250,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.canvas.addEventListener('mouseup', (e) => this.inputHandler.onMouseUp(e), {
             signal: this.lifecycle.signal,
         });
-        this.canvas.addEventListener('mouseleave', (e) => this.inputHandler.onMouseUp(e), {
+        this.canvas.addEventListener('mouseleave', (e) => this.inputHandler.onMouseUp(e, true), {
             signal: this.lifecycle.signal,
         });
         this.canvas.addEventListener('dblclick', (e) => this.inputHandler.onDoubleClick(e), {
@@ -409,9 +413,13 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.ctx.clearDirtyRect();
         this.ctx.markDirtyFull(width, height);
 
-        // Clear canvas with background color
-        ctx.fillStyle = this.backgroundColor;
-        ctx.fillRect(0, 0, width, height);
+        // Clear canvas with background color through the graphics wrapper so the
+        // tracked colour stays in sync with the real fillStyle. Clearing via the
+        // raw ctx would desync GraphicsCanvas.currentColor and could hide filled
+        // layer-0 primitives (e.g. connection dots) when the grid is disabled.
+        const bg = hexToRgb(this.backgroundColor);
+        this.ctx.setColor(new ColorCanvas(bg.r, bg.g, bg.b));
+        this.ctx.fillRect(0, 0, width, height);
 
         // Draw grid
         if (this.gridVisible) {
@@ -481,6 +489,27 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.model.setModified(false);
     }
 
+    /** Name of the file currently associated with this circuit. */
+    getFileName(): string {
+        return this.currentFileName;
+    }
+
+    setFileName(name: string): void {
+        this.currentFileName = name;
+    }
+
+    /**
+     * Handle to the file last chosen via the File System Access API, if any.
+     * Lets a plain "Save" write back to the same file without re-prompting.
+     */
+    getFileHandle(): FileSystemFileHandle | null {
+        return this.currentFileHandle;
+    }
+
+    setFileHandle(handle: FileSystemFileHandle | null): void {
+        this.currentFileHandle = handle;
+    }
+
     /**
      * Try to activate the macro whose single-letter shortcut matches the given key.
      * Returns true if a macro was found and activated, false otherwise.
@@ -518,6 +547,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     setTool(toolId: number): void {
         this.currentTool = toolId;
         this.elementsEdt.setState(toolId);
+        // Drop any in-progress ghost preview so it can't linger after the tool
+        // changes (e.g. right-click cancelling a partially-drawn line).
+        this.inputHandler.setGhostPrimitive(null);
         this.inputHandler.updateCursor(toolId);
         this.onToolChange?.(toolId);
     }
@@ -562,6 +594,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     selectAll(): void {
         this.selectionActions.setSelectionAll(true);
         this.render();
+    }
+
+    getSelectedPrimitives(): GraphicPrimitive[] {
+        return this.selectionActions.getSelectedPrimitives();
     }
 
     deleteSelected(): void {

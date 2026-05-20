@@ -66,8 +66,9 @@ class DoubleClickDetector {
     detect(sx: number, sy: number): boolean {
         const now = performance.now();
         const timeClose = now - this.lastTime < DoubleClickDetector.TIME_MS;
-        const posClose = Math.abs(sx - this.lastSx) <= DoubleClickDetector.DIST_PX &&
-                         Math.abs(sy - this.lastSy) <= DoubleClickDetector.DIST_PX;
+        const posClose =
+            Math.abs(sx - this.lastSx) <= DoubleClickDetector.DIST_PX &&
+            Math.abs(sy - this.lastSy) <= DoubleClickDetector.DIST_PX;
         this.pending = timeClose && posClose;
         this.lastTime = now;
         this.lastSx = sx;
@@ -135,14 +136,30 @@ export class InputHandler {
         return this; // InputHandler implements InputState getters
     }
 
-    get ghostPrimitive() { return this._ghostPrimitive; }
-    get selRectActive() { return this._selRectActive; }
-    get selRectSx2() { return this._selRectSx2; }
-    get selRectSy2() { return this._selRectSy2; }
-    get selStartScreenX() { return this._selStartScreenX; }
-    get selStartScreenY() { return this._selStartScreenY; }
-    get selRectLtoR() { return this._selRectLtoR; }
-    get isMovingSelected() { return this._isMovingSelected; }
+    get ghostPrimitive() {
+        return this._ghostPrimitive;
+    }
+    get selRectActive() {
+        return this._selRectActive;
+    }
+    get selRectSx2() {
+        return this._selRectSx2;
+    }
+    get selRectSy2() {
+        return this._selRectSy2;
+    }
+    get selStartScreenX() {
+        return this._selStartScreenX;
+    }
+    get selStartScreenY() {
+        return this._selStartScreenY;
+    }
+    get selRectLtoR() {
+        return this._selRectLtoR;
+    }
+    get isMovingSelected() {
+        return this._isMovingSelected;
+    }
 
     // ── Constructor ────────────────────────────────────────────────────────
 
@@ -154,7 +171,7 @@ export class InputHandler {
         editorActions: EditorActions,
         undoActions: UndoActions,
         selectionActions: SelectionActions,
-        callbacks: InputCallbacks
+        callbacks: InputCallbacks,
     ) {
         this.canvas = canvas;
         this.mapCoords = mapCoords;
@@ -231,7 +248,7 @@ export class InputHandler {
         const oldZ = this.mapCoords.getXMagnitude();
         const newZ = Math.max(
             MapCoordinates.MIN_MAGNITUDE,
-            Math.min(MapCoordinates.MAX_MAGNITUDE, oldZ * factor)
+            Math.min(MapCoordinates.MAX_MAGNITUDE, oldZ * factor),
         );
         const scale = newZ / oldZ;
 
@@ -263,7 +280,7 @@ export class InputHandler {
         const tool = this.cb.getTool();
 
         if (tool === ElementsEdtActions.ZOOM) {
-            this.zoomAtCursor(sx, sy, e.button === 2 ? (1 / 1.3) : 1.3);
+            this.zoomAtCursor(sx, sy, e.button === 2 ? 1 / 1.3 : 1.3);
             return;
         }
 
@@ -359,8 +376,10 @@ export class InputHandler {
         }
 
         if (this.mouseDownPrimHit !== null) {
-            if (Math.abs(sx - this._selStartScreenX) > InputHandler.DRAG_THRESHOLD_PX ||
-                Math.abs(sy - this._selStartScreenY) > InputHandler.DRAG_THRESHOLD_PX) {
+            if (
+                Math.abs(sx - this._selStartScreenX) > InputHandler.DRAG_THRESHOLD_PX ||
+                Math.abs(sy - this._selStartScreenY) > InputHandler.DRAG_THRESHOLD_PX
+            ) {
                 if (!this.mouseDownPrimHit.isSelected()) {
                     if (!e.ctrlKey && !e.metaKey) this.selectionActions.setSelectionAll(false);
                     this.mouseDownPrimHit.setSelected(true);
@@ -409,13 +428,16 @@ export class InputHandler {
             return;
         }
 
+        const hadGhost = this._ghostPrimitive !== null;
         this.cb.updateGhostPreview(lx, ly);
-        if (this._ghostPrimitive !== null) {
+        // Repaint when the ghost appears, moves, OR was just cleared — otherwise a
+        // stale ghost lingers on screen until some other event triggers a render.
+        if (this._ghostPrimitive !== null || hadGhost) {
             this.cb.render();
         }
     }
 
-    onMouseUp(e: MouseEvent): void {
+    onMouseUp(e: MouseEvent, isLeave = false): void {
         if (this.textEditorJustCommitted) {
             this.textEditorJustCommitted = false;
             return;
@@ -438,8 +460,10 @@ export class InputHandler {
 
         if (this.mouseDownPrimHit !== null) {
             this.editorActions.handleSelection(
-                this.mapCoords, this._selStartScreenX, this._selStartScreenY,
-                e.ctrlKey || e.metaKey
+                this.mapCoords,
+                this._selStartScreenX,
+                this._selStartScreenY,
+                e.ctrlKey || e.metaKey,
             );
             this.mouseDownPrimHit = null;
             this.cb.render();
@@ -457,12 +481,15 @@ export class InputHandler {
             const canvasRect = this.canvas.getBoundingClientRect();
             const upSx = (e.clientX - canvasRect.left) * dpr;
             const upSy = (e.clientY - canvasRect.top) * dpr;
-            const isClick = Math.abs(upSx - this._selStartScreenX) <= InputHandler.DRAG_THRESHOLD_PX &&
-                            Math.abs(upSy - this._selStartScreenY) <= InputHandler.DRAG_THRESHOLD_PX;
+            const isClick =
+                Math.abs(upSx - this._selStartScreenX) <= InputHandler.DRAG_THRESHOLD_PX &&
+                Math.abs(upSy - this._selStartScreenY) <= InputHandler.DRAG_THRESHOLD_PX;
             if (isClick) {
                 this.editorActions.handleSelection(
-                    this.mapCoords, this._selStartScreenX, this._selStartScreenY,
-                    e.ctrlKey || e.metaKey
+                    this.mapCoords,
+                    this._selStartScreenX,
+                    this._selStartScreenY,
+                    e.ctrlKey || e.metaKey,
                 );
             } else {
                 const x1 = Math.min(this.selRectLogX1, this.selRectLogX2);
@@ -488,9 +515,18 @@ export class InputHandler {
             return;
         }
 
-        if (tool !== ElementsEdtActions.SELECTION) {
+        // Click-to-place only on a genuine button release inside the canvas.
+        // mouseleave reuses this handler to terminate gestures, but must NOT
+        // re-fire placement at the stale mousedown coordinates. Likewise, never
+        // place while the in-place text editor is open.
+        if (!isLeave && tool !== ElementsEdtActions.SELECTION && !this.cb.isTextEditActive()) {
             const repaint = this.elementsEdt.handleClick(
-                this.mapCoords, this.lastScreenX, this.lastScreenY, false, false, false
+                this.mapCoords,
+                this.lastScreenX,
+                this.lastScreenY,
+                false,
+                false,
+                false,
             );
             if (repaint) this.cb.render();
         }
@@ -508,7 +544,12 @@ export class InputHandler {
         const sy = (e.clientY - rect.top) * dpr;
 
         const repaint = this.elementsEdt.handleClick(
-            this.mapCoords, sx, sy, false, e.ctrlKey || e.metaKey, true
+            this.mapCoords,
+            sx,
+            sy,
+            false,
+            e.ctrlKey || e.metaKey,
+            true,
         );
         if (repaint) this.cb.render();
     }
@@ -534,8 +575,9 @@ export class InputHandler {
     private findPrimitiveAt(sx: number, sy: number): GraphicPrimitive | null {
         const px = this.mapCoords.unmapXnosnap(sx);
         const py = this.mapCoords.unmapYnosnap(sy);
-        const toll = this.mapCoords.unmapXnosnap(sx + this.editorActions.selTolerance)
-                   - this.mapCoords.unmapXnosnap(sx);
+        const toll =
+            this.mapCoords.unmapXnosnap(sx + this.editorActions.selTolerance) -
+            this.mapCoords.unmapXnosnap(sx);
         const tolerance = toll < 2 ? 2 : toll;
         const layerV = this.model.getLayers();
 
@@ -557,7 +599,7 @@ export class InputHandler {
         const oldZ = this.mapCoords.getXMagnitude();
         const newZ = Math.max(
             MapCoordinates.MIN_MAGNITUDE,
-            Math.min(MapCoordinates.MAX_MAGNITUDE, oldZ * factor)
+            Math.min(MapCoordinates.MAX_MAGNITUDE, oldZ * factor),
         );
         const scale = newZ / oldZ;
 

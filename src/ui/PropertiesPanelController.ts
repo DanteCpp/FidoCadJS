@@ -621,6 +621,76 @@ export class PropertiesPanelController {
         this.sidebar.style.display = 'flex';
     }
 
+    /**
+     * Batch-edit panel for a multi-element selection. Shows only the properties
+     * that are common to every selected primitive (currently the layer) and
+     * applies changes to all of them at once.
+     */
+    showBatch(prims: GraphicPrimitive[]): void {
+        if (prims.length <= 1) {
+            if (prims[0]) this.show(prims[0]);
+            return;
+        }
+
+        if (this.currentLayerDropdown) {
+            this.currentLayerDropdown.destroy();
+            this.currentLayerDropdown = null;
+        }
+        for (const d of this.currentDashDropdowns) d.destroy();
+        this.currentDashDropdowns = [];
+
+        const header = this.sidebar.firstElementChild;
+        this.sidebar.innerHTML = '';
+        this.sidebar.appendChild(header as HTMLElement);
+
+        const form = document.createElement('div');
+        form.style.cssText = 'padding: 12px; display: flex; flex-direction: column; gap: 10px;';
+
+        const redraw = () => {
+            const model = this.circuitPanel.getModel();
+            for (const p of prims) p.setChanged(true);
+            model.setChanged(true);
+            model.sortPrimitiveLayers();
+            this.circuitPanel.render();
+        };
+
+        const sec = document.createElement('div');
+        sec.textContent = `Multiple elements (${prims.length})`;
+        sec.style.cssText =
+            'font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; ' +
+            'letter-spacing: 0.5px; margin-top: 4px; padding-bottom: 2px; border-bottom: 1px solid #ddd;';
+        form.appendChild(sec);
+
+        // Layer (shared) — initial value is the common layer when all agree,
+        // otherwise the first element's layer.
+        const layerDescs = this.circuitPanel.getLayers();
+        const layerNames = this.circuitPanel.getLayerDescriptions();
+        const initialLayer = prims[0]!.getLayer();
+
+        const row = this.createPropertyRow('Layer:');
+        const dropdown = new LayerDropdown(layerDescs, layerNames, initialLayer, (idx) => {
+            for (const p of prims) p.setLayer(idx);
+            redraw();
+        });
+        dropdown.element.style.flex = '1';
+        row.appendChild(dropdown.element);
+        form.appendChild(row);
+        this.currentLayerDropdown = dropdown;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.style.cssText =
+            'margin-top: 8px; padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; ' +
+            'border-radius: 4px; background: #e0e0e0; font-size: 13px; align-self: flex-end;';
+        closeBtn.addEventListener('click', () => {
+            this.sidebar.style.display = 'none';
+        });
+        form.appendChild(closeBtn);
+
+        this.sidebar.appendChild(form);
+        this.sidebar.style.display = 'flex';
+    }
+
     private createPropertyRow(label: string): HTMLElement {
         const row = document.createElement('div');
         row.style.cssText = 'display: flex; align-items: center; gap: 8px;';

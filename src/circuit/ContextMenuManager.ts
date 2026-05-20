@@ -21,6 +21,7 @@ import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
 
 export interface ContextMenuCallbacks {
     onPropertiesRequested: ((prim: GraphicPrimitive) => void) | null;
+    onBatchPropertiesRequested: ((prims: GraphicPrimitive[]) => void) | null;
     onSymbolizeRequested: (() => void) | null;
     onRender: () => void;
     copySelected: () => void;
@@ -86,7 +87,12 @@ export class ContextMenuManager {
                 label: 'Properties',
                 enabled: somethingSelected,
                 action: () => {
-                    if (first) this.callbacks.onPropertiesRequested?.(first);
+                    const selected = this.selectionActions.getSelectedPrimitives();
+                    if (selected.length > 1) {
+                        this.callbacks.onBatchPropertiesRequested?.(selected);
+                    } else if (first) {
+                        this.callbacks.onPropertiesRequested?.(first);
+                    }
                 },
             },
             { separator: true },

@@ -18,6 +18,7 @@ import { DrawingModel } from '../circuit/model/DrawingModel.js';
 import { ParserActions } from '../circuit/controllers/ParserActions.js';
 import { Drawing, registerDrawingHooks } from '../circuit/views/Drawing.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
+import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
 import { DrawingSize } from '../geom/DrawingSize.js';
 import { StandardLayers } from '../layers/StandardLayers.js';
 import { OperationPermissions } from './OperationPermissions.js';
@@ -502,10 +503,14 @@ export class MacroPicker {
         mc.setYCenter(mc.getYCenter() + 10);
 
         const ctx = this.previewCanvas.getContext('2d');
-        if (ctx) {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-        }
+        // Clear the background through the graphics wrapper (not the raw ctx) so
+        // GraphicsCanvas's tracked colour stays in sync with the real fillStyle.
+        // Otherwise the first filled primitive on a black layer (e.g. a
+        // connection dot, layer 0) would be painted white-on-white and vanish,
+        // because selectLayer() skips setColor() when it thinks the colour is
+        // already black.
+        this.previewGraphics.setColor(new ColorCanvas(255, 255, 255));
+        this.previewGraphics.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
         this.previewGraphics.clearDirtyRect();
         this.previewGraphics.markDirtyFull(this.previewCanvas.width, this.previewCanvas.height);
 

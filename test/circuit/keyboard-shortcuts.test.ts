@@ -23,7 +23,11 @@ beforeAll(() => {
 
     // Provide a stub 2D context so GraphicsCanvas can construct
     const origGetContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, contextId: string, ...args: any[]) {
+    HTMLCanvasElement.prototype.getContext = function (
+        this: HTMLCanvasElement,
+        contextId: string,
+        ...args: any[]
+    ) {
         if (contextId === '2d') {
             return createStub2DContext();
         }
@@ -88,7 +92,7 @@ function createStub2DContext(): any {
 function pressKey(
     target: HTMLElement,
     key: string,
-    opts: { ctrlKey?: boolean; shiftKey?: boolean; altKey?: boolean; metaKey?: boolean } = {}
+    opts: { ctrlKey?: boolean; shiftKey?: boolean; altKey?: boolean; metaKey?: boolean } = {},
 ): void {
     target.dispatchEvent(
         new KeyboardEvent('keydown', {
@@ -99,12 +103,19 @@ function pressKey(
             metaKey: opts.metaKey ?? false,
             bubbles: true,
             cancelable: true,
-        })
+        }),
     );
 }
 
 /** Create a simple line primitive and add it to the panel's model */
-function addLineToPanel(panel: CircuitPanel, x1: number, y1: number, x2: number, y2: number, layer: number): void {
+function addLineToPanel(
+    panel: CircuitPanel,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    layer: number,
+): void {
     const prim = new PrimitiveLine(x1, y1, x2, y2, layer, false, false, 0, 3, 2, 0, '', 4);
     // Access model via the canvas back-reference
     const model = (panel as any).model;
@@ -277,6 +288,53 @@ describe('Keyboard Shortcuts', () => {
         });
     });
 
+    // ─── Select all (Ctrl/Cmd+A) ─────────────────────────────────────────────
+
+    describe('Select all', () => {
+        it('Ctrl+A selects every primitive when focus is on the canvas', () => {
+            addLineToPanel(panel, 0, 0, 10, 10, 0);
+            addLineToPanel(panel, 20, 20, 30, 30, 0);
+            for (const prim of getModelPrimitives(panel)) {
+                expect(prim.isSelected()).toBe(false);
+            }
+
+            pressKey(canvas, 'a', { ctrlKey: true });
+
+            for (const prim of getModelPrimitives(panel)) {
+                expect(prim.isSelected()).toBe(true);
+            }
+        });
+
+        it('Cmd+A (metaKey) also selects all', () => {
+            addLineToPanel(panel, 0, 0, 10, 10, 0);
+
+            pressKey(canvas, 'a', { metaKey: true });
+
+            expect(getModelPrimitives(panel)[0].isSelected()).toBe(true);
+        });
+
+        it('Ctrl+A does not select primitives when focus is on a text input', () => {
+            addLineToPanel(panel, 0, 0, 10, 10, 0);
+            const input = document.createElement('input');
+            input.type = 'text';
+            document.body.appendChild(input);
+            input.focus();
+
+            pressKey(input, 'a', { ctrlKey: true });
+            // Native text-select must be preserved; drawing stays unselected.
+            expect(getModelPrimitives(panel)[0].isSelected()).toBe(false);
+
+            document.body.removeChild(input);
+            canvas.focus();
+        });
+
+        it('plain A (no modifier) still switches to the Selection tool', () => {
+            panel.setTool(ElementsEdtActions.LINE);
+            pressKey(canvas, 'a');
+            expect(panel.getTool()).toBe(ElementsEdtActions.SELECTION);
+        });
+    });
+
     // ─── Transform shortcuts (require selection) ────────────────────────────
 
     describe('Transform shortcuts (with selection)', () => {
@@ -298,8 +356,7 @@ describe('Keyboard Shortcuts', () => {
             const y1r = prim.virtualPoint[1].y;
 
             // At least one coordinate should have changed
-            const changed =
-                x0 !== x0r || y0 !== y0r || x1 !== x1r || y1 !== y1r;
+            const changed = x0 !== x0r || y0 !== y0r || x1 !== x1r || y1 !== y1r;
             expect(changed).toBe(true);
         });
 
@@ -321,8 +378,8 @@ describe('Keyboard Shortcuts', () => {
 
             pressKey(canvas, 's');
 
-            expect(prim.virtualPoint[0].x).toBe(10);   // on axis, unchanged
-            expect(prim.virtualPoint[1].x).toBe(-20);  // mirrored across x=10
+            expect(prim.virtualPoint[0].x).toBe(10); // on axis, unchanged
+            expect(prim.virtualPoint[1].x).toBe(-20); // mirrored across x=10
         });
 
         it('M starts move mode for selected elements', () => {
