@@ -248,7 +248,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.canvas.addEventListener('mouseup', (e) => this.inputHandler.onMouseUp(e), {
             signal: this.lifecycle.signal,
         });
-        this.canvas.addEventListener('mouseleave', (e) => this.inputHandler.onMouseUp(e), {
+        this.canvas.addEventListener('mouseleave', (e) => this.inputHandler.onMouseUp(e, true), {
             signal: this.lifecycle.signal,
         });
         this.canvas.addEventListener('dblclick', (e) => this.inputHandler.onDoubleClick(e), {
@@ -541,6 +541,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     setTool(toolId: number): void {
         this.currentTool = toolId;
         this.elementsEdt.setState(toolId);
+        // Drop any in-progress ghost preview so it can't linger after the tool
+        // changes (e.g. right-click cancelling a partially-drawn line).
+        this.inputHandler.setGhostPrimitive(null);
         this.inputHandler.updateCursor(toolId);
         this.onToolChange?.(toolId);
     }
