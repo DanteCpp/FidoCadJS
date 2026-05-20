@@ -392,6 +392,10 @@ class FidoCadJS {
         this.circuitPanel.onCancelTextEdit = () => {
             this.propertiesSidebar.style.display = 'none';
         };
+
+        this.circuitPanel.onSelectionCleared = () => {
+            this.propertiesSidebar.style.display = 'none';
+        };
     }
 
     // ─── Font discovery (used by PropertiesPanelController) ───────────────────

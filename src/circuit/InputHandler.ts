@@ -47,6 +47,8 @@ export interface InputCallbacks {
     updateGhostPreview(lx: number, ly: number): void;
     clampCenter(): void;
     showContextMenu(clientX: number, clientY: number): void;
+    /** Fired when a selection-mode click on an empty region leaves nothing selected. */
+    onSelectionCleared: (() => void) | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -491,6 +493,11 @@ export class InputHandler {
                     this._selStartScreenY,
                     e.ctrlKey || e.metaKey,
                 );
+                // Clicking an empty region leaves nothing selected: close the
+                // properties sidebar so it doesn't linger on a stale primitive.
+                if (this.selectionActions.getSelectedPrimitives().length === 0) {
+                    this.cb.onSelectionCleared?.();
+                }
             } else {
                 const x1 = Math.min(this.selRectLogX1, this.selRectLogX2);
                 const y1 = Math.min(this.selRectLogY1, this.selRectLogY2);
