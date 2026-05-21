@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "Empty+Limiter",
   "prop_shape_oval": "Oval",
   "prop_shape_rounded": "Rounded rect.",
-  "prop_multiple": "Multiple elements"
+  "prop_multiple": "Multiple elements",
+  "symb_origin_hint": "Origin (drag crosshair, right-click=toggle grid):",
+  "macropicker_header": "Components",
+  "macropicker_search": "Search components...",
+  "lib_overwrite_title": "Overwrite library",
+  "lib_overwrite_msg": "A user library with prefix \"{0}\" already exists. Overwrite it?",
+  "name_empty": "Name must not be empty.",
+  "key_empty": "Key must not be empty.",
+  "key_exists": "Key already exists."
 }

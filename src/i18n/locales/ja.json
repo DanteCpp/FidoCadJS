@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "中空+リミッタ",
   "prop_shape_oval": "楕円",
   "prop_shape_rounded": "角丸四角",
-  "prop_multiple": "複数の要素"
+  "prop_multiple": "複数の要素",
+  "symb_origin_hint": "原点（十字をドラッグ、右クリックでグリッド切替）:",
+  "macropicker_header": "部品",
+  "macropicker_search": "部品を検索...",
+  "lib_overwrite_title": "ライブラリを上書き",
+  "lib_overwrite_msg": "接頭辞「{0}」のユーザーライブラリは既に存在します。上書きしますか？",
+  "name_empty": "名前を空にできません。",
+  "key_empty": "キーを空にできません。",
+  "key_exists": "キーは既に存在します。"
 }

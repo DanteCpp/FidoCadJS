@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "Vacía+Limitador",
   "prop_shape_oval": "Óvalo",
   "prop_shape_rounded": "Rect. redondeado",
-  "prop_multiple": "Varios elementos"
+  "prop_multiple": "Varios elementos",
+  "symb_origin_hint": "Origen (arrastre la cruz, clic derecho = alternar cuadrícula):",
+  "macropicker_header": "Componentes",
+  "macropicker_search": "Buscar componentes...",
+  "lib_overwrite_title": "Sobrescribir biblioteca",
+  "lib_overwrite_msg": "Ya existe una biblioteca de usuario con el prefijo «{0}». ¿Sobrescribirla?",
+  "name_empty": "El nombre no puede estar vacío.",
+  "key_empty": "La clave no puede estar vacía.",
+  "key_exists": "La clave ya existe."
 }

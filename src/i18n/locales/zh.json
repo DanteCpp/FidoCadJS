@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "空心+限位",
   "prop_shape_oval": "椭圆",
   "prop_shape_rounded": "圆角矩形",
-  "prop_multiple": "多个元素"
+  "prop_multiple": "多个元素",
+  "symb_origin_hint": "原点（拖动十字准线，右键=切换网格）:",
+  "macropicker_header": "元件",
+  "macropicker_search": "搜索元件...",
+  "lib_overwrite_title": "覆盖库",
+  "lib_overwrite_msg": "前缀为“{0}”的用户库已存在。是否覆盖？",
+  "name_empty": "名称不能为空。",
+  "key_empty": "键不能为空。",
+  "key_exists": "键已存在。"
 }

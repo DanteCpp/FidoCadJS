@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "Leeg+Begrenzer",
   "prop_shape_oval": "Ovaal",
   "prop_shape_rounded": "Afger. rechthoek",
-  "prop_multiple": "Meerdere elementen"
+  "prop_multiple": "Meerdere elementen",
+  "symb_origin_hint": "Oorsprong (sleep het draadkruis, rechtsklik = raster wisselen):",
+  "macropicker_header": "Componenten",
+  "macropicker_search": "Componenten zoeken...",
+  "lib_overwrite_title": "Bibliotheek overschrijven",
+  "lib_overwrite_msg": "Er bestaat al een gebruikersbibliotheek met voorvoegsel \"{0}\". Overschrijven?",
+  "name_empty": "De naam mag niet leeg zijn.",
+  "key_empty": "De sleutel mag niet leeg zijn.",
+  "key_exists": "De sleutel bestaat al."
 }

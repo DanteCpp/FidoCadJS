@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "Leer+Begrenzer",
   "prop_shape_oval": "Oval",
   "prop_shape_rounded": "Abger. Rechteck",
-  "prop_multiple": "Mehrere Elemente"
+  "prop_multiple": "Mehrere Elemente",
+  "symb_origin_hint": "Ursprung (Fadenkreuz ziehen, Rechtsklick = Raster umschalten):",
+  "macropicker_header": "Bauteile",
+  "macropicker_search": "Bauteile suchen...",
+  "lib_overwrite_title": "Bibliothek überschreiben",
+  "lib_overwrite_msg": "Eine Benutzerbibliothek mit dem Präfix „{0}“ existiert bereits. Überschreiben?",
+  "name_empty": "Der Name darf nicht leer sein.",
+  "key_empty": "Der Schlüssel darf nicht leer sein.",
+  "key_exists": "Schlüssel existiert bereits."
 }

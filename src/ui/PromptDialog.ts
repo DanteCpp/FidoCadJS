@@ -6,9 +6,14 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
+import { getString } from '../i18n/i18n.js';
+
 function escapeHtml(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
 export class PromptDialog {
@@ -24,7 +29,7 @@ export class PromptDialog {
         title: string,
         message: string,
         defaultValue: string = '',
-        validator?: (value: string) => string | null
+        validator?: (value: string) => string | null,
     ): Promise<string | null> {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
@@ -52,9 +57,9 @@ export class PromptDialog {
                 `</div>` +
                 `<div style="padding:12px 16px; border-top:1px solid #ddd; display:flex; justify-content:flex-end; gap:8px;">` +
                 `<button id="promptCancel" style="padding:6px 16px; border:1px solid #ccc; border-radius:3px; ` +
-                `background:#f5f5f5; cursor:pointer; font-size:12px;">Cancel</button>` +
+                `background:#f5f5f5; cursor:pointer; font-size:12px;">${escapeHtml(getString('Cancel_btn'))}</button>` +
                 `<button id="promptOk" style="padding:6px 16px; border:1px solid #5a8fc0; border-radius:3px; ` +
-                `background:#5a8fc0; color:white; cursor:pointer; font-size:12px;">OK</button>` +
+                `background:#5a8fc0; color:white; cursor:pointer; font-size:12px;">${escapeHtml(getString('Ok_btn'))}</button>` +
                 `</div>`;
 
             overlay.appendChild(dialog);
@@ -66,7 +71,10 @@ export class PromptDialog {
             const errorEl = dialog.querySelector('#promptError') as HTMLElement;
 
             const runValidation = (): boolean => {
-                if (!validator) { okBtn.disabled = false; return true; }
+                if (!validator) {
+                    okBtn.disabled = false;
+                    return true;
+                }
                 const err = validator(input.value);
                 if (err) {
                     errorEl.textContent = err;
@@ -78,18 +86,32 @@ export class PromptDialog {
                 return true;
             };
 
-            const cleanup = (): void => { overlay.remove(); };
+            const cleanup = (): void => {
+                overlay.remove();
+            };
             const confirm = (): void => {
-                if (runValidation()) { cleanup(); resolve(input.value); }
+                if (runValidation()) {
+                    cleanup();
+                    resolve(input.value);
+                }
             };
 
             input.addEventListener('input', runValidation);
             okBtn.addEventListener('click', confirm);
-            cancelBtn.addEventListener('click', () => { cleanup(); resolve(null); });
-            closeBtn.addEventListener('click', () => { cleanup(); resolve(null); });
+            cancelBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(null);
+            });
+            closeBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(null);
+            });
 
             overlay.addEventListener('keydown', (e: KeyboardEvent) => {
-                if (e.key === 'Escape') { cleanup(); resolve(null); }
+                if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(null);
+                }
                 if (e.key === 'Enter' && !okBtn.disabled) confirm();
             });
 

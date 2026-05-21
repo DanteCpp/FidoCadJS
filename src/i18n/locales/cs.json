@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "Prázdná+omezovač",
   "prop_shape_oval": "Ovál",
   "prop_shape_rounded": "Zaobl. obdélník",
-  "prop_multiple": "Více prvků"
+  "prop_multiple": "Více prvků",
+  "symb_origin_hint": "Počátek (táhněte zaměřovač, pravé tlačítko = přepnout mřížku):",
+  "macropicker_header": "Součástky",
+  "macropicker_search": "Hledat součástky...",
+  "lib_overwrite_title": "Přepsat knihovnu",
+  "lib_overwrite_msg": "Uživatelská knihovna s předponou „{0}“ již existuje. Přepsat ji?",
+  "name_empty": "Název nesmí být prázdný.",
+  "key_empty": "Klíč nesmí být prázdný.",
+  "key_exists": "Klíč již existuje."
 }

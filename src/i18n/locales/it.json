@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "Vuota+Delimitatore",
   "prop_shape_oval": "Ovale",
   "prop_shape_rounded": "Rett. arrotondato",
-  "prop_multiple": "Elementi multipli"
+  "prop_multiple": "Elementi multipli",
+  "symb_origin_hint": "Origine (trascina il mirino, clic destro = mostra/nascondi griglia):",
+  "macropicker_header": "Componenti",
+  "macropicker_search": "Cerca componenti...",
+  "lib_overwrite_title": "Sovrascrivi libreria",
+  "lib_overwrite_msg": "Esiste già una libreria utente con prefisso \"{0}\". Sovrascriverla?",
+  "name_empty": "Il nome non può essere vuoto.",
+  "key_empty": "La chiave non può essere vuota.",
+  "key_exists": "La chiave esiste già."
 }

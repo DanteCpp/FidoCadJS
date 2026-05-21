@@ -341,5 +341,13 @@
   "prop_arrow_empty_limiter": "Vide+Limiteur",
   "prop_shape_oval": "Ovale",
   "prop_shape_rounded": "Rect. arrondi",
-  "prop_multiple": "Plusieurs éléments"
+  "prop_multiple": "Plusieurs éléments",
+  "symb_origin_hint": "Origine (déplacez la croix, clic droit = afficher/masquer la grille) :",
+  "macropicker_header": "Composants",
+  "macropicker_search": "Rechercher des composants...",
+  "lib_overwrite_title": "Remplacer la bibliothèque",
+  "lib_overwrite_msg": "Une bibliothèque utilisateur avec le préfixe « {0} » existe déjà. La remplacer ?",
+  "name_empty": "Le nom ne doit pas être vide.",
+  "key_empty": "La clé ne doit pas être vide.",
+  "key_exists": "La clé existe déjà."
 }

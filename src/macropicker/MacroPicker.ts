@@ -10,6 +10,7 @@
  * rename, remove, copy, paste, and change-key operations on user libraries.
  */
 
+import { getString } from '../i18n/i18n.js';
 import type { LibraryModel } from '../librarymodel/LibraryModel.js';
 import { Library } from '../librarymodel/Library.js';
 import { Category } from '../librarymodel/Category.js';
@@ -59,7 +60,7 @@ export class MacroPicker {
 
         // Header
         const header = document.createElement('div');
-        header.textContent = 'Components';
+        header.textContent = getString('macropicker_header');
         header.style.cssText =
             'padding: 8px 10px; font-weight: bold; font-size: 13px; ' +
             'border-bottom: 1px solid #ddd; background: #f0f0f0; flex-shrink: 0;';
@@ -68,7 +69,7 @@ export class MacroPicker {
         // Search box
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'search';
-        this.searchInput.placeholder = 'Search components...';
+        this.searchInput.placeholder = getString('macropicker_search');
         this.searchInput.style.cssText =
             'margin: 6px 8px; padding: 5px 8px; font-size: 12px; ' +
             'border: 1px solid #ccc; border-radius: 3px; outline: none; flex-shrink: 0;';
@@ -401,19 +402,19 @@ export class MacroPicker {
             menu.appendChild(item);
         };
 
-        addItem('Copy', perm.copyAvailable, () => {
+        addItem(getString('Copy'), perm.copyAvailable, () => {
             if (this.contextNode instanceof MacroDesc || this.contextNode instanceof Category) {
                 this.copyTarget = this.contextNode;
             }
         });
 
-        addItem('Paste', perm.pasteAvailable, () => {
+        addItem(getString('Paste'), perm.pasteAvailable, () => {
             this.pasteIntoSelectedNode();
         });
 
         menu.appendChild(this.makeMenuSeparator());
 
-        addItem('Rename', perm.renameAvailable, () => {
+        addItem(getString('Rename'), perm.renameAvailable, () => {
             if (this.contextNode) {
                 this.onContextMenuAction?.(
                     'rename',
@@ -422,7 +423,7 @@ export class MacroPicker {
             }
         });
 
-        addItem('Delete', perm.removeAvailable, () => {
+        addItem(getString('Delete'), perm.removeAvailable, () => {
             if (this.contextNode) {
                 this.onContextMenuAction?.(
                     'remove',
@@ -431,7 +432,7 @@ export class MacroPicker {
             }
         });
 
-        addItem('Change Key', perm.renKeyAvailable, () => {
+        addItem(getString('RenKey'), perm.renKeyAvailable, () => {
             if (this.contextNode) {
                 this.onContextMenuAction?.('changeKey', this.contextNode as MacroDesc);
             }
