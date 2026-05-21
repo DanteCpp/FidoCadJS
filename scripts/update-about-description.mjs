@@ -20,17 +20,17 @@ const LOCALES_DIR = resolve(__dirname, '..', 'src', 'i18n', 'locales');
 const KEY = 'programDescription1';
 
 const VALUES = {
-    en: 'A browser-based electronic schematic editor fully compatible with the FidoCad (fdc) format.',
-    cs: 'Editor elektronických schémat v prohlížeči, plně kompatibilní s formátem FidoCad (fdc).',
-    de: 'Ein browserbasierter Editor für elektronische Schaltpläne, vollständig kompatibel mit dem FidoCad-Format (fdc).',
-    el: 'Ένας επεξεργαστής ηλεκτρονικών σχηματικών στο πρόγραμμα περιήγησης, πλήρως συμβατός με τη μορφή FidoCad (fdc).',
-    es: 'Un editor de esquemas electrónicos basado en navegador, totalmente compatible con el formato FidoCad (fdc).',
-    fr: 'Un éditeur de schémas électroniques dans le navigateur, entièrement compatible avec le format FidoCad (fdc).',
-    it: 'Un editor di schemi elettronici basato su browser, pienamente compatibile con il formato FidoCad (fdc).',
-    ja: 'FidoCad（fdc）形式に完全対応した、ブラウザベースの電子回路図エディタ。',
-    nl: "Een browsergebaseerde editor voor elektronische schema's, volledig compatibel met het FidoCad-formaat (fdc).",
-    ru: 'Браузерный редактор электронных схем, полностью совместимый с форматом FidoCad (fdc).',
-    zh: '基于浏览器的电子原理图编辑器，完全兼容 FidoCad (fdc) 格式。',
+    en: 'A browser-based electronic schematic editor fully compatible with FidoCad format.',
+    cs: 'Editor elektronických schémat v prohlížeči, plně kompatibilní s formátem FidoCad.',
+    de: 'Ein browserbasierter Editor für elektronische Schaltpläne, vollständig kompatibel mit dem FidoCad-Format.',
+    el: 'Ένας επεξεργαστής ηλεκτρονικών σχηματικών στο πρόγραμμα περιήγησης, πλήρως συμβατός με τη μορφή FidoCad.',
+    es: 'Un editor de esquemas electrónicos basado en navegador, totalmente compatible con el formato FidoCad.',
+    fr: 'Un éditeur de schémas électroniques dans le navigateur, entièrement compatible avec le format FidoCad.',
+    it: 'Un editor di schemi elettronici basato su browser, pienamente compatibile con il formato FidoCad.',
+    ja: 'FidoCad形式に完全対応した、ブラウザベースの電子回路図エディタ。',
+    nl: "Een browsergebaseerde editor voor elektronische schema's, volledig compatibel met het FidoCad-formaat.",
+    ru: 'Браузерный редактор электронных схем, полностью совместимый с форматом FidoCad.',
+    zh: '基于浏览器的电子原理图编辑器，完全兼容 FidoCad 格式。',
 };
 
 function main() {
