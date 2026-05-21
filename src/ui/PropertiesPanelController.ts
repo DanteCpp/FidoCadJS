@@ -6,6 +6,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
+import { getString } from '../i18n/i18n.js';
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
 import { PrimitiveAdvText } from '../primitives/PrimitiveAdvText.js';
@@ -155,7 +156,7 @@ export class PropertiesPanelController {
         const orientOptions = [0, 90, 180, 270].map((a) => ({ value: String(a), text: `${a}°` }));
 
         const addDashStyle = (get: () => number, set: (v: number) => void): void => {
-            const row = this.createPropertyRow('Dash style:');
+            const row = this.createPropertyRow(getString('ctrl_dash_style'));
             const dd = new DashStyleDropdown(get(), (idx) => {
                 set(idx);
                 redraw();
@@ -180,29 +181,36 @@ export class PropertiesPanelController {
             setArrowWid: (v: number) => void,
         ): void => {
             addSection(arrowLabel);
-            addCheck('Arrow start:', getArrowStart, setArrowStart);
-            addCheck('Arrow end:', getArrowEnd, setArrowEnd);
+            addCheck(getString('ctrl_arrow_start'), getArrowStart, setArrowStart);
+            addCheck(getString('ctrl_arrow_end'), getArrowEnd, setArrowEnd);
             addSelect(
-                'Style:',
+                getString('ctrl_arrow_style'),
                 [
-                    { value: '0', text: 'Filled' },
-                    { value: '2', text: 'Empty' },
-                    { value: '1', text: 'Limiter' },
-                    { value: '3', text: 'Empty+Limiter' },
+                    { value: '0', text: getString('ctrl_filled') },
+                    { value: '2', text: getString('prop_arrow_empty') },
+                    { value: '1', text: getString('prop_arrow_limiter') },
+                    { value: '3', text: getString('prop_arrow_empty_limiter') },
                 ],
                 () => String(getArrowStyle()),
                 (v) => setArrowStyle(Number(v)),
             );
-            addNumber('Length:', getArrowLen, setArrowLen, 0, undefined, 1);
-            addNumber('Half width:', getArrowWid, setArrowWid, 0, undefined, 1);
+            addNumber(getString('length'), getArrowLen, setArrowLen, 0, undefined, 1);
+            addNumber(
+                getString('ctrl_arrow_half_width'),
+                getArrowWid,
+                setArrowWid,
+                0,
+                undefined,
+                1,
+            );
         };
 
         const addLayerSection = (): void => {
-            addSection('Common');
+            addSection(getString('prop_section_common'));
             const layerDescs = this.circuitPanel.getLayers();
             const layerNames = this.circuitPanel.getLayerDescriptions();
 
-            const row = this.createPropertyRow('Layer:');
+            const row = this.createPropertyRow(getString('ctrl_layer'));
             const dropdown = new LayerDropdown(layerDescs, layerNames, prim.getLayer(), (idx) => {
                 prim.setLayer(idx);
                 redraw();
@@ -216,12 +224,12 @@ export class PropertiesPanelController {
         const addNameValue = (): void => {
             if (prim.getNameVirtualPointNumber() >= 0) {
                 addText(
-                    'Name:',
+                    getString('ctrl_name'),
                     () => prim.getName(),
                     (v) => prim.setNameStr(v),
                 );
                 addText(
-                    'Value:',
+                    getString('ctrl_value'),
                     () => prim.getValue(),
                     (v) => prim.setValueStr(v),
                 );
@@ -244,9 +252,9 @@ export class PropertiesPanelController {
         // ===== TYPE-SPECIFIC SECTIONS =====
 
         if (prim instanceof PrimitiveAdvText) {
-            addSection('Text');
+            addSection(getString('Text'));
             const contentInput = addText(
-                'Content:',
+                getString('prop_content'),
                 () => prim.getString(),
                 (v) => prim.setString(v),
             );
@@ -260,7 +268,7 @@ export class PropertiesPanelController {
             {
                 const isLatex = () => prim.getString().includes('$');
 
-                const siyRow = this.createPropertyRow('Font size:');
+                const siyRow = this.createPropertyRow(getString('prop_font_size'));
                 const siyInp = document.createElement('input');
                 siyInp.type = 'number';
                 siyInp.value = String(prim.getFontDimension());
@@ -270,7 +278,7 @@ export class PropertiesPanelController {
                 siyRow.appendChild(siyInp);
                 form.appendChild(siyRow);
 
-                const sixRow = this.createPropertyRow('Font width:');
+                const sixRow = this.createPropertyRow(getString('prop_font_width'));
                 const sixInp = document.createElement('input');
                 sixInp.type = 'number';
                 sixInp.value = String(prim.getFontWidth());
@@ -304,7 +312,7 @@ export class PropertiesPanelController {
                 sixInp.addEventListener('change', handleSixChange);
             }
             addNumber(
-                'Orientation:',
+                getString('prop_orientation'),
                 () => prim.getOrientation(),
                 (v) => prim.setOrientation(v),
                 -360,
@@ -312,17 +320,17 @@ export class PropertiesPanelController {
                 1,
             );
             addCheck(
-                'Mirror:',
+                getString('ctrl_mirror'),
                 () => prim.isMirrored() !== 0,
                 (v) => prim.setMirrored(v ? 1 : 0),
             );
             addCheck(
-                'Bold:',
+                getString('ctrl_boldface'),
                 () => prim.isBold(),
                 (v) => prim.setBold(v),
             );
             addCheck(
-                'Italic:',
+                getString('ctrl_italic'),
                 () => prim.isItalic(),
                 (v) => prim.setItalic(v),
             );
@@ -350,7 +358,7 @@ export class PropertiesPanelController {
                       'Verdana',
                   ].map((f) => ({ value: f, text: f }));
             addSelect(
-                'Font:',
+                getString('ctrl_font'),
                 fontOptions,
                 () => prim.getFontName(),
                 (v) => prim.setFontName(v),
@@ -372,13 +380,13 @@ export class PropertiesPanelController {
             addLayerSection();
         } else if (prim instanceof PrimitiveLine) {
             const ad = prim.getArrowData();
-            addSection('Line');
+            addSection(getString('Line'));
             addDashStyle(
                 () => prim.getDashStyle(),
                 (v) => prim.setDashStyle(v),
             );
             addArrowSection(
-                'Arrows',
+                getString('prop_section_arrows'),
                 () => ad.isArrowStart(),
                 (v) => {
                     ad.setArrowStart(v);
@@ -408,9 +416,9 @@ export class PropertiesPanelController {
             addLayerSection();
             addNameValue();
         } else if (prim instanceof PrimitiveRectangle) {
-            addSection('Rectangle');
+            addSection(getString('Rectangle'));
             addCheck(
-                'Filled:',
+                getString('ctrl_filled'),
                 () => prim.getFilled(),
                 (v) => prim.setFilled(v),
             );
@@ -421,9 +429,9 @@ export class PropertiesPanelController {
             addLayerSection();
             addNameValue();
         } else if (prim instanceof PrimitiveOval) {
-            addSection('Ellipse');
+            addSection(getString('Ellipse'));
             addCheck(
-                'Filled:',
+                getString('ctrl_filled'),
                 () => prim.getFilled(),
                 (v) => prim.setFilled(v),
             );
@@ -435,13 +443,13 @@ export class PropertiesPanelController {
             addNameValue();
         } else if (prim instanceof PrimitiveBezier) {
             const ad = prim.getArrowData();
-            addSection('Bézier');
+            addSection(getString('Bezier'));
             addDashStyle(
                 () => prim.getDashStyle(),
                 (v) => prim.setDashStyle(v),
             );
             addArrowSection(
-                'Arrows',
+                getString('prop_section_arrows'),
                 () => ad.isArrowStart(),
                 (v) => {
                     ad.setArrowStart(v);
@@ -471,9 +479,9 @@ export class PropertiesPanelController {
             addLayerSection();
             addNameValue();
         } else if (prim instanceof PrimitivePCBLine) {
-            addSection('PCB Line');
+            addSection(getString('PCBline'));
             addNumber(
-                'Width:',
+                getString('ctrl_width'),
                 () => prim.getWidth(),
                 (v) => prim.setWidth(v),
                 0,
@@ -483,9 +491,9 @@ export class PropertiesPanelController {
             addLayerSection();
             addNameValue();
         } else if (prim instanceof PrimitivePCBPad) {
-            addSection('PCB Pad');
+            addSection(getString('PCBpad'));
             addNumber(
-                'Size X:',
+                getString('ctrl_x_radius'),
                 () => prim.getRx(),
                 (v) => prim.setRx(v),
                 0,
@@ -493,7 +501,7 @@ export class PropertiesPanelController {
                 0.5,
             );
             addNumber(
-                'Size Y:',
+                getString('ctrl_y_radius'),
                 () => prim.getRy(),
                 (v) => prim.setRy(v),
                 0,
@@ -501,7 +509,7 @@ export class PropertiesPanelController {
                 0.5,
             );
             addNumber(
-                'Drill radius:',
+                getString('ctrl_internal_radius'),
                 () => prim.getRi(),
                 (v) => prim.setRi(v),
                 0,
@@ -509,11 +517,11 @@ export class PropertiesPanelController {
                 0.5,
             );
             addSelect(
-                'Shape:',
+                getString('ctrl_pad_style'),
                 [
-                    { value: '0', text: 'Oval' },
-                    { value: '1', text: 'Rectangle' },
-                    { value: '2', text: 'Rounded rect.' },
+                    { value: '0', text: getString('prop_shape_oval') },
+                    { value: '1', text: getString('Rectangle') },
+                    { value: '2', text: getString('prop_shape_rounded') },
                 ],
                 () => String(prim.getSty()),
                 (v) => prim.setSty(Number(v)),
@@ -521,9 +529,9 @@ export class PropertiesPanelController {
             addLayerSection();
             addNameValue();
         } else if (prim instanceof PrimitivePolygon) {
-            addSection('Polygon');
+            addSection(getString('Polygon'));
             addCheck(
-                'Filled:',
+                getString('ctrl_filled'),
                 () => prim.getFilled(),
                 (v) => prim.setFilled(v),
             );
@@ -535,14 +543,14 @@ export class PropertiesPanelController {
             addNameValue();
         } else if (prim instanceof PrimitiveComplexCurve) {
             const ad = prim.getArrowData();
-            addSection('Complex curve');
+            addSection(getString('Complexcurve'));
             addCheck(
-                'Filled:',
+                getString('ctrl_filled'),
                 () => prim.getFilled(),
                 (v) => prim.setFilled(v),
             );
             addCheck(
-                'Closed:',
+                getString('ctrl_closed_curve'),
                 () => prim.getIsClosed(),
                 (v) => prim.setIsClosed(v),
             );
@@ -551,7 +559,7 @@ export class PropertiesPanelController {
                 (v) => prim.setDashStyle(v),
             );
             addArrowSection(
-                'Arrows',
+                getString('prop_section_arrows'),
                 () => ad.isArrowStart(),
                 (v) => {
                     ad.setArrowStart(v);
@@ -581,8 +589,8 @@ export class PropertiesPanelController {
             addLayerSection();
             addNameValue();
         } else if (prim instanceof PrimitiveMacro) {
-            addSection('Component');
-            const nameRow = this.createPropertyRow('Macro:');
+            addSection(getString('prop_section_component'));
+            const nameRow = this.createPropertyRow(getString('prop_macro'));
             const nameSpan = document.createElement('span');
             nameSpan.textContent = prim.getMacroName();
             nameSpan.style.cssText =
@@ -590,13 +598,13 @@ export class PropertiesPanelController {
             nameRow.appendChild(nameSpan);
             form.appendChild(nameRow);
             addSelect(
-                'Orientation:',
+                getString('prop_orientation'),
                 orientOptions,
                 () => String(prim.getOrientation() * 90),
                 (v) => prim.setOrientation(Math.round(Number(v) / 90)),
             );
             addCheck(
-                'Mirror:',
+                getString('ctrl_mirror'),
                 () => prim.isMirrored(),
                 (v) => prim.setMirrored(v),
             );
@@ -608,7 +616,7 @@ export class PropertiesPanelController {
         }
 
         const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
+        closeBtn.textContent = getString('Close');
         closeBtn.style.cssText =
             'margin-top: 8px; padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; ' +
             'border-radius: 4px; background: #e0e0e0; font-size: 13px; align-self: flex-end;';
@@ -655,7 +663,7 @@ export class PropertiesPanelController {
         };
 
         const sec = document.createElement('div');
-        sec.textContent = `Multiple elements (${prims.length})`;
+        sec.textContent = `${getString('prop_multiple')} (${prims.length})`;
         sec.style.cssText =
             'font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; ' +
             'letter-spacing: 0.5px; margin-top: 4px; padding-bottom: 2px; border-bottom: 1px solid #ddd;';
@@ -667,7 +675,7 @@ export class PropertiesPanelController {
         const layerNames = this.circuitPanel.getLayerDescriptions();
         const initialLayer = prims[0]!.getLayer();
 
-        const row = this.createPropertyRow('Layer:');
+        const row = this.createPropertyRow(getString('ctrl_layer'));
         const dropdown = new LayerDropdown(layerDescs, layerNames, initialLayer, (idx) => {
             for (const p of prims) p.setLayer(idx);
             redraw();
@@ -678,7 +686,7 @@ export class PropertiesPanelController {
         this.currentLayerDropdown = dropdown;
 
         const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
+        closeBtn.textContent = getString('Close');
         closeBtn.style.cssText =
             'margin-top: 8px; padding: 8px 16px; cursor: pointer; border: 1px solid #ccc; ' +
             'border-radius: 4px; background: #e0e0e0; font-size: 13px; align-self: flex-end;';

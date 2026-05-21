@@ -326,5 +326,20 @@
   "Export_jpeg_quality": "JPEG quality:",
   "Print_not_implemented": "Print is not yet implemented.",
   "About_title": "About FidoCadJS",
-  "Circuit_definition": "Circuit definition"
+  "Circuit_definition": "Circuit definition",
+  "Properties": "Свойства",
+  "prop_section_common": "Общие",
+  "prop_section_arrows": "Стрелки",
+  "prop_section_component": "Компонент",
+  "prop_content": "Содержимое:",
+  "prop_font_size": "Размер шрифта:",
+  "prop_font_width": "Ширина шрифта:",
+  "prop_orientation": "Ориентация:",
+  "prop_macro": "Макрос:",
+  "prop_arrow_empty": "Пустая",
+  "prop_arrow_limiter": "Ограничитель",
+  "prop_arrow_empty_limiter": "Пустая+Ограничитель",
+  "prop_shape_oval": "Овал",
+  "prop_shape_rounded": "Скругл. прямоуг.",
+  "prop_multiple": "Несколько элементов"
 }

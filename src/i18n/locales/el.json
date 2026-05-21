@@ -326,5 +326,20 @@
   "Export_jpeg_quality": "JPEG quality:",
   "Print_not_implemented": "Print is not yet implemented.",
   "About_title": "About FidoCadJS",
-  "Circuit_definition": "Circuit definition"
+  "Circuit_definition": "Circuit definition",
+  "Properties": "Ιδιότητες",
+  "prop_section_common": "Κοινά",
+  "prop_section_arrows": "Βέλη",
+  "prop_section_component": "Εξάρτημα",
+  "prop_content": "Περιεχόμενο:",
+  "prop_font_size": "Μέγεθος γραμματοσειράς:",
+  "prop_font_width": "Πλάτος γραμματοσειράς:",
+  "prop_orientation": "Προσανατολισμός:",
+  "prop_macro": "Μακροεντολή:",
+  "prop_arrow_empty": "Κενό",
+  "prop_arrow_limiter": "Περιοριστής",
+  "prop_arrow_empty_limiter": "Κενό+Περιοριστής",
+  "prop_shape_oval": "Οβάλ",
+  "prop_shape_rounded": "Στρογγ. ορθογώνιο",
+  "prop_multiple": "Πολλαπλά στοιχεία"
 }

@@ -326,5 +326,20 @@
   "Export_jpeg_quality": "JPEG quality:",
   "Print_not_implemented": "Print is not yet implemented.",
   "About_title": "About FidoCadJS",
-  "Circuit_definition": "Circuit definition"
+  "Circuit_definition": "Circuit definition",
+  "Properties": "属性",
+  "prop_section_common": "通用",
+  "prop_section_arrows": "箭头",
+  "prop_section_component": "元件",
+  "prop_content": "内容:",
+  "prop_font_size": "字体大小:",
+  "prop_font_width": "字体宽度:",
+  "prop_orientation": "方向:",
+  "prop_macro": "宏:",
+  "prop_arrow_empty": "空心",
+  "prop_arrow_limiter": "限位",
+  "prop_arrow_empty_limiter": "空心+限位",
+  "prop_shape_oval": "椭圆",
+  "prop_shape_rounded": "圆角矩形",
+  "prop_multiple": "多个元素"
 }
