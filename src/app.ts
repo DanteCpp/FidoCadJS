@@ -13,7 +13,7 @@ import { MacroPicker } from './macropicker/MacroPicker.js';
 import { MenuBar } from './ui/MenuBar.js';
 import { ToolbarController } from './ui/ToolbarController.js';
 import { PropertiesPanelController } from './ui/PropertiesPanelController.js';
-import { loadLocale, getPreferredLocale, onLocaleChange } from './i18n/i18n.js';
+import { loadLocale, getPreferredLocale, onLocaleChange, getString } from './i18n/i18n.js';
 import { AccessResources } from './i18n/AccessResources.js';
 import { SettingsManager } from './settings/SettingsManager.js';
 import { Globals } from './globals/Globals.js';
@@ -240,8 +240,8 @@ class FidoCadJS {
         const existingPrefixes = UserLibraryStorage.getUserLibraryPrefixes();
         if (existingPrefixes.includes(prefix)) {
             const ok = await ConfirmDialog.show(
-                'Overwrite Library',
-                `A user library with prefix "${prefix}" already exists. Overwrite it?`,
+                getString('lib_overwrite_title'),
+                getString('lib_overwrite_msg').replace('{0}', prefix),
             );
             if (!ok) return;
         }
@@ -254,7 +254,7 @@ class FidoCadJS {
         try {
             UserLibraryStorage.saveUserLibrary(prefix, this.libraryModel.getAllMacros(), libName);
         } catch (e) {
-            alert('Failed to save library: storage may be full.');
+            alert(getString('StorageError'));
             console.error(e);
             return;
         }
@@ -275,21 +275,15 @@ class FidoCadJS {
                         : node instanceof Category
                           ? node.getName()
                           : node.getName();
-                const title =
-                    node instanceof MacroDesc
-                        ? 'Rename macro'
-                        : node instanceof Category
-                          ? 'Rename category'
-                          : 'Rename library';
                 const newName = await PromptDialog.show(
-                    title,
+                    getString('Rename'),
                     node instanceof MacroDesc
-                        ? 'Please input new macro name.'
+                        ? getString('new_macro_name')
                         : node instanceof Category
-                          ? 'Please input new category name.'
-                          : 'Please input new library name.',
+                          ? getString('new_category_name')
+                          : getString('new_library_name'),
                     name,
-                    (v) => (v.trim().length === 0 ? 'Name must not be empty.' : null),
+                    (v) => (v.trim().length === 0 ? getString('name_empty') : null),
                 );
                 if (newName !== null && newName !== name) {
                     try {
@@ -303,11 +297,12 @@ class FidoCadJS {
             }
             case 'remove': {
                 let confirmMsg: string;
-                if (node instanceof MacroDesc) confirmMsg = `Really remove macro ${node.name}?`;
+                if (node instanceof MacroDesc)
+                    confirmMsg = `${getString('remove_macro_confirm')} ${node.name}?`;
                 else if (node instanceof Category)
-                    confirmMsg = `Really remove category ${node.getName()}?`;
-                else confirmMsg = `Really remove library ${node.getName()}?`;
-                const ok = await ConfirmDialog.show('Delete', confirmMsg);
+                    confirmMsg = `${getString('remove_category_confirm')} ${node.getName()}?`;
+                else confirmMsg = `${getString('remove_library_confirm')} ${node.getName()}?`;
+                const ok = await ConfirmDialog.show(getString('Delete'), confirmMsg);
                 if (ok) {
                     try {
                         this.libraryModel.remove(node);
@@ -322,25 +317,29 @@ class FidoCadJS {
                 if (!(node instanceof MacroDesc)) return;
                 const oldKey = LibraryModel.getPlainMacroKey(node);
                 const ok = await ConfirmDialog.show(
-                    'Change Key',
-                    'Warning: the macro could not be visualized correctly if it is already in use in your drawing. Continue?',
+                    getString('RenKey'),
+                    getString('ChangeKeyWarning'),
                 );
                 if (!ok) return;
-                const newKey = await PromptDialog.show('Change Key', 'Key:', oldKey, (v) => {
-                    if (v.trim().length === 0) return 'Key must not be empty.';
-                    if (LibUtils.checkKeyInvalidChars(v))
-                        return 'The key must not contain spaces or "."';
-                    const fullKey = `${node.filename}.${v}`.toLowerCase();
-                    if (
-                        LibUtils.checkKeyDuplicate(
-                            this.libraryModel.getAllMacros(),
-                            node.filename,
-                            fullKey,
+                const newKey = await PromptDialog.show(
+                    getString('RenKey'),
+                    getString('Key'),
+                    oldKey,
+                    (v) => {
+                        if (v.trim().length === 0) return getString('key_empty');
+                        if (LibUtils.checkKeyInvalidChars(v)) return getString('SpaceKey');
+                        const fullKey = `${node.filename}.${v}`.toLowerCase();
+                        if (
+                            LibUtils.checkKeyDuplicate(
+                                this.libraryModel.getAllMacros(),
+                                node.filename,
+                                fullKey,
+                            )
                         )
-                    )
-                        return 'Key already exists.';
-                    return null;
-                });
+                            return getString('key_exists');
+                        return null;
+                    },
+                );
                 if (newKey !== null && newKey !== oldKey) {
                     try {
                         this.libraryModel.changeKey(node, newKey);
@@ -390,6 +389,10 @@ class FidoCadJS {
         };
 
         this.circuitPanel.onCancelTextEdit = () => {
+            this.propertiesSidebar.style.display = 'none';
+        };
+
+        this.circuitPanel.onSelectionCleared = () => {
             this.propertiesSidebar.style.display = 'none';
         };
     }

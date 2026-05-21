@@ -6,6 +6,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
+import { getString } from '../i18n/i18n.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
 
 export class LayerDropdown {
@@ -34,7 +35,7 @@ export class LayerDropdown {
         // Outer container
         this.element = document.createElement('div');
         this.element.style.cssText = 'position:relative; display:inline-block;';
-        this.element.title = 'Active layer';
+        this.element.title = getString('tooltip_layerSel');
 
         // Button (always visible — shows current layer)
         const layerBtn = document.createElement('div');
@@ -69,8 +70,12 @@ export class LayerDropdown {
             const lbl = document.createElement('span');
             lbl.textContent = layerNames[i] ?? '';
             item.appendChild(lbl);
-            item.addEventListener('mouseenter', () => { item.style.background = '#e8f0fe'; });
-            item.addEventListener('mouseleave', () => { item.style.background = ''; });
+            item.addEventListener('mouseenter', () => {
+                item.style.background = '#e8f0fe';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.background = '';
+            });
             item.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 this.selectLayer(i);

@@ -10,6 +10,7 @@
  * On OK, builds a MacroDesc and adds it to the library model.
  */
 
+import { getString } from '../i18n/i18n.js';
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { DrawingModel } from '../circuit/model/DrawingModel.js';
 import type { LibraryModel } from '../librarymodel/LibraryModel.js';
@@ -50,7 +51,12 @@ export class DialogSymbolize {
     private isDragging: boolean = false;
     private resizeObserver: ResizeObserver | null = null;
 
-    constructor(_circuitPanel: EditorFacade, drawingModel: DrawingModel, libraryModel: LibraryModel, onSaved: () => void) {
+    constructor(
+        _circuitPanel: EditorFacade,
+        drawingModel: DrawingModel,
+        libraryModel: LibraryModel,
+        onSaved: () => void,
+    ) {
         this.drawingModel = drawingModel;
         this.libraryModel = libraryModel;
         this.onSaved = onSaved;
@@ -90,11 +96,12 @@ export class DialogSymbolize {
             'padding:10px 16px; background:#f0f0f0; border-bottom:1px solid #ddd; ' +
             'display:flex; align-items:center; justify-content:space-between; flex-shrink:0;';
         const title = document.createElement('span');
-        title.textContent = 'Symbol-o-matic';
+        title.textContent = getString('Symbolize');
         title.style.cssText = 'font-weight:bold; font-size:13px;';
         const closeBtn = document.createElement('button');
         closeBtn.textContent = '✕';
-        closeBtn.style.cssText = 'border:none; background:none; cursor:pointer; font-size:14px; color:#888;';
+        closeBtn.style.cssText =
+            'border:none; background:none; cursor:pointer; font-size:14px; color:#888;';
         closeBtn.addEventListener('click', () => this.close());
         titleBar.appendChild(title);
         titleBar.appendChild(closeBtn);
@@ -105,24 +112,30 @@ export class DialogSymbolize {
         body.style.cssText = 'padding:16px; overflow-y:auto; flex:1;';
 
         // Lib filename row
-        body.appendChild(this.buildFieldRow('Library filename:', () => {
-            this.libFilenameInput = document.createElement('input');
-            this.libFilenameInput.type = 'text';
-            this.libFilenameInput.style.cssText = 'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
-            return this.libFilenameInput;
-        }));
+        body.appendChild(
+            this.buildFieldRow(getString('Library_file'), () => {
+                this.libFilenameInput = document.createElement('input');
+                this.libFilenameInput.type = 'text';
+                this.libFilenameInput.style.cssText =
+                    'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
+                return this.libFilenameInput;
+            }),
+        );
 
         // Lib name row
-        body.appendChild(this.buildFieldRow('Library name:', () => {
-            this.libNameInput = document.createElement('input');
-            this.libNameInput.type = 'text';
-            this.libNameInput.style.cssText = 'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
-            return this.libNameInput;
-        }));
+        body.appendChild(
+            this.buildFieldRow(getString('Library_name'), () => {
+                this.libNameInput = document.createElement('input');
+                this.libNameInput.type = 'text';
+                this.libNameInput.style.cssText =
+                    'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
+                return this.libNameInput;
+            }),
+        );
 
         // Preview container
         const previewLabel = document.createElement('div');
-        previewLabel.textContent = 'Origin (drag crosshair, right-click=toggle grid):';
+        previewLabel.textContent = getString('symb_origin_hint');
         previewLabel.style.cssText = 'font-size:11px; color:#666; margin-bottom:2px;';
         body.appendChild(previewLabel);
 
@@ -136,30 +149,37 @@ export class DialogSymbolize {
         body.appendChild(previewContainer);
 
         // Group row
-        body.appendChild(this.buildFieldRow('Group:', () => {
-            this.groupInput = document.createElement('input');
-            this.groupInput.type = 'text';
-            this.groupInput.style.cssText = 'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
-            return this.groupInput;
-        }));
+        body.appendChild(
+            this.buildFieldRow(getString('Group'), () => {
+                this.groupInput = document.createElement('input');
+                this.groupInput.type = 'text';
+                this.groupInput.style.cssText =
+                    'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
+                return this.groupInput;
+            }),
+        );
 
         // Macro name row
-        body.appendChild(this.buildFieldRow('Name:', () => {
-            this.macroNameInput = document.createElement('input');
-            this.macroNameInput.type = 'text';
-            this.macroNameInput.style.cssText = 'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
-            return this.macroNameInput;
-        }));
+        body.appendChild(
+            this.buildFieldRow(getString('Name'), () => {
+                this.macroNameInput = document.createElement('input');
+                this.macroNameInput.type = 'text';
+                this.macroNameInput.style.cssText =
+                    'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
+                return this.macroNameInput;
+            }),
+        );
 
         // Key row
         const keyRow = document.createElement('div');
         keyRow.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:8px;';
         const keyLabel = document.createElement('span');
-        keyLabel.textContent = 'Key:';
+        keyLabel.textContent = getString('Key');
         keyLabel.style.cssText = 'min-width:100px; font-size:12px; color:#333;';
         this.keyInput = document.createElement('input');
         this.keyInput.type = 'text';
-        this.keyInput.style.cssText = 'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
+        this.keyInput.style.cssText =
+            'flex:1; padding:4px 6px; font-size:12px; border:1px solid #ccc; border-radius:2px;';
         this.keyInput.addEventListener('input', () => this.validateKeyVisual());
         keyRow.appendChild(keyLabel);
         keyRow.appendChild(this.keyInput);
@@ -173,7 +193,7 @@ export class DialogSymbolize {
         this.snapCheckbox.id = 'snapToGrid';
         const snapLabel = document.createElement('label');
         snapLabel.htmlFor = 'snapToGrid';
-        snapLabel.textContent = 'Snap origin to grid';
+        snapLabel.textContent = getString('SnapToGridOrigin');
         snapLabel.style.cssText = 'font-size:12px; color:#333;';
         snapRow.appendChild(this.snapCheckbox);
         snapRow.appendChild(snapLabel);
@@ -187,13 +207,13 @@ export class DialogSymbolize {
             'padding:12px 16px; border-top:1px solid #ddd; display:flex; justify-content:flex-end; gap:8px; flex-shrink:0;';
 
         const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
+        cancelBtn.textContent = getString('Cancel_btn');
         cancelBtn.style.cssText =
             'padding:6px 16px; border:1px solid #ccc; border-radius:3px; background:#f5f5f5; cursor:pointer; font-size:12px;';
         cancelBtn.addEventListener('click', () => this.close());
 
         const okBtn = document.createElement('button');
-        okBtn.textContent = 'OK';
+        okBtn.textContent = getString('Ok_btn');
         okBtn.style.cssText =
             'padding:6px 16px; border:1px solid #5a8fc0; border-radius:3px; ' +
             'background:#5a8fc0; color:white; cursor:pointer; font-size:12px;';
@@ -307,7 +327,7 @@ export class DialogSymbolize {
             this.previewModel,
             Math.floor(w * 0.8),
             Math.floor(h * 0.8),
-            true
+            true,
         );
         mc.setXCenter(mc.getXCenter() + 10);
         mc.setYCenter(mc.getYCenter() + 10);
@@ -476,13 +496,20 @@ export class DialogSymbolize {
     // ── Macro building ────────────────────────────────────────────────────────
 
     private buildMacro(
-        myname: string, mykey: string, mylib: string,
-        mygrp: string, myprefix: string, origin: { x: number; y: number }
+        myname: string,
+        mykey: string,
+        mylib: string,
+        mygrp: string,
+        myprefix: string,
+        origin: { x: number; y: number },
     ): MacroDesc | null {
         // Check if anything is selected
         let hasSelection = false;
         for (const prim of this.drawingModel.getPrimitiveVector()) {
-            if (prim.isSelected()) { hasSelection = true; break; }
+            if (prim.isSelected()) {
+                hasSelection = true;
+                break;
+            }
         }
         if (!hasSelection) return null;
 
@@ -520,17 +547,17 @@ export class DialogSymbolize {
         const fullKey = `${prefix}.${key}`.toLowerCase();
 
         if (key.length === 0) {
-            alert('Invalid key.');
+            alert(getString('InvKey'));
             this.keyInput.focus();
             return;
         }
         if (LibUtils.checkKeyInvalidChars(key)) {
-            alert('The key must not contain spaces or "."');
+            alert(getString('SpaceKey'));
             this.keyInput.focus();
             return;
         }
         if (LibUtils.checkKey(this.libraryModel.getAllMacros(), prefix, fullKey)) {
-            alert('The specified key is already in use or contains forbidden characters.');
+            alert(getString('DupKey'));
             this.keyInput.focus();
             return;
         }
@@ -541,11 +568,11 @@ export class DialogSymbolize {
             this.libNameInput.value.trim() || 'User Library',
             this.groupInput.value.trim() || 'group',
             prefix,
-            { x: 200 - this.originLx, y: 200 - this.originLy }
+            { x: 200 - this.originLx, y: 200 - this.originLy },
         );
 
         if (!macro) {
-            alert('No primitives selected for symbol creation.');
+            alert(getString('NothingSelected'));
             return;
         }
 
@@ -554,10 +581,13 @@ export class DialogSymbolize {
 
         // Persist user library
         try {
-            UserLibraryStorage.saveUserLibrary(prefix, this.libraryModel.getAllMacros(),
-                this.libNameInput.value.trim() || 'User Library');
+            UserLibraryStorage.saveUserLibrary(
+                prefix,
+                this.libraryModel.getAllMacros(),
+                this.libNameInput.value.trim() || 'User Library',
+            );
         } catch {
-            alert('Cannot save library. Check storage availability.');
+            alert(getString('StorageError'));
         }
 
         // Rebuild the library model tree and refresh the picker

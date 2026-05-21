@@ -9,6 +9,7 @@
  *          (P2.6).
  */
 
+import { getString } from '../i18n/i18n.js';
 import { ContextMenu } from '../ui/ContextMenu.js';
 import { PrimitiveMacro } from '../primitives/PrimitiveMacro.js';
 import { PrimitivePolygon } from '../primitives/PrimitivePolygon.js';
@@ -84,7 +85,7 @@ export class ContextMenuManager {
 
         this.contextMenu.show(clientX, clientY, [
             {
-                label: 'Properties',
+                label: getString('Properties'),
                 enabled: somethingSelected,
                 action: () => {
                     const selected = this.selectionActions.getSelectedPrimitives();
@@ -97,28 +98,28 @@ export class ContextMenuManager {
             },
             { separator: true },
             {
-                label: 'Cut',
+                label: getString('Cut'),
                 enabled: somethingSelected,
                 action: () => this.callbacks.cutSelected(),
             },
             {
-                label: 'Copy',
+                label: getString('Copy'),
                 enabled: somethingSelected,
                 action: () => this.callbacks.copySelected(),
             },
             {
-                label: 'Paste',
+                label: getString('Paste'),
                 enabled: hasCb,
                 action: () => this.callbacks.paste(),
             },
             {
-                label: 'Duplicate',
+                label: getString('Duplicate'),
                 enabled: somethingSelected,
                 action: () => this.callbacks.duplicateSelected(),
             },
             { separator: true },
             {
-                label: 'Select All',
+                label: getString('SelectAll'),
                 enabled: true,
                 action: () => {
                     this.callbacks.selectAll();
@@ -126,41 +127,41 @@ export class ContextMenuManager {
             },
             { separator: true },
             {
-                label: 'Move',
+                label: getString('Move'),
                 enabled: somethingSelected,
                 action: () => this.callbacks.startMoveSelected(),
             },
             {
-                label: 'Rotate',
+                label: getString('Rotate'),
                 enabled: somethingSelected,
                 action: () => this.callbacks.rotateSelected(),
             },
             {
-                label: 'Mirror',
+                label: getString('Mirror_E'),
                 enabled: somethingSelected,
                 action: () => this.callbacks.mirrorSelected(),
             },
             {
-                label: 'Symbolize',
+                label: getString('Symbolize'),
                 enabled: somethingSelected,
                 visible: somethingSelected && !isMacroPrim,
                 action: () => this.callbacks.onSymbolizeRequested?.(),
             },
             {
-                label: 'Vectorize',
+                label: getString('Unsymbolize'),
                 enabled: isMacroPrim,
                 visible: isMacroPrim,
                 action: () => this.callbacks.vectorizeMacro(),
             },
             { separator: true },
             {
-                label: 'Add Node',
+                label: getString('Add_node'),
                 enabled: isNodePrim,
                 visible: isNodePrim,
                 action: () => this.addNodeAt(contextMenuLogX, contextMenuLogY),
             },
             {
-                label: 'Remove Node',
+                label: getString('Remove_node'),
                 enabled: isNodePrim,
                 visible: isNodePrim,
                 action: () => this.removeNodeAt(contextMenuLogX, contextMenuLogY),

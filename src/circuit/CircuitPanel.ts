@@ -85,6 +85,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     onExistingTextEditRequested: ((prim: PrimitiveAdvText) => void) | null = null;
     onSymbolizeRequested: (() => void) | null = null;
     onCancelTextEdit: (() => void) | null = null;
+    onSelectionCleared: (() => void) | null = null;
 
     private clipboardController: ClipboardController;
     private keyboardController: KeyboardController;
@@ -195,6 +196,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             updateGhostPreview: (lx, ly) => this.updateGhostPreview(lx, ly),
             clampCenter: () => this.clampCenter(),
             showContextMenu: (cx, cy) => this.contextMenuManager.show(cx, cy),
+            onSelectionCleared: () => this.onSelectionCleared?.(),
         };
         this.inputHandler = new InputHandler(
             this.canvas,

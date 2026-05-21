@@ -6,13 +6,23 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
+import { getString } from '../i18n/i18n.js';
+
 function escapeHtml(s: string): string {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
 export class ConfirmDialog {
-    static show(title: string, message: string, okLabel: string = 'OK', cancelLabel: string = 'Cancel'): Promise<boolean> {
+    static show(
+        title: string,
+        message: string,
+        okLabel: string = getString('Ok_btn'),
+        cancelLabel: string = getString('Cancel_btn'),
+    ): Promise<boolean> {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
             overlay.style.cssText =
@@ -41,19 +51,36 @@ export class ConfirmDialog {
 
             overlay.appendChild(dialog);
 
-            const cleanup = (): void => { overlay.remove(); };
+            const cleanup = (): void => {
+                overlay.remove();
+            };
 
             const okBtn = dialog.querySelector('#confirmOk') as HTMLButtonElement;
             const cancelBtn = dialog.querySelector('#confirmCancel') as HTMLButtonElement;
             const closeBtn = dialog.querySelector('#confirmClose') as HTMLButtonElement;
 
-            okBtn.addEventListener('click', () => { cleanup(); resolve(true); });
-            cancelBtn.addEventListener('click', () => { cleanup(); resolve(false); });
-            closeBtn.addEventListener('click', () => { cleanup(); resolve(false); });
+            okBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(true);
+            });
+            cancelBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(false);
+            });
+            closeBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(false);
+            });
 
             overlay.addEventListener('keydown', (e: KeyboardEvent) => {
-                if (e.key === 'Escape') { cleanup(); resolve(false); }
-                if (e.key === 'Enter') { cleanup(); resolve(true); }
+                if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(false);
+                }
+                if (e.key === 'Enter') {
+                    cleanup();
+                    resolve(true);
+                }
             });
 
             document.body.appendChild(overlay);

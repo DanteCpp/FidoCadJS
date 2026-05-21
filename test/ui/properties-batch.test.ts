@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import { loadLocale } from '../../src/i18n/i18n.js';
 import { PropertiesPanelController } from '../../src/ui/PropertiesPanelController.js';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { StandardLayers } from '../../src/layers/StandardLayers.js';
@@ -32,7 +33,10 @@ describe('Batch layer editing', () => {
     let model: DrawingModel;
     let facade: EditorFacade;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        // The panel routes labels through getString(); load the English bundle
+        // so lookups resolve to text instead of returning the raw key.
+        await loadLocale('en');
         model = new DrawingModel();
         model.setLayers(StandardLayers.createStandardLayers());
 
