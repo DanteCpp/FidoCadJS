@@ -154,7 +154,7 @@
   "About_menu": "Over FidoCadJS",
   "About": "Over",
   "Version": "",
-  "programDescription1": "Een multiplatform FidoCadJS editor.",
+  "programDescription1": "Een browsergebaseerde editor voor elektronische schema's, volledig compatibel met het FidoCad-formaat (fdc).",
   "programDescription2": "(c) 2026 Dante Loi.",
   "programDescription3": "",
   "ExportOptions": "Export opties:",

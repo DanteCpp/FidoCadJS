@@ -154,7 +154,7 @@
   "About_menu": "Acerca de FidoCadJS",
   "About": "Acerca",
   "Version": "Versión",
-  "programDescription1": "Un editor multiplataforma de FidoCadJS.",
+  "programDescription1": "Un editor de esquemas electrónicos basado en navegador, totalmente compatible con el formato FidoCad (fdc).",
   "programDescription2": "(c) 2026 Dante Loi.",
   "programDescription3": "Traducido por Simon",
   "ExportOptions": "Exportar opciones:",

@@ -124,7 +124,7 @@
   "Print_dlg": "Eigenschaften Ausdruck",
   "Print_uncomplete": "Druck nicht abgeschlossen.",
   "Profile": "Profiler aktivieren",
-  "programDescription1": "A multiplatform FidoCadJS editor.",
+  "programDescription1": "Ein browserbasierter Editor für elektronische Schaltpläne, vollständig kompatibel mit dem FidoCad-Format (fdc).",
   "programDescription2": "(c) 2026 Dante Loi.",
   "programDescription3": "Deutsch-Version von Olaf Marzocchi",
   "Quaqua": "Quaqua aktivieren (lieber nicht wenn FidoCadJS zu langsam ist)",

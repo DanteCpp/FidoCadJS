@@ -154,7 +154,7 @@
   "About_menu": "Informations sur FidoCadJS",
   "About": "Informations",
   "Version": "",
-  "programDescription1": "Un éditeur FidoCadJS multiplateforme.",
+  "programDescription1": "Un éditeur de schémas électroniques dans le navigateur, entièrement compatible avec le format FidoCad (fdc).",
   "programDescription2": "(c) 2026 Dante Loi.",
   "programDescription3": "",
   "ExportOptions": "Options d'exportation :",
