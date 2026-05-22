@@ -13,6 +13,7 @@ import type { ParserActions } from '../circuit/controllers/ParserActions.js';
 import { MacroDesc } from '../primitives/MacroDesc.js';
 import { LibUtils } from './LibUtils.js';
 import { Toast } from '../ui/Toast.js';
+import { getString } from '../i18n/i18n.js';
 
 const REGISTRY_KEY = 'fidocadts.libs.v1';
 const LIB_PREFIX = 'fidocadts.lib.v1.';
@@ -29,7 +30,7 @@ export class UserLibraryStorage {
                 try {
                     parserActions.readLibraryString(fclText, prefix);
                 } catch (e) {
-                    Toast.show(`Failed to load user library "${prefix}".`, 'error');
+                    Toast.show(getString('Userlib_load_error').replace('{0}', prefix), 'error');
                     console.error(`Failed to load user library "${prefix}":`, e);
                 }
             }
@@ -44,7 +45,7 @@ export class UserLibraryStorage {
             localStorage.setItem(LIB_PREFIX + prefix, fclText);
             UserLibraryStorage.addPrefix(prefix);
         } catch (e) {
-            Toast.show('Failed to save user library. Storage may be full.', 'error');
+            Toast.show(getString('Userlib_save_error'), 'error');
             console.error('Failed to save user library:', e);
             throw new Error('StorageError');
         }

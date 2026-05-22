@@ -403,7 +403,7 @@ export class DialogSymbolize {
         ctx.arc(ox, oy, 3, 0, Math.PI * 2);
         ctx.fill();
         ctx.font = '11px sans-serif';
-        ctx.fillText('Origin', ox + 5, oy - 5);
+        ctx.fillText(getString('Origin'), ox + 5, oy - 5);
         ctx.restore();
 
         ctx.restore();

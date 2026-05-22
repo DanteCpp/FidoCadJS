@@ -349,5 +349,14 @@
   "lib_overwrite_msg": "Esiste già una libreria utente con prefisso \"{0}\". Sovrascriverla?",
   "name_empty": "Il nome non può essere vuoto.",
   "key_empty": "La chiave non può essere vuota.",
-  "key_exists": "La chiave esiste già."
+  "key_exists": "La chiave esiste già.",
+  "Grid_x_step": "Passo griglia X",
+  "Grid_y_step": "Passo griglia Y",
+  "Render_tex": "Mostra le formule LaTeX nell'editor",
+  "Settings_load_error": "Impossibile caricare le impostazioni. Uso i valori predefiniti.",
+  "Settings_save_error": "Impossibile salvare le impostazioni. Le modifiche potrebbero non essere conservate.",
+  "Userlib_load_error": "Impossibile caricare la libreria utente \"{0}\".",
+  "Userlib_save_error": "Impossibile salvare la libreria utente. La memoria potrebbe essere piena.",
+  "macropicker_preview_hint": "Seleziona un componente per l'anteprima",
+  "About_license": "Distribuito secondo la licenza GNU General Public License v3"
 }

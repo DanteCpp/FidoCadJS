@@ -349,5 +349,14 @@
   "lib_overwrite_msg": "Ya existe una biblioteca de usuario con el prefijo «{0}». ¿Sobrescribirla?",
   "name_empty": "El nombre no puede estar vacío.",
   "key_empty": "La clave no puede estar vacía.",
-  "key_exists": "La clave ya existe."
+  "key_exists": "La clave ya existe.",
+  "Grid_x_step": "Paso de cuadrícula X",
+  "Grid_y_step": "Paso de cuadrícula Y",
+  "Render_tex": "Mostrar fórmulas LaTeX en el editor",
+  "Settings_load_error": "No se pudieron cargar los ajustes. Se usarán los valores predeterminados.",
+  "Settings_save_error": "No se pudieron guardar los ajustes. Los cambios podrían no conservarse.",
+  "Userlib_load_error": "No se pudo cargar la biblioteca de usuario \"{0}\".",
+  "Userlib_save_error": "No se pudo guardar la biblioteca de usuario. El almacenamiento podría estar lleno.",
+  "macropicker_preview_hint": "Seleccione un componente para la vista previa",
+  "About_license": "Distribuido bajo la Licencia Pública General de GNU v3"
 }

@@ -123,7 +123,9 @@ class FidoCadJS {
             'width: 280px; background: #f5f5f5; border-right: 1px solid #ccc; ' +
             'display: none; flex-direction: column; overflow-y: auto;';
         this.propertiesSidebar.innerHTML =
-            '<div style="padding: 12px; font-weight: bold; border-bottom: 1px solid #ddd;">Properties</div>';
+            '<div style="padding: 12px; font-weight: bold; border-bottom: 1px solid #ddd;">' +
+            getString('Properties') +
+            '</div>';
 
         // Right library panel
         this.libraryPanel = document.createElement('div');

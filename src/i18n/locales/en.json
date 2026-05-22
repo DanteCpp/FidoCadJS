@@ -349,5 +349,14 @@
   "lib_overwrite_msg": "A user library with prefix \"{0}\" already exists. Overwrite it?",
   "name_empty": "Name must not be empty.",
   "key_empty": "Key must not be empty.",
-  "key_exists": "Key already exists."
+  "key_exists": "Key already exists.",
+  "Grid_x_step": "Grid X step",
+  "Grid_y_step": "Grid Y step",
+  "Render_tex": "Render LaTeX math in editor",
+  "Settings_load_error": "Failed to load settings. Using defaults.",
+  "Settings_save_error": "Failed to save settings. Changes may not persist.",
+  "Userlib_load_error": "Failed to load user library \"{0}\".",
+  "Userlib_save_error": "Failed to save user library. Storage may be full.",
+  "macropicker_preview_hint": "Select a component to preview",
+  "About_license": "Licensed under GNU General Public License v3"
 }

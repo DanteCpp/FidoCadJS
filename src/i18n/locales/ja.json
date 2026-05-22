@@ -349,5 +349,14 @@
   "lib_overwrite_msg": "接頭辞「{0}」のユーザーライブラリは既に存在します。上書きしますか？",
   "name_empty": "名前を空にできません。",
   "key_empty": "キーを空にできません。",
-  "key_exists": "キーは既に存在します。"
+  "key_exists": "キーは既に存在します。",
+  "Grid_x_step": "グリッド X 間隔",
+  "Grid_y_step": "グリッド Y 間隔",
+  "Render_tex": "エディターで LaTeX 数式を表示",
+  "Settings_load_error": "設定を読み込めませんでした。既定値を使用します。",
+  "Settings_save_error": "設定を保存できませんでした。変更は保持されない場合があります。",
+  "Userlib_load_error": "ユーザーライブラリ「{0}」を読み込めませんでした。",
+  "Userlib_save_error": "ユーザーライブラリを保存できませんでした。ストレージが満杯の可能性があります。",
+  "macropicker_preview_hint": "プレビューするコンポーネントを選択してください",
+  "About_license": "GNU General Public License v3 の下でライセンスされています"
 }

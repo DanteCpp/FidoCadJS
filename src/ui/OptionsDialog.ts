@@ -148,8 +148,8 @@ export function showOptionsDialog(panel: EditorFacade): void {
 
 function buildDrawingPanel(s: AppSettings): HTMLElement {
     const p = document.createElement('div');
-    p.appendChild(numRow('Grid X step', 'gridSizeX', s.gridSizeX, 1, 1));
-    p.appendChild(numRow('Grid Y step', 'gridSizeY', s.gridSizeY, 1, 1));
+    p.appendChild(numRow(getString('Grid_x_step'), 'gridSizeX', s.gridSizeX, 1, 1));
+    p.appendChild(numRow(getString('Grid_y_step'), 'gridSizeY', s.gridSizeY, 1, 1));
     p.appendChild(checkRow(getString('SnapToGrid'), 'snapToGrid', s.snapToGrid));
     p.appendChild(checkRow(getString('Anti_aliasing'), 'antiAlias', s.antiAlias));
     p.appendChild(numRow(getString('stroke_size_straight'), 'strokeSize', s.strokeSize, 0.1, 0.1));
@@ -175,7 +175,7 @@ function buildAppearancePanel(s: AppSettings): HTMLElement {
     p.appendChild(colorRow(getString('Select_LR_color'), 'selectionLTRColor', s.selectionLTRColor));
     p.appendChild(colorRow(getString('Select_RL_color'), 'selectionRTLColor', s.selectionRTLColor));
     p.appendChild(document.createElement('hr'));
-    p.appendChild(checkRow('Render LaTeX math in editor', 'renderTeX', s.renderTeX));
+    p.appendChild(checkRow(getString('Render_tex'), 'renderTeX', s.renderTeX));
     return p;
 }
 

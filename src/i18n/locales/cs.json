@@ -349,5 +349,14 @@
   "lib_overwrite_msg": "Uživatelská knihovna s předponou „{0}“ již existuje. Přepsat ji?",
   "name_empty": "Název nesmí být prázdný.",
   "key_empty": "Klíč nesmí být prázdný.",
-  "key_exists": "Klíč již existuje."
+  "key_exists": "Klíč již existuje.",
+  "Grid_x_step": "Krok mřížky X",
+  "Grid_y_step": "Krok mřížky Y",
+  "Render_tex": "Zobrazit vzorce LaTeX v editoru",
+  "Settings_load_error": "Nepodařilo se načíst nastavení. Použijí se výchozí hodnoty.",
+  "Settings_save_error": "Nepodařilo se uložit nastavení. Změny se nemusí zachovat.",
+  "Userlib_load_error": "Nepodařilo se načíst uživatelskou knihovnu \"{0}\".",
+  "Userlib_save_error": "Nepodařilo se uložit uživatelskou knihovnu. Úložiště může být plné.",
+  "macropicker_preview_hint": "Vyberte komponentu pro náhled",
+  "About_license": "Licencováno pod GNU General Public License v3"
 }

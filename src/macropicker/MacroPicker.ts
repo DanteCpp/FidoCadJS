@@ -575,7 +575,7 @@ export class MacroPicker {
         ctx.fillStyle = '#bbb';
         ctx.font = '12px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Select a component to preview', w / 2, h / 2);
+        ctx.fillText(getString('macropicker_preview_hint'), w / 2, h / 2);
         ctx.restore();
     }
 

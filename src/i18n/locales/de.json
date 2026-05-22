@@ -349,5 +349,14 @@
   "lib_overwrite_msg": "Eine Benutzerbibliothek mit dem Präfix „{0}“ existiert bereits. Überschreiben?",
   "name_empty": "Der Name darf nicht leer sein.",
   "key_empty": "Der Schlüssel darf nicht leer sein.",
-  "key_exists": "Schlüssel existiert bereits."
+  "key_exists": "Schlüssel existiert bereits.",
+  "Grid_x_step": "Rasterabstand X",
+  "Grid_y_step": "Rasterabstand Y",
+  "Render_tex": "LaTeX-Formeln im Editor anzeigen",
+  "Settings_load_error": "Einstellungen konnten nicht geladen werden. Standardwerte werden verwendet.",
+  "Settings_save_error": "Einstellungen konnten nicht gespeichert werden. Änderungen gehen möglicherweise verloren.",
+  "Userlib_load_error": "Benutzerbibliothek \"{0}\" konnte nicht geladen werden.",
+  "Userlib_save_error": "Benutzerbibliothek konnte nicht gespeichert werden. Der Speicher ist möglicherweise voll.",
+  "macropicker_preview_hint": "Wählen Sie eine Komponente für die Vorschau",
+  "About_license": "Lizenziert unter der GNU General Public License v3"
 }
