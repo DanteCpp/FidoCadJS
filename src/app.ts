@@ -64,6 +64,7 @@ class FidoCadJS {
                 this.circuitPanel,
                 () => this.newCircuit(),
                 (content, fileName) => this.importLibrary(content, fileName),
+                () => this.reloadAllLibraries(),
             );
             this.menuBar.getElement().replaceWith(newMenu.getElement());
             this.menuBar = newMenu;
@@ -90,6 +91,21 @@ class FidoCadJS {
         const parser = this.circuitPanel.getParserActions();
         this.circuitPanel.getModel().getLibrary().clear();
         await loadStandardLibraries(parser);
+        await UserLibraryStorage.syncFromFolder();
+        UserLibraryStorage.loadUserLibraries(parser);
+        this.libraryModel.forceUpdate();
+        this.macroPicker.refresh(this.libraryModel);
+    }
+
+    /**
+     * Reload standard + user libraries from storage and refresh the picker.
+     * Used after the user changes the library storage folder.
+     */
+    private async reloadAllLibraries(): Promise<void> {
+        const parser = this.circuitPanel.getParserActions();
+        this.circuitPanel.getModel().getLibrary().clear();
+        await loadStandardLibraries(parser);
+        await UserLibraryStorage.syncFromFolder();
         UserLibraryStorage.loadUserLibraries(parser);
         this.libraryModel.forceUpdate();
         this.macroPicker.refresh(this.libraryModel);
@@ -154,6 +170,7 @@ class FidoCadJS {
             this.circuitPanel,
             () => this.newCircuit(),
             (content, fileName) => this.importLibrary(content, fileName),
+            () => this.reloadAllLibraries(),
         );
         this.circuitPanel.setMenuBar(this.menuBar);
         app.insertBefore(this.menuBar.getElement(), this.toolbarEl);
@@ -199,6 +216,7 @@ class FidoCadJS {
 
     private async initLibraries(): Promise<void> {
         await loadStandardLibraries(this.circuitPanel.getParserActions());
+        await UserLibraryStorage.syncFromFolder();
         UserLibraryStorage.loadUserLibraries(this.circuitPanel.getParserActions());
         this.libraryModel = new LibraryModel(this.circuitPanel.getModel());
         this.macroPicker.refresh(this.libraryModel);

@@ -8,6 +8,9 @@
 
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { SettingsManager, type AppSettings } from '../settings/SettingsManager.js';
+import { LibraryFolder } from '../librarymodel/LibraryFolder.js';
+import { UserLibraryStorage } from '../librarymodel/UserLibraryStorage.js';
+import { Toast } from './Toast.js';
 import {
     getString,
     getCurrentLocale,
@@ -16,9 +19,9 @@ import {
     LOCALE_LABELS,
 } from '../i18n/i18n.js';
 
-type TabId = 'drawing' | 'pcb' | 'appearance' | 'language';
+type TabId = 'drawing' | 'pcb' | 'appearance' | 'libraries' | 'language';
 
-export function showOptionsDialog(panel: EditorFacade): void {
+export function showOptionsDialog(panel: EditorFacade, onLibrariesChanged?: () => void): void {
     const mgr = SettingsManager.getInstance();
     const s = mgr.getSettings();
 
@@ -46,6 +49,7 @@ export function showOptionsDialog(panel: EditorFacade): void {
         { id: 'drawing', label: getString('Drawing') },
         { id: 'pcb', label: 'PCB' },
         { id: 'appearance', label: getString('Theme_management') },
+        { id: 'libraries', label: getString('Libraries_tab') },
         { id: 'language', label: getString('Languages_tab') },
     ];
 
@@ -60,6 +64,7 @@ export function showOptionsDialog(panel: EditorFacade): void {
         drawing: buildDrawingPanel(draft),
         pcb: buildPCBPanel(draft),
         appearance: buildAppearancePanel(draft),
+        libraries: buildLibrariesPanel(onLibrariesChanged),
         language: buildLanguagePanel(),
     };
 
@@ -176,6 +181,97 @@ function buildAppearancePanel(s: AppSettings): HTMLElement {
     p.appendChild(colorRow(getString('Select_RL_color'), 'selectionRTLColor', s.selectionRTLColor));
     p.appendChild(document.createElement('hr'));
     p.appendChild(checkRow(getString('Render_tex'), 'renderTeX', s.renderTeX));
+    return p;
+}
+
+function buildLibrariesPanel(onLibrariesChanged?: () => void): HTMLElement {
+    const p = document.createElement('div');
+
+    const info = document.createElement('p');
+    info.textContent = getString('Lib_folder_info');
+    info.style.cssText = 'margin: 0 0 14px 0; font-size: 11px; color: #666; line-height: 1.45;';
+    p.appendChild(info);
+
+    // Browsers without the File System Access API keep the localStorage backend.
+    if (!LibraryFolder.isSupported()) {
+        const warn = document.createElement('p');
+        warn.textContent = getString('Lib_folder_unsupported');
+        warn.style.cssText = 'margin: 0; font-size: 12px; color: #a00;';
+        p.appendChild(warn);
+        return p;
+    }
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; margin-bottom: 14px; gap: 8px;';
+
+    const lbl = document.createElement('label');
+    lbl.textContent = getString('Lib_storage_location');
+    lbl.style.cssText = 'flex: 0 0 auto; color: #333;';
+
+    const valueEl = document.createElement('span');
+    valueEl.style.cssText =
+        'flex: 1; min-width: 0; color: #111; font-weight: bold; ' +
+        'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+    valueEl.textContent = getString('Lib_storage_browser');
+
+    row.appendChild(lbl);
+    row.appendChild(valueEl);
+    p.appendChild(row);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display: flex; gap: 8px;';
+
+    const chooseBtn = document.createElement('button');
+    chooseBtn.textContent = getString('Lib_choose_folder');
+    chooseBtn.style.cssText =
+        'padding: 6px 14px; background: #007bff; color: white; border: none; ' +
+        'border-radius: 4px; cursor: pointer; font-size: 12px;';
+
+    const useBrowserBtn = document.createElement('button');
+    useBrowserBtn.textContent = getString('Lib_use_browser');
+    useBrowserBtn.style.cssText =
+        'padding: 6px 14px; background: #6c757d; color: white; border: none; ' +
+        'border-radius: 4px; cursor: pointer; font-size: 12px; display: none;';
+
+    const showLinked = (name: string | null): void => {
+        valueEl.textContent = name ? name : getString('Lib_storage_browser');
+        useBrowserBtn.style.display = name ? 'inline-block' : 'none';
+    };
+
+    chooseBtn.addEventListener('click', () => {
+        void (async () => {
+            chooseBtn.disabled = true;
+            try {
+                const handle = await LibraryFolder.chooseDirectory();
+                if (!handle) return;
+                await UserLibraryStorage.linkFolderAndMerge();
+                showLinked(handle.name);
+                onLibrariesChanged?.();
+                Toast.show(getString('Lib_folder_linked').replace('{0}', handle.name), 'info');
+            } catch (e) {
+                console.error('Choosing library folder failed:', e);
+                Toast.show(getString('Lib_folder_error'), 'error');
+            } finally {
+                chooseBtn.disabled = false;
+            }
+        })();
+    });
+
+    useBrowserBtn.addEventListener('click', () => {
+        void (async () => {
+            await LibraryFolder.unlink();
+            showLinked(null);
+            Toast.show(getString('Lib_use_browser_done'), 'info');
+        })();
+    });
+
+    btnRow.appendChild(chooseBtn);
+    btnRow.appendChild(useBrowserBtn);
+    p.appendChild(btnRow);
+
+    // Reflect the currently linked folder (if any) once IndexedDB responds.
+    void LibraryFolder.getLinkedDirectoryName().then(showLinked);
+
     return p;
 }
 

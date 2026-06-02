@@ -34,6 +34,7 @@ export class MenuBar {
     private readonly onImportLibrary:
         | ((content: string, fileName: string) => Promise<void>)
         | undefined;
+    private readonly onReloadLibraries: (() => void) | undefined;
     private undoMenuItem: HTMLElement | null = null;
     private redoMenuItem: HTMLElement | null = null;
 
@@ -41,10 +42,12 @@ export class MenuBar {
         panel: EditorFacade,
         onNewCircuit: () => void,
         onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined,
+        onReloadLibraries?: () => void,
     ) {
         this.panel = panel;
         this.onNewCircuit = onNewCircuit;
         this.onImportLibrary = onImportLibrary;
+        this.onReloadLibraries = onReloadLibraries;
 
         this.el = document.createElement('div');
         this.el.style.cssText =
@@ -362,7 +365,7 @@ export class MenuBar {
                 kind: 'action',
                 label: `${getString('Circ_opt')}...`,
                 shortcut: 'Ctrl+,',
-                action: () => showOptionsDialog(this.panel),
+                action: () => showOptionsDialog(this.panel, this.onReloadLibraries),
             },
         ];
     }

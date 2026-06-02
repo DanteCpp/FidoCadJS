@@ -69,6 +69,20 @@ test.describe('Menu Bar — File Menu', () => {
         await expect(page.locator('span', { hasText: 'Ctrl+Y' }).first()).toBeVisible();
         await expect(page.locator('span', { hasText: 'Ctrl+X' }).first()).toBeVisible();
     });
+
+    test('Options dialog has a Libraries tab with a folder picker', async ({ page }) => {
+        // Open View ▸ Options.
+        await page.locator('button', { hasText: 'View' }).hover();
+        await page.waitForTimeout(200);
+        await page.getByText('Options...', { exact: true }).click();
+
+        const dialog = page.locator('dialog[open]');
+        await expect(dialog).toBeVisible();
+
+        // Switch to the Libraries tab and confirm the folder control is present.
+        await dialog.locator('button', { hasText: 'Libraries' }).click();
+        await expect(dialog.locator('button', { hasText: 'Choose folder' })).toBeVisible();
+    });
 });
 
 test.describe('Menu Bar — Actions via API', () => {
