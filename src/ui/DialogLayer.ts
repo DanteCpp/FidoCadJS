@@ -19,6 +19,7 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
 
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
+        overlay.setAttribute('data-testid', 'layer-dialog');
         overlay.style.cssText =
             'position: fixed; inset: 0; background: rgba(0,0,0,0.35); ' +
             'z-index: 10000; display: flex; align-items: center; justify-content: center;';
@@ -85,6 +86,7 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
 
             // Alpha slider
             const alphaSlider = document.createElement('input');
+            alphaSlider.setAttribute('data-testid', `layer-alpha-${i}`);
             alphaSlider.type = 'range';
             alphaSlider.min = '0';
             alphaSlider.max = '255';
@@ -118,6 +120,7 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
         btnRow.appendChild(cancelBtn);
 
         const okBtn = document.createElement('button');
+        okBtn.setAttribute('data-testid', 'layer-dialog-ok');
         okBtn.textContent = getString('Ok_btn');
         okBtn.style.cssText =
             'padding: 8px 18px; border: none; border-radius: 4px; ' +
@@ -136,20 +139,35 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
         };
 
         const applyChanges = () => {
+            let anyChanged = false;
             for (let i = 0; i < 16; i++) {
                 const r = rows[i]!;
                 const layer = layers[i]!;
                 const color = layer.getColor();
-                if (color) {
-                    const hex = r.colorInput.value.replace('#', '');
-                    color.setRGB(parseInt(hex, 16));
+
+                // Compare against the current values exactly as the dialog shows
+                // them (the alpha slider quantises to /255), so a layer the user
+                // never touched is not flagged modified — only modified layers
+                // are written to the file header.
+                const curHex = color ? '#' + color.getRGB().toString(16).padStart(6, '0') : null;
+                const curAlpha = String(Math.round(layer.getAlpha() * 255));
+                const colorChanged = curHex !== null && r.colorInput.value !== curHex;
+                const alphaChanged = r.alphaSlider.value !== curAlpha;
+                const visChanged = r.visCheck.checked !== layer.isVisible();
+                const nameChanged = r.nameInput.value !== layer.getDescription();
+
+                if (!colorChanged && !alphaChanged && !visChanged && !nameChanged) continue;
+
+                if (color && colorChanged) {
+                    color.setRGB(parseInt(r.colorInput.value.replace('#', ''), 16));
                 }
                 layer.setDescription(r.nameInput.value);
                 layer.setAlpha(Number(r.alphaSlider.value) / 255);
                 layer.setVisible(r.visCheck.checked);
                 layer.setModified(true);
+                anyChanged = true;
             }
-            panel.render();
+            if (anyChanged) panel.render();
         };
 
         cancelBtn.addEventListener(
