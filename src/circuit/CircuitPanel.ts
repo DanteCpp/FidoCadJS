@@ -41,6 +41,7 @@ import { ExportFacade } from '../export/ExportFacade.js';
 import { createEditorServices } from './services.js';
 import { InputHandler } from './InputHandler.js';
 import type { InputCallbacks } from './InputHandler.js';
+import { getString } from '../i18n/i18n.js';
 
 export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
@@ -55,7 +56,11 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private ctx: GraphicsCanvas;
     private model: DrawingModel;
     private parserActions: ParserActions;
-    private currentFileName: string = 'circuit.fcd';
+    /**
+     * Name of the file backing this drawing, or null when the drawing has
+     * never been saved/opened (shown as "Untitled" in the tab title).
+     */
+    private currentFileName: string | null = null;
     private currentFileHandle: FileSystemFileHandle | null = null;
     private mapCoordinates: MapCoordinates;
     private gridVisible: boolean = true;
@@ -267,10 +272,11 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.updateDocumentTitle();
     }
 
-    /** Update the browser tab title to reflect modified state. */
+    /** Update the browser tab title to reflect the file name and modified state. */
     private updateDocumentTitle(): void {
         const modified = this.model.isModified();
-        document.title = (modified ? '* ' : '') + 'FidoCadJS';
+        const name = this.currentFileName ?? getString('Untitled');
+        document.title = (modified ? '* ' : '') + 'FidoCadJS - ' + name;
     }
 
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
@@ -498,13 +504,18 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.model.setModified(false);
     }
 
-    /** Name of the file currently associated with this circuit. */
+    /**
+     * Name of the file currently associated with this circuit. Falls back to a
+     * default suggestion ("circuit.fcd") when the drawing has never been named,
+     * so the Save dialog always has a sensible filename to propose.
+     */
     getFileName(): string {
-        return this.currentFileName;
+        return this.currentFileName ?? 'circuit.fcd';
     }
 
     setFileName(name: string): void {
         this.currentFileName = name;
+        this.updateDocumentTitle();
     }
 
     /**
@@ -753,6 +764,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.undoActions.reset();
         this.selectionActions.setSelectionAll(false);
         this.inputHandler.clearGhostAndSelection();
+        // A new drawing has no backing file yet — reset to the "Untitled" state.
+        this.currentFileName = null;
+        this.currentFileHandle = null;
+        this.model.setModified(false);
         this.render();
         this.onUndoStateChange?.();
     }
