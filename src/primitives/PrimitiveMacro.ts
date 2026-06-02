@@ -9,6 +9,7 @@
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
+import { Globals } from '../globals/Globals.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { DrawingModel } from '../circuit/model/DrawingModel.js';
@@ -227,6 +228,26 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.macroModel.setLayers(layerV);
     }
 
+    /**
+     * Compose this macro's orientation with that of the enclosing coordinate
+     * system, accounting for the non-commutativity of rotation and mirroring.
+     *
+     * The coordinate transform for an (orientation o, mirror m) pair is the
+     * dihedral-group element `sᵐ·rᵒ`. Composing the parent transform with this
+     * macro's gives `s^mp·r^op · s^m·r^o`. Using `s·r = r⁻¹·s`, the rotation
+     * parts only add directly when this macro is not mirrored; when it is, the
+     * parent's rotation contributes with the opposite sign. (The combined
+     * mirror flag is always `m XOR parentMirror`, handled by the caller.)
+     *
+     * This only differs from a plain sum when the parent is itself rotated —
+     * i.e. for nested macros — so flat drawings are unaffected.
+     */
+    private composeOrientation(coordSys: MapCoordinates): number {
+        const parentO = coordSys.getOrientation();
+        const o = this.m ? this.o - parentO : this.o + parentO;
+        return ((o % 4) + 4) % 4;
+    }
+
     private drawMacroContents(g: GraphicsInterface, coordSys: MapCoordinates): void {
         if (this.changed) {
             this.changed = false;
@@ -237,7 +258,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
             this.macroCoord.setYMagnitude(coordSys.getYMagnitude());
             this.macroCoord.setXCenter(coordSys.mapXr(this.x1, this.y1));
             this.macroCoord.setYCenter(coordSys.mapYr(this.x1, this.y1));
-            this.macroCoord.setOrientation((this.o + coordSys.getOrientation()) % 4);
+            this.macroCoord.setOrientation(this.composeOrientation(coordSys));
             this.macroCoord.setMirror(this.m !== coordSys.getMirror());
             this.macroCoord.setMacro(true);
             this.macroCoord.resetMinMax();
@@ -289,8 +310,8 @@ export class PrimitiveMacro extends GraphicPrimitive {
         if (tokens[0] !== 'MC') throw new Error(`MC: Invalid primitive: ${tokens[0]}`);
         if (nn < 6) throw new Error('Bad arguments on MC');
 
-        this.virtualPoint[0]!.x = parseInt(tokens[1]!, 10);
-        this.virtualPoint[0]!.y = parseInt(tokens[2]!, 10);
+        this.virtualPoint[0]!.x = Globals.coord(tokens[1]);
+        this.virtualPoint[0]!.y = Globals.coord(tokens[2]);
         this.virtualPoint[1]!.x = this.virtualPoint[0]!.x + 10;
         this.virtualPoint[1]!.y = this.virtualPoint[0]!.y + 10;
         this.virtualPoint[2]!.x = this.virtualPoint[0]!.x + 10;
@@ -440,7 +461,8 @@ export class PrimitiveMacro extends GraphicPrimitive {
     toString(extensions: boolean): string {
         const mirror = this.m ? '1' : '0';
         let s =
-            `MC ${this.virtualPoint[0]!.x} ${this.virtualPoint[0]!.y} ` +
+            `MC ${Globals.formatCoord(this.virtualPoint[0]!.x)} ` +
+            `${Globals.formatCoord(this.virtualPoint[0]!.y)} ` +
             `${this.o} ${mirror} ${this.macroName}\n`;
         s += this.saveText(extensions);
         return s;
@@ -481,7 +503,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
         mc.setYMagnitude(cs.getYMagnitude());
         mc.setXCenter(cs.mapXr(x1, y1));
         mc.setYCenter(cs.mapYr(x1, y1));
-        mc.setOrientation((this.o + cs.getOrientation()) % 4);
+        mc.setOrientation(this.composeOrientation(cs));
         mc.setMirror(this.m !== cs.getMirror());
         mc.setMacro(true);
         this.macroModel.setDrawOnlyLayer(this.drawOnlyLayer);

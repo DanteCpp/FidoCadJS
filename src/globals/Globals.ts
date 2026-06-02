@@ -44,17 +44,41 @@ export class Globals {
     // Parser safety limits — defend against malformed/hostile .fcd inputs.
     static readonly MAX_VERTICES = 10000;
     static readonly MAX_MACRO_DEPTH = 16;
+    // Coordinates are non-negative numbers in the FidoCadJ logical grid. The
+    // origin (0,0) is the top-left; negative coordinates are not supported by
+    // the editor or the viewport, so parsed values are clamped to [0, MAX].
+    // Coordinates may be fractional (floating-point); integer, FidoCadJ-
+    // compatible coordinates are obtained simply by drawing with snap-to-grid
+    // enabled, which lands every point on integer grid multiples.
     static readonly MAX_COORD = 1_000_000;
-    static readonly MIN_COORD = -1_000_000;
+    static readonly MIN_COORD = 0;
 
-    /** Validate and clamp a parsed integer coordinate. Returns null on NaN. */
+    /** Validate and clamp a parsed coordinate. Returns null on NaN. */
     static parseCoord(token: string | undefined): number | null {
         if (token === undefined) return null;
-        const v = parseInt(token, 10);
+        const v = parseFloat(token);
         if (!Number.isFinite(v)) return null;
         if (v > Globals.MAX_COORD) return Globals.MAX_COORD;
         if (v < Globals.MIN_COORD) return Globals.MIN_COORD;
         return v;
+    }
+
+    /**
+     * Parse a coordinate token, returning 0 for non-numeric input. Convenience
+     * wrapper around parseCoord for fixed-argument primitives that do not
+     * null-check their coordinate fields.
+     */
+    static coord(token: string | undefined): number {
+        return Globals.parseCoord(token) ?? 0;
+    }
+
+    /**
+     * Serialize a coordinate for the FCD format: written with up to 3 decimals,
+     * trailing zeros (and the decimal point) trimmed, so whole numbers are
+     * emitted as plain integers.
+     */
+    static formatCoord(v: number): string {
+        return parseFloat(v.toFixed(3)).toString();
     }
 
     static prettifyPath(s: string, len: number): string {

@@ -635,7 +635,7 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
         let s = this.isFilled ? 'CP ' : 'CV ';
         s += this.isClosed ? '1 ' : '0 ';
         for (let i = 0; i < this.nPoints; i++)
-            s += `${this.virtualPoint[i]!.x} ${this.virtualPoint[i]!.y} `;
+            s += `${Globals.formatCoord(this.virtualPoint[i]!.x)} ${Globals.formatCoord(this.virtualPoint[i]!.y)} `;
         s += `${this.getLayer()}\n`;
         if (
             extensions &&

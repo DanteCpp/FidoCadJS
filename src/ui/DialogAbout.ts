@@ -28,6 +28,7 @@ export function showAboutDialog(): void {
         s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const desc1 = escape(getString('programDescription1'));
     const desc2 = escape(getString('programDescription2'));
+    const license = escape(getString('About_license'));
     box.innerHTML = `
         <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700;">FidoCadJS</h2>
         <p style="margin: 0 0 8px; font-size: 14px; color: #555;">Version 0.99.0-beta</p>
@@ -40,7 +41,7 @@ export function showAboutDialog(): void {
             </a>
         </p>
         <p style="margin: 0 0 20px; font-size: 10px; color: #aaa;">
-            Licensed under GNU General Public License v3
+            ${license}
         </p>
     `;
 

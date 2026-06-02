@@ -291,10 +291,10 @@ export class MapCoordinates {
     }
 
     unmapXnosnap(x: number): number {
-        return Math.round((x - this.xCenter) / this.xMagnitude);
+        return (x - this.xCenter) / this.xMagnitude;
     }
     unmapYnosnap(y: number): number {
-        return Math.round((y - this.yCenter) / this.yMagnitude);
+        return (y - this.yCenter) / this.yMagnitude;
     }
 
     unmapXsnap(x: number): number {

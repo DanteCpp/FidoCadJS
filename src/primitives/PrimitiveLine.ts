@@ -182,12 +182,12 @@ export class PrimitiveLine extends GraphicPrimitive {
         this.changed = true;
         if (tokens[0] !== 'LI') throw new Error(`LI: Invalid primitive: ${tokens[0]}`);
         if (nn < 5) throw new Error('Bad arguments on LI');
-        const x1 = parseInt(tokens[1]!, 10);
-        const y1 = parseInt(tokens[2]!, 10);
+        const x1 = Globals.coord(tokens[1]);
+        const y1 = Globals.coord(tokens[2]);
         this.virtualPoint[0]!.x = x1;
         this.virtualPoint[0]!.y = y1;
-        this.virtualPoint[1]!.x = parseInt(tokens[3]!, 10);
-        this.virtualPoint[1]!.y = parseInt(tokens[4]!, 10);
+        this.virtualPoint[1]!.x = Globals.coord(tokens[3]);
+        this.virtualPoint[1]!.y = Globals.coord(tokens[4]);
         this.virtualPoint[this.getNameVirtualPointNumber()]!.x = x1 + 5;
         this.virtualPoint[this.getNameVirtualPointNumber()]!.y = y1 + 5;
         this.virtualPoint[this.getValueVirtualPointNumber()]!.x = x1 + 5;
@@ -249,8 +249,10 @@ export class PrimitiveLine extends GraphicPrimitive {
         )
             return '';
         let s =
-            `LI ${this.virtualPoint[0]!.x} ${this.virtualPoint[0]!.y} ` +
-            `${this.virtualPoint[1]!.x} ${this.virtualPoint[1]!.y} ${this.getLayer()}\n`;
+            `LI ${Globals.formatCoord(this.virtualPoint[0]!.x)} ` +
+            `${Globals.formatCoord(this.virtualPoint[0]!.y)} ` +
+            `${Globals.formatCoord(this.virtualPoint[1]!.x)} ` +
+            `${Globals.formatCoord(this.virtualPoint[1]!.y)} ${this.getLayer()}\n`;
         if (
             extensions &&
             (this.arrowData.atLeastOneArrow() ||

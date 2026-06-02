@@ -70,4 +70,49 @@ describe('Globals', () => {
         const result = Globals.adjustExtension('"test.txt"', 'svg');
         expect(result).toBe('test.svg');
     });
+
+    it('parseCoord returns the value for valid non-negative integers', () => {
+        expect(Globals.parseCoord('0')).toBe(0);
+        expect(Globals.parseCoord('1500')).toBe(1500);
+    });
+
+    it('parseCoord clamps negative coordinates to 0', () => {
+        expect(Globals.MIN_COORD).toBe(0);
+        expect(Globals.parseCoord('-5')).toBe(0);
+        expect(Globals.parseCoord('-1000000')).toBe(0);
+    });
+
+    it('parseCoord clamps values above MAX_COORD', () => {
+        expect(Globals.MAX_COORD).toBe(1_000_000);
+        expect(Globals.parseCoord('1000000')).toBe(1_000_000);
+        expect(Globals.parseCoord('5000000')).toBe(Globals.MAX_COORD);
+    });
+
+    it('parseCoord returns null for non-numeric tokens', () => {
+        expect(Globals.parseCoord('abc')).toBeNull();
+        expect(Globals.parseCoord(undefined)).toBeNull();
+    });
+
+    it('parseCoord preserves fractional input', () => {
+        expect(Globals.parseCoord('12.7')).toBe(12.7);
+        expect(Globals.parseCoord('12.125')).toBe(12.125);
+    });
+
+    it('coord returns 0 for non-numeric tokens', () => {
+        expect(Globals.coord('abc')).toBe(0);
+        expect(Globals.coord(undefined)).toBe(0);
+        expect(Globals.coord('42')).toBe(42);
+    });
+
+    it('formatCoord writes up to 3 decimals, trimming trailing zeros', () => {
+        expect(Globals.formatCoord(12.5)).toBe('12.5');
+        expect(Globals.formatCoord(12.125)).toBe('12.125');
+        expect(Globals.formatCoord(13)).toBe('13');
+        expect(Globals.formatCoord(12.10004)).toBe('12.1');
+    });
+
+    it('round-trips a fractional coordinate through parse and format', () => {
+        const token = '37.25';
+        expect(Globals.formatCoord(Globals.parseCoord(token)!)).toBe(token);
+    });
 });

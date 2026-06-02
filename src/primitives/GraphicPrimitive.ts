@@ -194,11 +194,17 @@ export abstract class GraphicPrimitive {
         const vvp = this.getValueVirtualPointNumber();
         const fs43 = Math.trunc((this.macroFontSize * 4) / 3);
 
-        s.push(`TY ${this.virtualPoint[nvp]!.x} ${this.virtualPoint[nvp]!.y}`);
+        s.push(
+            `TY ${Globals.formatCoord(this.virtualPoint[nvp]!.x)} ` +
+                `${Globals.formatCoord(this.virtualPoint[nvp]!.y)}`,
+        );
         s.push(` ${fs43} ${this.macroFontSize} 0 0 ${this.getLayer()}`);
         s.push(` ${subsFont} ${this.name}\n`);
 
-        s.push(`TY ${this.virtualPoint[vvp]!.x} ${this.virtualPoint[vvp]!.y}`);
+        s.push(
+            `TY ${Globals.formatCoord(this.virtualPoint[vvp]!.x)} ` +
+                `${Globals.formatCoord(this.virtualPoint[vvp]!.y)}`,
+        );
         s.push(` ${fs43} ${this.macroFontSize} 0 0 ${this.getLayer()}`);
         s.push(` ${subsFont} ${this.value}\n`);
 
@@ -276,8 +282,8 @@ export abstract class GraphicPrimitive {
         if (nn < 9) throw new Error('Bad arguments on TY');
 
         const vvp = this.getValueVirtualPointNumber();
-        this.virtualPoint[vvp]!.x = parseInt(tokens[1]!, 10);
-        this.virtualPoint[vvp]!.y = parseInt(tokens[2]!, 10);
+        this.virtualPoint[vvp]!.x = Globals.coord(tokens[1]);
+        this.virtualPoint[vvp]!.y = Globals.coord(tokens[2]);
 
         this.macroFont =
             tokens[8] === '*' ? Globals.defaultTextFont : tokens[8]!.replaceAll('++', ' ');
@@ -295,8 +301,8 @@ export abstract class GraphicPrimitive {
         if (nn < 9) throw new Error('bad arguments on TY');
 
         const nvp = this.getNameVirtualPointNumber();
-        this.virtualPoint[nvp]!.x = parseInt(tokens[1]!, 10);
-        this.virtualPoint[nvp]!.y = parseInt(tokens[2]!, 10);
+        this.virtualPoint[nvp]!.x = Globals.coord(tokens[1]);
+        this.virtualPoint[nvp]!.y = Globals.coord(tokens[2]);
 
         const parts: string[] = [];
         for (let j = 9; j < nn; j++) parts.push(tokens[j]!);

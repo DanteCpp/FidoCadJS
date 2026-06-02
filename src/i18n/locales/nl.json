@@ -114,6 +114,7 @@
   "extFCJ_c": "Activeer FidoCadJS extenties tijdens kopiëren elementen",
   "Restart": "Herstarten",
   "Drawing": "Tekening",
+  "Untitled": "Naamloos",
   "FidoCad": "FidoCadJS extenties",
   "pcbline_width": "PCB lijnbreedte:",
   "pcbpad_width": "PCB oogmaat:",
@@ -349,5 +350,14 @@
   "lib_overwrite_msg": "Er bestaat al een gebruikersbibliotheek met voorvoegsel \"{0}\". Overschrijven?",
   "name_empty": "De naam mag niet leeg zijn.",
   "key_empty": "De sleutel mag niet leeg zijn.",
-  "key_exists": "De sleutel bestaat al."
+  "key_exists": "De sleutel bestaat al.",
+  "Grid_x_step": "Rasterstap X",
+  "Grid_y_step": "Rasterstap Y",
+  "Render_tex": "LaTeX-formules in editor weergeven",
+  "Settings_load_error": "Instellingen konden niet worden geladen. Standaardwaarden worden gebruikt.",
+  "Settings_save_error": "Instellingen konden niet worden opgeslagen. Wijzigingen blijven mogelijk niet behouden.",
+  "Userlib_load_error": "Gebruikersbibliotheek \"{0}\" kon niet worden geladen.",
+  "Userlib_save_error": "Gebruikersbibliotheek kon niet worden opgeslagen. De opslag is mogelijk vol.",
+  "macropicker_preview_hint": "Selecteer een component voor het voorbeeld",
+  "About_license": "Gelicentieerd onder de GNU General Public License v3"
 }

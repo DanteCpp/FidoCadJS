@@ -114,6 +114,7 @@
   "extFCJ_c": "Activer extensions FidoCadJS pendant la copie d'éléments",
   "Restart": "Démarrage",
   "Drawing": "Dessin",
+  "Untitled": "Sans titre",
   "FidoCad": "Extensions FidoCadJS",
   "pcbline_width": "Largeur piste C.I. :",
   "pcbpad_width": "Largeur pastille C.I. :",
@@ -349,5 +350,14 @@
   "lib_overwrite_msg": "Une bibliothèque utilisateur avec le préfixe « {0} » existe déjà. La remplacer ?",
   "name_empty": "Le nom ne doit pas être vide.",
   "key_empty": "La clé ne doit pas être vide.",
-  "key_exists": "La clé existe déjà."
+  "key_exists": "La clé existe déjà.",
+  "Grid_x_step": "Pas de grille X",
+  "Grid_y_step": "Pas de grille Y",
+  "Render_tex": "Afficher les formules LaTeX dans l'éditeur",
+  "Settings_load_error": "Impossible de charger les paramètres. Utilisation des valeurs par défaut.",
+  "Settings_save_error": "Impossible d'enregistrer les paramètres. Les modifications pourraient ne pas être conservées.",
+  "Userlib_load_error": "Impossible de charger la bibliothèque utilisateur « {0} ».",
+  "Userlib_save_error": "Impossible d'enregistrer la bibliothèque utilisateur. La mémoire est peut-être pleine.",
+  "macropicker_preview_hint": "Sélectionnez un composant pour l'aperçu",
+  "About_license": "Distribué sous licence GNU General Public License v3"
 }

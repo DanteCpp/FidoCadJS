@@ -114,6 +114,7 @@
   "extFCJ_c": "在拷贝元件时加入FidoCadJS扩展",
   "Restart": "启动",
   "Drawing": "绘图",
+  "Untitled": "未命名",
   "FidoCad": "FidoCadJS扩展",
   "pcbline_width": "PCB导线宽度:",
   "pcbpad_width": "PCB焊盘宽度:",
@@ -349,5 +350,14 @@
   "lib_overwrite_msg": "前缀为“{0}”的用户库已存在。是否覆盖？",
   "name_empty": "名称不能为空。",
   "key_empty": "键不能为空。",
-  "key_exists": "键已存在。"
+  "key_exists": "键已存在。",
+  "Grid_x_step": "网格 X 间距",
+  "Grid_y_step": "网格 Y 间距",
+  "Render_tex": "在编辑器中渲染 LaTeX 公式",
+  "Settings_load_error": "无法加载设置，将使用默认值。",
+  "Settings_save_error": "无法保存设置，更改可能不会保留。",
+  "Userlib_load_error": "无法加载用户库“{0}”。",
+  "Userlib_save_error": "无法保存用户库，存储空间可能已满。",
+  "macropicker_preview_hint": "选择一个元件以预览",
+  "About_license": "依据 GNU General Public License v3 授权"
 }

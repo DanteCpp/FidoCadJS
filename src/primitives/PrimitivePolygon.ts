@@ -255,7 +255,9 @@ export class PrimitivePolygon extends GraphicPrimitive {
     toString(extensions: boolean): string {
         const parts: string[] = [this.isFilled ? 'PP ' : 'PV '];
         for (let i = 0; i < this.nPoints; i++) {
-            parts.push(`${this.virtualPoint[i]!.x} ${this.virtualPoint[i]!.y} `);
+            parts.push(
+                `${Globals.formatCoord(this.virtualPoint[i]!.x)} ${Globals.formatCoord(this.virtualPoint[i]!.y)} `,
+            );
         }
         parts.push(`${this.getLayer()}\n`);
         let cmd = parts.join('');
