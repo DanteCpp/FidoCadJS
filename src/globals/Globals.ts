@@ -44,20 +44,50 @@ export class Globals {
     // Parser safety limits — defend against malformed/hostile .fcd inputs.
     static readonly MAX_VERTICES = 10000;
     static readonly MAX_MACRO_DEPTH = 16;
-    // Coordinates are non-negative integers in the FidoCadJ logical grid. The
+    // Coordinates are non-negative numbers in the FidoCadJ logical grid. The
     // origin (0,0) is the top-left; negative coordinates are not supported by
     // the editor or the viewport, so parsed values are clamped to [0, MAX].
     static readonly MAX_COORD = 1_000_000;
     static readonly MIN_COORD = 0;
 
-    /** Validate and clamp a parsed integer coordinate. Returns null on NaN. */
+    // When false (default) coordinates are integers, for strict FidoCadJ
+    // compatibility. When true the editor accepts and serializes fractional
+    // (floating-point) coordinates — a FidoCadJS extension that stock FidoCadJ
+    // cannot read. Driven by the `strictCompat` setting (floatCoords =
+    // !strictCompat); see SettingsManager.
+    static floatCoords = false;
+
+    /**
+     * Validate and clamp a parsed coordinate. Returns null on NaN. In strict
+     * (integer) mode the value is rounded to the nearest integer.
+     */
     static parseCoord(token: string | undefined): number | null {
         if (token === undefined) return null;
-        const v = parseInt(token, 10);
+        let v = parseFloat(token);
         if (!Number.isFinite(v)) return null;
+        if (!Globals.floatCoords) v = Math.round(v);
         if (v > Globals.MAX_COORD) return Globals.MAX_COORD;
         if (v < Globals.MIN_COORD) return Globals.MIN_COORD;
         return v;
+    }
+
+    /**
+     * Parse a coordinate token, returning 0 for non-numeric input. Convenience
+     * wrapper around parseCoord for fixed-argument primitives that do not
+     * null-check their coordinate fields.
+     */
+    static coord(token: string | undefined): number {
+        return Globals.parseCoord(token) ?? 0;
+    }
+
+    /**
+     * Serialize a coordinate for the FCD format. In strict (integer) mode the
+     * value is rounded to the nearest integer; in float mode it is written with
+     * up to 3 decimals, trailing zeros (and the point) trimmed.
+     */
+    static formatCoord(v: number): string {
+        if (!Globals.floatCoords) return String(Math.round(v));
+        return parseFloat(v.toFixed(3)).toString();
     }
 
     static prettifyPath(s: string, len: number): string {

@@ -49,13 +49,15 @@ describe('DrawingSize.getImageSize', () => {
         expect(o.y).toBeLessThanOrEqual(25);
     });
 
-    it('negative coordinates are tracked correctly', () => {
+    it('negative coordinates are clamped to 0 on read', () => {
+        // Negative coordinates are not supported: the parser clamps them to 0,
+        // so this line is read as (0,0)-(50,50) rather than (-50,-50)-(50,50).
         const m = makeModel('[FIDOCAD]\nLI -50 -50 50 50 0\n');
         const o = new PointG(0, 0);
         const d = DrawingSize.getImageSize(m, 1, true, o);
-        expect(d.width).toBeGreaterThanOrEqual(100);
-        expect(o.x).toBeLessThanOrEqual(-45); // origin near (-50,-50)
-        expect(o.y).toBeLessThanOrEqual(-45);
+        expect(d.width).toBeGreaterThanOrEqual(50);
+        expect(o.x).toBeGreaterThanOrEqual(0); // origin never north-west of (0,0)
+        expect(o.y).toBeGreaterThanOrEqual(0);
     });
 
     it('mutates the model.changed flag', () => {

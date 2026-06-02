@@ -6,6 +6,8 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
+import { Globals } from '../globals/Globals.js';
+
 export class MapCoordinates {
     private xCenter: number = 0;
     private yCenter: number = 0;
@@ -291,10 +293,12 @@ export class MapCoordinates {
     }
 
     unmapXnosnap(x: number): number {
-        return Math.round((x - this.xCenter) / this.xMagnitude);
+        const v = (x - this.xCenter) / this.xMagnitude;
+        return Globals.floatCoords ? v : Math.round(v);
     }
     unmapYnosnap(y: number): number {
-        return Math.round((y - this.yCenter) / this.yMagnitude);
+        const v = (y - this.yCenter) / this.yMagnitude;
+        return Globals.floatCoords ? v : Math.round(v);
     }
 
     unmapXsnap(x: number): number {

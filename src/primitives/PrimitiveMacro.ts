@@ -9,6 +9,7 @@
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
+import { Globals } from '../globals/Globals.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { DrawingModel } from '../circuit/model/DrawingModel.js';
@@ -309,8 +310,8 @@ export class PrimitiveMacro extends GraphicPrimitive {
         if (tokens[0] !== 'MC') throw new Error(`MC: Invalid primitive: ${tokens[0]}`);
         if (nn < 6) throw new Error('Bad arguments on MC');
 
-        this.virtualPoint[0]!.x = parseInt(tokens[1]!, 10);
-        this.virtualPoint[0]!.y = parseInt(tokens[2]!, 10);
+        this.virtualPoint[0]!.x = Globals.coord(tokens[1]);
+        this.virtualPoint[0]!.y = Globals.coord(tokens[2]);
         this.virtualPoint[1]!.x = this.virtualPoint[0]!.x + 10;
         this.virtualPoint[1]!.y = this.virtualPoint[0]!.y + 10;
         this.virtualPoint[2]!.x = this.virtualPoint[0]!.x + 10;
@@ -460,7 +461,8 @@ export class PrimitiveMacro extends GraphicPrimitive {
     toString(extensions: boolean): string {
         const mirror = this.m ? '1' : '0';
         let s =
-            `MC ${this.virtualPoint[0]!.x} ${this.virtualPoint[0]!.y} ` +
+            `MC ${Globals.formatCoord(this.virtualPoint[0]!.x)} ` +
+            `${Globals.formatCoord(this.virtualPoint[0]!.y)} ` +
             `${this.o} ${mirror} ${this.macroName}\n`;
         s += this.saveText(extensions);
         return s;

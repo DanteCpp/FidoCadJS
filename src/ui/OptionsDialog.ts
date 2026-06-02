@@ -156,6 +156,7 @@ function buildDrawingPanel(s: AppSettings): HTMLElement {
     p.appendChild(numRow(getString('Grid_x_step'), 'gridSizeX', s.gridSizeX, 1, 1));
     p.appendChild(numRow(getString('Grid_y_step'), 'gridSizeY', s.gridSizeY, 1, 1));
     p.appendChild(checkRow(getString('SnapToGrid'), 'snapToGrid', s.snapToGrid));
+    p.appendChild(checkRow(getString('Strict_fidocad_compat'), 'strictCompat', s.strictCompat));
     p.appendChild(checkRow(getString('Anti_aliasing'), 'antiAlias', s.antiAlias));
     p.appendChild(numRow(getString('stroke_size_straight'), 'strokeSize', s.strokeSize, 0.1, 0.1));
     p.appendChild(

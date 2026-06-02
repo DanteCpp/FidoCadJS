@@ -118,16 +118,26 @@ lines are dropped on save).
 
 ## 3. Coordinate system and units
 
-- Coordinates are integers in the **FidoCadJ logical grid**.
+- Coordinates live in the **FidoCadJ logical grid**.
 - One grid unit corresponds to **5 mils (0.127 mm)** in the FidoCadJ
   convention; this matters for export scaling, not for the FCD syntax itself.
 - The origin `(0, 0)` is at the **top-left**; **x grows right, y grows down**.
-- Coordinates are **non-negative**. Parsed coordinates are clamped to the range
-  `[0, +1 000 000]` (`MIN_COORD`/`MAX_COORD`); non-numeric coordinates are
-  rejected for the variable-length primitives (`PP`/`PV`, `CP`/`CV`).
+- Coordinates are **non-negative** in every mode. Parsed coordinates are clamped
+  to the range `[0, +1 000 000]` (`MIN_COORD`/`MAX_COORD`); non-numeric
+  coordinates are rejected for the variable-length primitives (`PP`/`PV`,
+  `CP`/`CV`).
 - Negative coordinates are **not supported**: any negative value in the source
   is clamped to `0` by the lexer, the editor refuses to move primitives to
   negative coordinates, and the viewport cannot pan north-west of the origin.
+- **Integer vs. floating-point.** By default (and for **strict FidoCadJ
+  compatibility**, the `strictCompat` setting) coordinates are **integers**:
+  fractional input is rounded to the nearest integer on read and integers are
+  written on save. When strict compatibility is **disabled**, FidoCadJS accepts
+  and writes **floating-point** coordinates with up to **3 decimals** (trailing
+  zeros and the decimal point trimmed, e.g. `12.5`, `12.125`, `13`). This is a
+  **FidoCadJS extension**: a drawing saved with fractional coordinates is *not*
+  guaranteed to be readable by stock FidoCadJ. Both bounds and the
+  non-negativity rule above apply identically in float mode.
 
 ### 3.1 Layers
 

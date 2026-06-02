@@ -241,8 +241,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         this.recalcSize = true;
         if (tokens[0] === 'TY') {
             if (nn < 9) throw new Error('Bad arguments on TY');
-            this.virtualPoint[0]!.x = parseInt(tokens[1]!, 10);
-            this.virtualPoint[0]!.y = parseInt(tokens[2]!, 10);
+            this.virtualPoint[0]!.x = Globals.coord(tokens[1]);
+            this.virtualPoint[0]!.y = Globals.coord(tokens[2]);
             this.siy = Math.round(parseFloat(tokens[3]!));
             this.six = Math.round(parseFloat(tokens[4]!));
             this.checkSizes();
@@ -260,8 +260,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.txt = parts.join('');
         } else if (tokens[0] === 'TE') {
             if (nn < 4) throw new Error('Bad arguments on TE');
-            this.virtualPoint[0]!.x = parseInt(tokens[1]!, 10);
-            this.virtualPoint[0]!.y = parseInt(tokens[2]!, 10);
+            this.virtualPoint[0]!.x = Globals.coord(tokens[1]);
+            this.virtualPoint[0]!.y = Globals.coord(tokens[2]);
             this.six = 3;
             this.siy = 4;
             this.o = 0;
@@ -357,7 +357,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         const fn = this.fontName === null ? Globals.defaultTextFont : this.fontName;
         const subsFont = fn === Globals.defaultTextFont ? '*' : fn.replaceAll(' ', '++');
         return (
-            `TY ${this.virtualPoint[0]!.x} ${this.virtualPoint[0]!.y} ` +
+            `TY ${Globals.formatCoord(this.virtualPoint[0]!.x)} ` +
+            `${Globals.formatCoord(this.virtualPoint[0]!.y)} ` +
             `${this.siy} ${this.six} ${this.o} ${this.sty} ${this.getLayer()} ` +
             `${subsFont} ${this.txt}\n`
         );

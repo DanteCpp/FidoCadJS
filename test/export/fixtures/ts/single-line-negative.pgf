@@ -1,10 +1,10 @@
-\begin{pgfpicture}{0cm}{0cm}{106pt}{106pt}
+\begin{pgfpicture}{0cm}{0cm}{56pt}{56pt}
 % Created by FidoCadJS
 \pgfsetxvec{\pgfpoint{1pt}{0pt}}
 \pgfsetyvec{\pgfpoint{0pt}{1pt}}
 \pgfsetroundjoin
 \pgfsetroundcap
-\pgftranslateto{\pgfxy(0,106)}
+\pgftranslateto{\pgfxy(0,56)}
 \begin{pgfmagnify}{1}{-1}
 % Layer color definitions
 \definecolor{layer0}{rgb}{0,0,0}
@@ -27,6 +27,6 @@
 \color{layer3}
 \pgfsetlinewidth{0.5pt}
 \pgfsetdash{}{0pt}
-\pgfline{\pgfxy(3,3)}{\pgfxy(103,103)}
+\pgfline{\pgfxy(3,3)}{\pgfxy(53,53)}
 \end{pgfmagnify}
 \end{pgfpicture}

@@ -45,6 +45,7 @@
   "tooltip_layerSel": "Change selected layer.",
   "ShowGrid": "Show grid",
   "SnapToGrid": "Snap to grid",
+  "Strict_fidocad_compat": "Strict FidoCadJ compatibility (integer coordinates)",
   "LibraryUpdate": "Update libraries",
   "Circuit": "Circuit",
   "Define": "View code",

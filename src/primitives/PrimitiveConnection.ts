@@ -18,14 +18,16 @@ import { RectangleG } from '../graphic/RectangleG.js';
 export class PrimitiveConnection extends GraphicPrimitive {
     private static readonly N_POINTS = 3;
 
-    private x1: number = 0; private y1: number = 0;
-    private xa1: number = 0; private ya1: number = 0;
+    private x1: number = 0;
+    private y1: number = 0;
+    private xa1: number = 0;
+    private ya1: number = 0;
     private ni: number = 0;
     private nn: number = 0;
     private w: number = 0;
 
-    constructor(f: string, size: number)
-    constructor(x: number, y: number, layer: number, f: string, size: number)
+    constructor(f: string, size: number);
+    constructor(x: number, y: number, layer: number, f: string, size: number);
     constructor(...args: unknown[]) {
         super();
         if (args.length === 2) {
@@ -33,7 +35,8 @@ export class PrimitiveConnection extends GraphicPrimitive {
         } else {
             const [x, y, layer, f, size] = args as [number, number, number, string, number];
             this.initPrimitive(-1, f, size);
-            this.virtualPoint[0]!.x = x; this.virtualPoint[0]!.y = y;
+            this.virtualPoint[0]!.x = x;
+            this.virtualPoint[0]!.y = y;
             this.virtualPoint[this.getNameVirtualPointNumber()]!.x = x + 5;
             this.virtualPoint[this.getNameVirtualPointNumber()]!.y = y + 5;
             this.virtualPoint[this.getValueVirtualPointNumber()]!.x = x + 5;
@@ -42,7 +45,9 @@ export class PrimitiveConnection extends GraphicPrimitive {
         }
     }
 
-    getControlPointNumber(): number { return PrimitiveConnection.N_POINTS; }
+    getControlPointNumber(): number {
+        return PrimitiveConnection.N_POINTS;
+    }
 
     draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
@@ -53,12 +58,17 @@ export class PrimitiveConnection extends GraphicPrimitive {
             this.x1 = this.virtualPoint[0]!.x;
             this.y1 = this.virtualPoint[0]!.y;
 
-            this.nn = Math.abs(coordSys.mapXr(0, 0) - coordSys.mapXr(10, 10)) *
-                Globals.diameterConnection / 10.0;
+            this.nn =
+                (Math.abs(coordSys.mapXr(0, 0) - coordSys.mapXr(10, 10)) *
+                    Globals.diameterConnection) /
+                10.0;
 
             if (this.nn < 2.0) {
-                this.nn = Math.trunc(Math.abs(coordSys.mapXr(0, 0) - coordSys.mapXr(20, 20)) *
-                    Globals.diameterConnection / 12);
+                this.nn = Math.trunc(
+                    (Math.abs(coordSys.mapXr(0, 0) - coordSys.mapXr(20, 20)) *
+                        Globals.diameterConnection) /
+                        12,
+                );
             }
 
             this.xa1 = Math.round(coordSys.mapX(this.x1, this.y1) - this.nn / 2.0);
@@ -86,9 +96,10 @@ export class PrimitiveConnection extends GraphicPrimitive {
         this.changed = true;
         if (tokens[0] !== 'SA') throw new Error('Invalid primitive: programming error?');
         if (nn < 3) throw new Error('Bad arguments on SA');
-        const x1 = parseInt(tokens[1]!, 10);
-        const y1 = parseInt(tokens[2]!, 10);
-        this.virtualPoint[0]!.x = x1; this.virtualPoint[0]!.y = y1;
+        const x1 = Globals.coord(tokens[1]);
+        const y1 = Globals.coord(tokens[2]);
+        this.virtualPoint[0]!.x = x1;
+        this.virtualPoint[0]!.y = y1;
         this.virtualPoint[this.getNameVirtualPointNumber()]!.x = x1 + 5;
         this.virtualPoint[this.getNameVirtualPointNumber()]!.y = y1 + 5;
         this.virtualPoint[this.getValueVirtualPointNumber()]!.x = x1 + 5;
@@ -98,12 +109,19 @@ export class PrimitiveConnection extends GraphicPrimitive {
 
     getDistanceToPoint(px: number, py: number): number {
         if (this.checkText(px, py)) return 0;
-        return GeometricDistances.pointToPoint(
-            this.virtualPoint[0]!.x, this.virtualPoint[0]!.y, px, py) - 1;
+        return (
+            GeometricDistances.pointToPoint(
+                this.virtualPoint[0]!.x,
+                this.virtualPoint[0]!.y,
+                px,
+                py,
+            ) - 1
+        );
     }
 
     toString(extensions: boolean): string {
-        let s = `SA ${this.virtualPoint[0]!.x} ${this.virtualPoint[0]!.y} ${this.getLayer()}\n`;
+        const c = Globals.formatCoord;
+        let s = `SA ${c(this.virtualPoint[0]!.x)} ${c(this.virtualPoint[0]!.y)} ${this.getLayer()}\n`;
         s += this.saveText(extensions);
         return s;
     }
@@ -114,11 +132,16 @@ export class PrimitiveConnection extends GraphicPrimitive {
             cs.mapX(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),
             cs.mapY(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),
             this.getLayer(),
-            Globals.diameterConnection * cs.getXMagnitude());
+            Globals.diameterConnection * cs.getXMagnitude(),
+        );
     }
 
-    getNameVirtualPointNumber(): number { return 1; }
-    getValueVirtualPointNumber(): number { return 2; }
+    getNameVirtualPointNumber(): number {
+        return 1;
+    }
+    getValueVirtualPointNumber(): number {
+        return 2;
+    }
 
     override intersects(rect: RectangleG, isLeftToRightSelection: boolean): boolean {
         if (!this.getCurrentLayer()?.isVisible()) return false;
