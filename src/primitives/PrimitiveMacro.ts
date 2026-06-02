@@ -227,6 +227,26 @@ export class PrimitiveMacro extends GraphicPrimitive {
         this.macroModel.setLayers(layerV);
     }
 
+    /**
+     * Compose this macro's orientation with that of the enclosing coordinate
+     * system, accounting for the non-commutativity of rotation and mirroring.
+     *
+     * The coordinate transform for an (orientation o, mirror m) pair is the
+     * dihedral-group element `sᵐ·rᵒ`. Composing the parent transform with this
+     * macro's gives `s^mp·r^op · s^m·r^o`. Using `s·r = r⁻¹·s`, the rotation
+     * parts only add directly when this macro is not mirrored; when it is, the
+     * parent's rotation contributes with the opposite sign. (The combined
+     * mirror flag is always `m XOR parentMirror`, handled by the caller.)
+     *
+     * This only differs from a plain sum when the parent is itself rotated —
+     * i.e. for nested macros — so flat drawings are unaffected.
+     */
+    private composeOrientation(coordSys: MapCoordinates): number {
+        const parentO = coordSys.getOrientation();
+        const o = this.m ? this.o - parentO : this.o + parentO;
+        return ((o % 4) + 4) % 4;
+    }
+
     private drawMacroContents(g: GraphicsInterface, coordSys: MapCoordinates): void {
         if (this.changed) {
             this.changed = false;
@@ -237,7 +257,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
             this.macroCoord.setYMagnitude(coordSys.getYMagnitude());
             this.macroCoord.setXCenter(coordSys.mapXr(this.x1, this.y1));
             this.macroCoord.setYCenter(coordSys.mapYr(this.x1, this.y1));
-            this.macroCoord.setOrientation((this.o + coordSys.getOrientation()) % 4);
+            this.macroCoord.setOrientation(this.composeOrientation(coordSys));
             this.macroCoord.setMirror(this.m !== coordSys.getMirror());
             this.macroCoord.setMacro(true);
             this.macroCoord.resetMinMax();
@@ -481,7 +501,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
         mc.setYMagnitude(cs.getYMagnitude());
         mc.setXCenter(cs.mapXr(x1, y1));
         mc.setYCenter(cs.mapYr(x1, y1));
-        mc.setOrientation((this.o + cs.getOrientation()) % 4);
+        mc.setOrientation(this.composeOrientation(cs));
         mc.setMirror(this.m !== cs.getMirror());
         mc.setMacro(true);
         this.macroModel.setDrawOnlyLayer(this.drawOnlyLayer);
