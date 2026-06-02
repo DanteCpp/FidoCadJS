@@ -44,8 +44,13 @@ export class Globals {
     // Parser safety limits — defend against malformed/hostile .fcd inputs.
     static readonly MAX_VERTICES = 10000;
     static readonly MAX_MACRO_DEPTH = 16;
-    static readonly MAX_COORD = 1_000_000;
-    static readonly MIN_COORD = -1_000_000;
+    // Coordinates are non-negative integers in the FidoCadJ logical grid. The
+    // origin (0,0) is the top-left; negative coordinates are not supported by
+    // the editor or the viewport, so parsed values are clamped to [0, MAX].
+    // The upper bound spans the full JS safe-integer range so designs can be
+    // scaled up for finer relative placement.
+    static readonly MAX_COORD = Number.MAX_SAFE_INTEGER;
+    static readonly MIN_COORD = 0;
 
     /** Validate and clamp a parsed integer coordinate. Returns null on NaN. */
     static parseCoord(token: string | undefined): number | null {

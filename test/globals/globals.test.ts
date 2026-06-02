@@ -70,4 +70,26 @@ describe('Globals', () => {
         const result = Globals.adjustExtension('"test.txt"', 'svg');
         expect(result).toBe('test.svg');
     });
+
+    it('parseCoord returns the value for valid non-negative integers', () => {
+        expect(Globals.parseCoord('0')).toBe(0);
+        expect(Globals.parseCoord('1500')).toBe(1500);
+    });
+
+    it('parseCoord clamps negative coordinates to 0', () => {
+        expect(Globals.MIN_COORD).toBe(0);
+        expect(Globals.parseCoord('-5')).toBe(0);
+        expect(Globals.parseCoord('-1000000')).toBe(0);
+    });
+
+    it('parseCoord clamps to MAX_COORD (full safe-integer range)', () => {
+        expect(Globals.MAX_COORD).toBe(Number.MAX_SAFE_INTEGER);
+        expect(Globals.parseCoord('9007199254740990')).toBe(9007199254740990);
+        expect(Globals.parseCoord('99999999999999999999')).toBe(Globals.MAX_COORD);
+    });
+
+    it('parseCoord returns null for non-numeric tokens', () => {
+        expect(Globals.parseCoord('abc')).toBeNull();
+        expect(Globals.parseCoord(undefined)).toBeNull();
+    });
 });
