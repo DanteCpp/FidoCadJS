@@ -129,15 +129,15 @@ lines are dropped on save).
 - Negative coordinates are **not supported**: any negative value in the source
   is clamped to `0` by the lexer, the editor refuses to move primitives to
   negative coordinates, and the viewport cannot pan north-west of the origin.
-- **Integer vs. floating-point.** By default (and for **strict FidoCadJ
-  compatibility**, the `strictCompat` setting) coordinates are **integers**:
-  fractional input is rounded to the nearest integer on read and integers are
-  written on save. When strict compatibility is **disabled**, FidoCadJS accepts
-  and writes **floating-point** coordinates with up to **3 decimals** (trailing
-  zeros and the decimal point trimmed, e.g. `12.5`, `12.125`, `13`). This is a
-  **FidoCadJS extension**: a drawing saved with fractional coordinates is *not*
-  guaranteed to be readable by stock FidoCadJ. Both bounds and the
-  non-negativity rule above apply identically in float mode.
+- **Floating-point coordinates.** FidoCadJS accepts and writes **floating-point**
+  coordinates with up to **3 decimals** (trailing zeros and the decimal point
+  trimmed, e.g. `12.5`, `12.125`, `13`). Whole numbers are therefore emitted as
+  plain integers. For **FidoCadJ compatibility**, simply draw with
+  **snap-to-grid enabled**: every point then lands on an integer grid multiple,
+  so the file contains only integers. Files that contain fractional coordinates
+  are a **FidoCadJS extension** and are *not* guaranteed to be readable by stock
+  FidoCadJ. The bounds and non-negativity rule above apply to fractional
+  coordinates as well.
 
 ### 3.1 Layers
 

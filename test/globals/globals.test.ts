@@ -6,7 +6,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Globals } from '../../src/globals/Globals.js';
 
 describe('Globals', () => {
@@ -93,10 +93,9 @@ describe('Globals', () => {
         expect(Globals.parseCoord(undefined)).toBeNull();
     });
 
-    it('parseCoord rounds fractional input in strict (integer) mode', () => {
-        expect(Globals.floatCoords).toBe(false);
-        expect(Globals.parseCoord('12.7')).toBe(13);
-        expect(Globals.parseCoord('12.2')).toBe(12);
+    it('parseCoord preserves fractional input', () => {
+        expect(Globals.parseCoord('12.7')).toBe(12.7);
+        expect(Globals.parseCoord('12.125')).toBe(12.125);
     });
 
     it('coord returns 0 for non-numeric tokens', () => {
@@ -105,31 +104,7 @@ describe('Globals', () => {
         expect(Globals.coord('42')).toBe(42);
     });
 
-    it('formatCoord rounds to an integer in strict mode', () => {
-        expect(Globals.formatCoord(12.7)).toBe('13');
-        expect(Globals.formatCoord(13)).toBe('13');
-    });
-});
-
-describe('Globals — floating-point coordinate mode', () => {
-    afterEach(() => {
-        Globals.floatCoords = false;
-    });
-
-    it('parseCoord preserves fractional input when floatCoords is on', () => {
-        Globals.floatCoords = true;
-        expect(Globals.parseCoord('12.7')).toBe(12.7);
-        expect(Globals.parseCoord('12.125')).toBe(12.125);
-    });
-
-    it('parseCoord still clamps negatives to 0 in float mode', () => {
-        Globals.floatCoords = true;
-        expect(Globals.parseCoord('-0.5')).toBe(0);
-        expect(Globals.parseCoord('-50')).toBe(0);
-    });
-
     it('formatCoord writes up to 3 decimals, trimming trailing zeros', () => {
-        Globals.floatCoords = true;
         expect(Globals.formatCoord(12.5)).toBe('12.5');
         expect(Globals.formatCoord(12.125)).toBe('12.125');
         expect(Globals.formatCoord(13)).toBe('13');
@@ -137,7 +112,6 @@ describe('Globals — floating-point coordinate mode', () => {
     });
 
     it('round-trips a fractional coordinate through parse and format', () => {
-        Globals.floatCoords = true;
         const token = '37.25';
         expect(Globals.formatCoord(Globals.parseCoord(token)!)).toBe(token);
     });

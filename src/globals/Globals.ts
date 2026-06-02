@@ -47,25 +47,17 @@ export class Globals {
     // Coordinates are non-negative numbers in the FidoCadJ logical grid. The
     // origin (0,0) is the top-left; negative coordinates are not supported by
     // the editor or the viewport, so parsed values are clamped to [0, MAX].
+    // Coordinates may be fractional (floating-point); integer, FidoCadJ-
+    // compatible coordinates are obtained simply by drawing with snap-to-grid
+    // enabled, which lands every point on integer grid multiples.
     static readonly MAX_COORD = 1_000_000;
     static readonly MIN_COORD = 0;
 
-    // When false (default) coordinates are integers, for strict FidoCadJ
-    // compatibility. When true the editor accepts and serializes fractional
-    // (floating-point) coordinates — a FidoCadJS extension that stock FidoCadJ
-    // cannot read. Driven by the `strictCompat` setting (floatCoords =
-    // !strictCompat); see SettingsManager.
-    static floatCoords = false;
-
-    /**
-     * Validate and clamp a parsed coordinate. Returns null on NaN. In strict
-     * (integer) mode the value is rounded to the nearest integer.
-     */
+    /** Validate and clamp a parsed coordinate. Returns null on NaN. */
     static parseCoord(token: string | undefined): number | null {
         if (token === undefined) return null;
-        let v = parseFloat(token);
+        const v = parseFloat(token);
         if (!Number.isFinite(v)) return null;
-        if (!Globals.floatCoords) v = Math.round(v);
         if (v > Globals.MAX_COORD) return Globals.MAX_COORD;
         if (v < Globals.MIN_COORD) return Globals.MIN_COORD;
         return v;
@@ -81,12 +73,11 @@ export class Globals {
     }
 
     /**
-     * Serialize a coordinate for the FCD format. In strict (integer) mode the
-     * value is rounded to the nearest integer; in float mode it is written with
-     * up to 3 decimals, trailing zeros (and the point) trimmed.
+     * Serialize a coordinate for the FCD format: written with up to 3 decimals,
+     * trailing zeros (and the decimal point) trimmed, so whole numbers are
+     * emitted as plain integers.
      */
     static formatCoord(v: number): string {
-        if (!Globals.floatCoords) return String(Math.round(v));
         return parseFloat(v.toFixed(3)).toString();
     }
 

@@ -16,7 +16,6 @@ export interface AppSettings {
     gridSizeX: number;
     gridSizeY: number;
     snapToGrid: boolean;
-    strictCompat: boolean;
     antiAlias: boolean;
     strokeSize: number;
     connectionSize: number;
@@ -41,7 +40,6 @@ const DEFAULTS: AppSettings = {
     gridSizeX: 5,
     gridSizeY: 5,
     snapToGrid: true,
-    strictCompat: true,
     antiAlias: false,
     strokeSize: 0.5,
     connectionSize: 2.0,
@@ -75,7 +73,6 @@ function sanitize(parsed: unknown): Partial<AppSettings> {
     if (isFiniteNumberInRange(p.gridSizeX, 1, 1000)) out.gridSizeX = p.gridSizeX;
     if (isFiniteNumberInRange(p.gridSizeY, 1, 1000)) out.gridSizeY = p.gridSizeY;
     if (typeof p.snapToGrid === 'boolean') out.snapToGrid = p.snapToGrid;
-    if (typeof p.strictCompat === 'boolean') out.strictCompat = p.strictCompat;
     if (typeof p.antiAlias === 'boolean') out.antiAlias = p.antiAlias;
     if (isFiniteNumberInRange(p.strokeSize, 0.01, 100)) out.strokeSize = p.strokeSize;
     if (isFiniteNumberInRange(p.connectionSize, 0.01, 100)) out.connectionSize = p.connectionSize;
@@ -98,9 +95,6 @@ export class SettingsManager {
     private constructor() {
         this.settings = { ...DEFAULTS };
         this.load();
-        // Make the coordinate mode effective immediately, before any file is
-        // parsed and before applyToPanel runs.
-        Globals.floatCoords = !this.settings.strictCompat;
     }
 
     static getInstance(): SettingsManager {
@@ -125,7 +119,6 @@ export class SettingsManager {
         mc.setXGridStep(s.gridSizeX);
         mc.setYGridStep(s.gridSizeY);
         mc.setSnap(s.snapToGrid);
-        Globals.floatCoords = !s.strictCompat;
         panel.setAntiAlias(s.antiAlias);
         Globals.lineWidth = s.strokeSize;
         Globals.diameterConnection = s.connectionSize;
