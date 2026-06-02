@@ -79,9 +79,22 @@ test.describe('Menu Bar — File Menu', () => {
         const dialog = page.locator('dialog[open]');
         await expect(dialog).toBeVisible();
 
-        // Switch to the Libraries tab and confirm the folder control is present.
+        // Switch to the Libraries tab.
         await dialog.locator('button', { hasText: 'Libraries' }).click();
-        await expect(dialog.locator('button', { hasText: 'Choose folder' })).toBeVisible();
+
+        // The folder picker only renders where the File System Access API is
+        // available (Chromium). On Firefox/WebKit the panel instead shows an
+        // "unsupported" message — assert whichever applies to this browser.
+        const supported = await page.evaluate(
+            () =>
+                typeof (window as { showDirectoryPicker?: unknown }).showDirectoryPicker ===
+                    'function' && typeof indexedDB !== 'undefined',
+        );
+        if (supported) {
+            await expect(dialog.locator('button', { hasText: 'Choose folder' })).toBeVisible();
+        } else {
+            await expect(dialog.getByText('does not support saving libraries')).toBeVisible();
+        }
     });
 });
 
