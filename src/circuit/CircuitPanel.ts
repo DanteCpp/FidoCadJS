@@ -191,9 +191,13 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         // Initialize input handler (gesture state machine + mouse events)
         const inputCb: InputCallbacks = {
             render: () => this.render(),
-            onZoomChange: this.onZoomChange,
-            onUndoStateChange: this.onUndoStateChange,
-            onCoordinatesChange: this.onCoordinatesChange,
+            // Forward through thunks rather than capturing the current value:
+            // these panel callbacks are assigned after construction (e.g. by
+            // ToolbarController/app), so a by-value capture would stay null and
+            // wheel/drag gestures handled here would never notify listeners.
+            onZoomChange: () => this.onZoomChange?.(),
+            onUndoStateChange: () => this.onUndoStateChange?.(),
+            onCoordinatesChange: (lx, ly) => this.onCoordinatesChange?.(lx, ly),
             isTextEditActive: () => this.textEditDialog.isActive(),
             commitTextEdit: () => this.textEditDialog.commit(),
             getTool: () => this.currentTool,

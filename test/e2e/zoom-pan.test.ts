@@ -7,9 +7,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import {
-  gotoApp, pressKey, getZoomPercent, loadCircuit, canvasBox,
-} from './utils';
+import { gotoApp, pressKey, getZoomPercent, loadCircuit, canvasBox } from './utils';
 
 const FOUR_PRIMITIVES_FCD = `FJC A 1
 FJC B 1
@@ -20,185 +18,218 @@ EV 40 90 70 120 3
 `;
 
 test.describe('Zoom Operations', () => {
-  test.beforeEach(async ({ page }) => {
-    await gotoApp(page);
-  });
+    test.beforeEach(async ({ page }) => {
+        await gotoApp(page);
+    });
 
-  test('initial zoom is 100%', async ({ page }) => {
-    const zoom = await getZoomPercent(page);
-    expect(zoom).toBe(100);
-  });
+    test('initial zoom is 100%', async ({ page }) => {
+        const zoom = await getZoomPercent(page);
+        expect(zoom).toBe(100);
+    });
 
-  test('+ key zooms in', async ({ page }) => {
-    const before = await getZoomPercent(page);
-    await pressKey(page, '+');
-    const after = await getZoomPercent(page);
-    expect(after).toBeGreaterThan(before);
-  });
+    test('+ key zooms in', async ({ page }) => {
+        const before = await getZoomPercent(page);
+        await pressKey(page, '+');
+        const after = await getZoomPercent(page);
+        expect(after).toBeGreaterThan(before);
+    });
 
-  test('= key also zooms in', async ({ page }) => {
-    const before = await getZoomPercent(page);
-    await pressKey(page, '=');
-    const after = await getZoomPercent(page);
-    expect(after).toBeGreaterThan(before);
-  });
+    test('= key also zooms in', async ({ page }) => {
+        const before = await getZoomPercent(page);
+        await pressKey(page, '=');
+        const after = await getZoomPercent(page);
+        expect(after).toBeGreaterThan(before);
+    });
 
-  test('- key zooms out', async ({ page }) => {
-    const before = await getZoomPercent(page);
-    await pressKey(page, '-');
-    const after = await getZoomPercent(page);
-    expect(after).toBeLessThan(before);
-  });
+    test('- key zooms out', async ({ page }) => {
+        const before = await getZoomPercent(page);
+        await pressKey(page, '-');
+        const after = await getZoomPercent(page);
+        expect(after).toBeLessThan(before);
+    });
 
-  test('zoom in, then zoom out returns to original', async ({ page }) => {
-    const initial = await getZoomPercent(page);
+    test('zoom in, then zoom out returns to original', async ({ page }) => {
+        const initial = await getZoomPercent(page);
 
-    await pressKey(page, '+');
-    await page.waitForTimeout(100);
-    const zoomedIn = await getZoomPercent(page);
-    expect(zoomedIn).toBeGreaterThan(initial);
+        await pressKey(page, '+');
+        await page.waitForTimeout(100);
+        const zoomedIn = await getZoomPercent(page);
+        expect(zoomedIn).toBeGreaterThan(initial);
 
-    await pressKey(page, '-');
-    await page.waitForTimeout(100);
-    const zoomedOut = await getZoomPercent(page);
-    expect(zoomedOut).toBeLessThan(zoomedIn);
-  });
+        await pressKey(page, '-');
+        await page.waitForTimeout(100);
+        const zoomedOut = await getZoomPercent(page);
+        expect(zoomedOut).toBeLessThan(zoomedIn);
+    });
 
-  test('Space triggers fit-to-view', async ({ page }) => {
-    // Load content so fit has something to fit to
-    await loadCircuit(page, FOUR_PRIMITIVES_FCD);
+    test('Space triggers fit-to-view', async ({ page }) => {
+        // Load content so fit has something to fit to
+        await loadCircuit(page, FOUR_PRIMITIVES_FCD);
 
-    // Force a low zoom first
-    await pressKey(page, '-');
-    await pressKey(page, '-');
-    await page.waitForTimeout(200);
-    const lowZoom = await getZoomPercent(page);
-    expect(lowZoom).toBeLessThan(100);
+        // Force a low zoom first
+        await pressKey(page, '-');
+        await pressKey(page, '-');
+        await page.waitForTimeout(200);
+        const lowZoom = await getZoomPercent(page);
+        expect(lowZoom).toBeLessThan(100);
 
-    // Fit to view
-    await pressKey(page, ' ');
-    await page.waitForTimeout(200);
-    const fitZoom = await getZoomPercent(page);
-    expect(fitZoom).toBeGreaterThan(lowZoom);
-  });
+        // Fit to view
+        await pressKey(page, ' ');
+        await page.waitForTimeout(200);
+        const fitZoom = await getZoomPercent(page);
+        expect(fitZoom).toBeGreaterThan(lowZoom);
+    });
 
-  test('mouse wheel zooms toward cursor', async ({ page }) => {
-    const box = await canvasBox(page);
-    expect(box).not.toBeNull();
+    test('mouse wheel zooms toward cursor', async ({ page }) => {
+        const box = await canvasBox(page);
+        expect(box).not.toBeNull();
 
-    const before = await getZoomPercent(page);
+        const before = await getZoomPercent(page);
 
-    // Scroll down (zoom in). The amount may need to be larger to trigger a change.
-    await page.mouse.wheel(box!.x + box!.width / 2, box!.y + box!.height / 2, 0, -120);
-    await page.waitForTimeout(300);
+        // Scroll down (zoom in). The amount may need to be larger to trigger a change.
+        await page.mouse.wheel(box!.x + box!.width / 2, box!.y + box!.height / 2, 0, -120);
+        await page.waitForTimeout(300);
 
-    const after = await getZoomPercent(page);
-    // Zoom may or may not have changed depending on clamping; we just verify no crash
-    expect(after).toBeGreaterThan(0);
-  });
+        const after = await getZoomPercent(page);
+        // Zoom may or may not have changed depending on clamping; we just verify no crash
+        expect(after).toBeGreaterThan(0);
+    });
 
-  test('Fit button exists and is clickable', async ({ page }) => {
-    const fitBtn = page.locator('button', { hasText: 'Fit' });
-    await expect(fitBtn).toBeVisible();
-    await fitBtn.click();
-    await page.waitForTimeout(200);
-    // Should not crash
-    const zoom = await getZoomPercent(page);
-    expect(zoom).toBeGreaterThan(0);
-  });
+    test('Fit button exists and is clickable', async ({ page }) => {
+        const fitBtn = page.locator('button', { hasText: 'Fit' });
+        await expect(fitBtn).toBeVisible();
+        await fitBtn.click();
+        await page.waitForTimeout(200);
+        // Should not crash
+        const zoom = await getZoomPercent(page);
+        expect(zoom).toBeGreaterThan(0);
+    });
 
-  test('zoom select dropdown updates on zoom change', async ({ page }) => {
-    const select = page.locator('[data-testid="zoom-select"]');
-    const initialVal = await select.inputValue();
+    test('zoom select dropdown updates on keyboard zoom', async ({ page }) => {
+        const select = page.locator('[data-testid="zoom-select"]');
+        const initialVal = await select.inputValue();
 
-    // Zoom in several times to ensure a change
-    await pressKey(page, '+');
-    await pressKey(page, '+');
-    await page.waitForTimeout(300);
+        // Zoom in several times to ensure a change
+        await pressKey(page, '+');
+        await pressKey(page, '+');
+        await page.waitForTimeout(300);
 
-    const newVal = await select.inputValue();
-    // The dropdown should have changed if zoom changed enough
-    // (it snaps to nearest preset level)
-    expect(newVal).toBeDefined();
-  });
+        const newVal = await select.inputValue();
+        // The dropdown should have changed if zoom changed enough
+        // (it snaps to nearest preset level)
+        expect(newVal).toBeDefined();
+    });
+
+    // Regression: wheel zoom is handled by InputHandler, whose onZoomChange
+    // callback was captured by value before ToolbarController wired the dropdown
+    // sync — so the dropdown never updated on wheel zoom. It must now stay in sync.
+    test('zoom select dropdown updates on mouse-wheel zoom', async ({ page }) => {
+        const box = await canvasBox(page);
+        expect(box).not.toBeNull();
+
+        const select = page.locator('[data-testid="zoom-select"]');
+        const initialVal = await select.inputValue();
+
+        // Hover the canvas centre and zoom in a few wheel notches.
+        await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+        for (let i = 0; i < 3; i++) {
+            await page.mouse.wheel(0, -120);
+            await page.waitForTimeout(120);
+        }
+        await page.waitForTimeout(200);
+
+        const newVal = await select.inputValue();
+        // The dropdown must have moved off its initial preset…
+        expect(newVal).not.toBe(initialVal);
+
+        // …and must match the preset nearest to the actual zoom percent.
+        const zoomLevels = [
+            25, 50, 75, 100, 150, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000, 4000,
+        ];
+        const pct = await getZoomPercent(page);
+        const nearest = zoomLevels.reduce((best, lvl) =>
+            Math.abs(lvl - pct) < Math.abs(best - pct) ? lvl : best,
+        );
+        expect(Number(newVal)).toBe(nearest);
+    });
 });
 
 test.describe('Pan Operations', () => {
-  test.beforeEach(async ({ page }) => {
-    await gotoApp(page);
-  });
+    test.beforeEach(async ({ page }) => {
+        await gotoApp(page);
+    });
 
-  test('middle mouse button starts panning', async ({ page }) => {
-    const box = await canvasBox(page);
-    expect(box).not.toBeNull();
+    test('middle mouse button starts panning', async ({ page }) => {
+        const box = await canvasBox(page);
+        expect(box).not.toBeNull();
 
-    // Middle-click drag on canvas
-    await page.mouse.move(box!.x + 300, box!.y + 300);
-    await page.mouse.down({ button: 'middle' });
-    await page.mouse.move(box!.x + 350, box!.y + 320, { steps: 5 });
-    await page.mouse.up({ button: 'middle' });
-    await page.waitForTimeout(200);
+        // Middle-click drag on canvas
+        await page.mouse.move(box!.x + 300, box!.y + 300);
+        await page.mouse.down({ button: 'middle' });
+        await page.mouse.move(box!.x + 350, box!.y + 320, { steps: 5 });
+        await page.mouse.up({ button: 'middle' });
+        await page.waitForTimeout(200);
 
-    // Should not crash
-    expect(true).toBe(true);
-  });
+        // Should not crash
+        expect(true).toBe(true);
+    });
 });
 
 test.describe('Resize behavior', () => {
-  test.beforeEach(async ({ page }) => {
-    await gotoApp(page);
-  });
+    test.beforeEach(async ({ page }) => {
+        await gotoApp(page);
+    });
 
-  test('viewport resize does not crash the app', async ({ page }) => {
-    await page.setViewportSize({ width: 800, height: 600 });
-    await page.waitForTimeout(300);
+    test('viewport resize does not crash the app', async ({ page }) => {
+        await page.setViewportSize({ width: 800, height: 600 });
+        await page.waitForTimeout(300);
 
-    // The canvas should still be present and have non-zero dimensions
-    const canvas = page.locator('[data-testid="editor-canvas"]');
-    await expect(canvas).toBeVisible();
+        // The canvas should still be present and have non-zero dimensions
+        const canvas = page.locator('[data-testid="editor-canvas"]');
+        await expect(canvas).toBeVisible();
 
-    const box = await canvas.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.width).toBeGreaterThan(0);
-    expect(box!.height).toBeGreaterThan(0);
-  });
+        const box = await canvas.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.width).toBeGreaterThan(0);
+        expect(box!.height).toBeGreaterThan(0);
+    });
 
-  test('viewport resize preserves rendering without offset', async ({ page }) => {
-    // Load content first so we have something to verify
-    await loadCircuit(page, FOUR_PRIMITIVES_FCD);
+    test('viewport resize preserves rendering without offset', async ({ page }) => {
+        // Load content first so we have something to verify
+        await loadCircuit(page, FOUR_PRIMITIVES_FCD);
 
-    // Resize the viewport
-    await page.setViewportSize({ width: 1024, height: 768 });
-    await page.waitForTimeout(500);
+        // Resize the viewport
+        await page.setViewportSize({ width: 1024, height: 768 });
+        await page.waitForTimeout(500);
 
-    // Force a render by zooming
-    await pressKey(page, '+');
-    await page.waitForTimeout(200);
+        // Force a render by zooming
+        await pressKey(page, '+');
+        await page.waitForTimeout(200);
 
-    // App should still be functional — zoom should work
-    const zoom = await getZoomPercent(page);
-    expect(zoom).toBeGreaterThan(0);
-  });
+        // App should still be functional — zoom should work
+        const zoom = await getZoomPercent(page);
+        expect(zoom).toBeGreaterThan(0);
+    });
 
-  test('multiple consecutive resizes do not crash', async ({ page }) => {
-    const sizes = [
-      { width: 1024, height: 768 },
-      { width: 800, height: 600 },
-      { width: 1280, height: 720 },
-      { width: 640, height: 480 },
-    ];
+    test('multiple consecutive resizes do not crash', async ({ page }) => {
+        const sizes = [
+            { width: 1024, height: 768 },
+            { width: 800, height: 600 },
+            { width: 1280, height: 720 },
+            { width: 640, height: 480 },
+        ];
 
-    for (const size of sizes) {
-      await page.setViewportSize(size);
-      await page.waitForTimeout(200);
-    }
+        for (const size of sizes) {
+            await page.setViewportSize(size);
+            await page.waitForTimeout(200);
+        }
 
-    // Verify canvas is still alive
-    const canvas = page.locator('[data-testid="editor-canvas"]');
-    await expect(canvas).toBeVisible();
+        // Verify canvas is still alive
+        const canvas = page.locator('[data-testid="editor-canvas"]');
+        await expect(canvas).toBeVisible();
 
-    // Should still be able to interact
-    const zoom = await getZoomPercent(page);
-    expect(zoom).toBeGreaterThan(0);
-  });
+        // Should still be able to interact
+        const zoom = await getZoomPercent(page);
+        expect(zoom).toBeGreaterThan(0);
+    });
 });
