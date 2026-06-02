@@ -123,9 +123,8 @@ lines are dropped on save).
   convention; this matters for export scaling, not for the FCD syntax itself.
 - The origin `(0, 0)` is at the **top-left**; **x grows right, y grows down**.
 - Coordinates are **non-negative**. Parsed coordinates are clamped to the range
-  `[0, Number.MAX_SAFE_INTEGER]` (`MIN_COORD`/`MAX_COORD`, i.e.
-  `[0, 9 007 199 254 740 991]`); non-numeric coordinates are rejected for the
-  variable-length primitives (`PP`/`PV`, `CP`/`CV`).
+  `[0, +1 000 000]` (`MIN_COORD`/`MAX_COORD`); non-numeric coordinates are
+  rejected for the variable-length primitives (`PP`/`PV`, `CP`/`CV`).
 - Negative coordinates are **not supported**: any negative value in the source
   is clamped to `0` by the lexer, the editor refuses to move primitives to
   negative coordinates, and the viewport cannot pan north-west of the origin.

@@ -82,10 +82,10 @@ describe('Globals', () => {
         expect(Globals.parseCoord('-1000000')).toBe(0);
     });
 
-    it('parseCoord clamps to MAX_COORD (full safe-integer range)', () => {
-        expect(Globals.MAX_COORD).toBe(Number.MAX_SAFE_INTEGER);
-        expect(Globals.parseCoord('9007199254740990')).toBe(9007199254740990);
-        expect(Globals.parseCoord('99999999999999999999')).toBe(Globals.MAX_COORD);
+    it('parseCoord clamps values above MAX_COORD', () => {
+        expect(Globals.MAX_COORD).toBe(1_000_000);
+        expect(Globals.parseCoord('1000000')).toBe(1_000_000);
+        expect(Globals.parseCoord('5000000')).toBe(Globals.MAX_COORD);
     });
 
     it('parseCoord returns null for non-numeric tokens', () => {
