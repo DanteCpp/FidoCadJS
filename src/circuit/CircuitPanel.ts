@@ -415,6 +415,13 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.ctx.clearDirtyRect();
         this.ctx.markDirtyFull(width, height);
 
+        // Reset globalAlpha before clearing: the previous frame may have ended
+        // mid-render on a translucent layer (e.g. layers 12–14 have alpha < 1),
+        // leaving ctx.globalAlpha < 1. Without this, the background fillRect
+        // below only partially overwrites prior pixels and a "ghost" of the
+        // previous frame remains visible after zoom/pan.
+        ctx.globalAlpha = 1.0;
+
         // Clear canvas with background color through the graphics wrapper so the
         // tracked colour stays in sync with the real fillStyle. Clearing via the
         // raw ctx would desync GraphicsCanvas.currentColor and could hide filled
