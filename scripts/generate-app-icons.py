@@ -21,7 +21,7 @@ ICONS_DIR = Path(__file__).resolve().parent.parent / "public" / "icons"
 SOURCE = ICONS_DIR / "favicon.png"   # master full-bleed transparent artwork
 
 BG_COLOR = (13, 27, 42)              # #0d1b2a  dark navy
-ARTWORK_SCALE = 0.80                 # artwork occupies 80% of the canvas
+ARTWORK_SCALE = 0.70                 # artwork occupies 70% of the canvas
 SIZES = (512, 192)
 
 
