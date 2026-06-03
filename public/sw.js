@@ -66,6 +66,15 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Vite tags its module scripts and stylesheets with `crossorigin`, so the
+    // browser sends an `Origin` header on those requests at runtime. The same
+    // assets are served with `Vary: Origin`, and the precache fetch carried no
+    // such header — so a default cache.match (which honours Vary) would MISS
+    // and the worker would fall through to the network, breaking offline use.
+    // Filenames are content-hashed, so a URL always maps to identical bytes;
+    // ignoring Vary is therefore both safe and necessary.
+    const matchOpts = { ignoreVary: true };
+
     // Navigations: prefer the network, fall back to the cached app shell.
     if (request.mode === 'navigate') {
         event.respondWith(
@@ -75,9 +84,9 @@ self.addEventListener('fetch', (event) => {
                 } catch {
                     const cache = await caches.open(CACHE_NAME);
                     return (
-                        (await cache.match(request)) ||
-                        (await cache.match('./index.html')) ||
-                        (await cache.match('./')) ||
+                        (await cache.match(request, matchOpts)) ||
+                        (await cache.match('./index.html', matchOpts)) ||
+                        (await cache.match('./', matchOpts)) ||
                         Response.error()
                     );
                 }
@@ -90,7 +99,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         (async () => {
             const cache = await caches.open(CACHE_NAME);
-            const cached = await cache.match(request);
+            const cached = await cache.match(request, matchOpts);
             if (cached) return cached;
             const response = await fetch(request);
             if (response && response.ok && response.type === 'basic') {
