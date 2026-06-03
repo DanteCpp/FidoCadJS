@@ -84,6 +84,7 @@ class FidoCadJS {
                 () => this.newCircuit(),
                 (content, fileName) => this.importLibrary(content, fileName),
                 () => this.reloadAllLibraries(),
+                () => this.librariesReady ?? Promise.resolve(),
             );
             this.menuBar.getElement().replaceWith(newMenu.getElement());
             this.menuBar = newMenu;
@@ -190,6 +191,7 @@ class FidoCadJS {
             () => this.newCircuit(),
             (content, fileName) => this.importLibrary(content, fileName),
             () => this.reloadAllLibraries(),
+            () => this.librariesReady ?? Promise.resolve(),
         );
         this.circuitPanel.setMenuBar(this.menuBar);
         app.insertBefore(this.menuBar.getElement(), this.toolbarEl);
