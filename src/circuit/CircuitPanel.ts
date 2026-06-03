@@ -229,6 +229,12 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             'contextmenu',
             (e) => {
                 e.preventDefault();
+                // A right-button drag draws the measuring ruler; in that case the
+                // gesture was a measurement, not a menu request, so leave the
+                // ruler on screen and suppress the popup / tool change.
+                if (this.inputHandler.consumeRulerDrag()) {
+                    return;
+                }
                 // If a drawing tool is active, right-click cancels it (already dispatched
                 // via onMouseDown to handleClick). Sync the UI toolbar state and do NOT
                 // show the context menu.
@@ -471,6 +477,13 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             ctx.save();
             ctx.globalAlpha = 0.4;
             st.ghostPrimitive.draw(this.ctx, this.mapCoordinates, this.model.getLayers());
+            ctx.restore();
+        }
+
+        // Draw measuring ruler (right-button drag)
+        if (st.ruler.isActive()) {
+            ctx.save();
+            st.ruler.draw(ctx, this.mapCoordinates, window.devicePixelRatio || 1);
             ctx.restore();
         }
 

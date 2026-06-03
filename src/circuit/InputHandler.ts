@@ -12,6 +12,7 @@
 
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { DrawingModel } from './model/DrawingModel.js';
+import { Ruler } from './Ruler.js';
 import { ElementsEdtActions } from './controllers/ElementsEdtActions.js';
 import type { EditorActions } from './controllers/EditorActions.js';
 import type { UndoActions } from './controllers/UndoActions.js';
@@ -32,6 +33,7 @@ export interface InputState {
     readonly selStartScreenY: number;
     readonly selRectLtoR: boolean;
     readonly isMovingSelected: boolean;
+    readonly ruler: Ruler;
 }
 
 /** Callbacks from InputHandler into CircuitPanel. */
@@ -130,6 +132,11 @@ export class InputHandler {
     private moveStartLogX = 0;
     private moveStartLogY = 0;
 
+    // Measuring ruler (right-button drag), ported from FidoCadJ.
+    private _ruler = new Ruler();
+    private rulerArmed = false;
+    private rulerDragged = false;
+
     private static readonly DRAG_THRESHOLD_PX = 5;
 
     // ── Public state (readonly for CircuitPanel) ───────────────────────────
@@ -161,6 +168,20 @@ export class InputHandler {
     }
     get isMovingSelected() {
         return this._isMovingSelected;
+    }
+    get ruler() {
+        return this._ruler;
+    }
+
+    /**
+     * Returns true (once) if the most recent right-button gesture was a drag
+     * that drew the ruler, clearing the flag. The contextmenu handler uses this
+     * to suppress the popup menu after a measurement.
+     */
+    consumeRulerDrag(): boolean {
+        const dragged = this.rulerDragged;
+        this.rulerDragged = false;
+        return dragged;
     }
 
     // ── Constructor ────────────────────────────────────────────────────────
@@ -273,6 +294,14 @@ export class InputHandler {
 
         this.dblClick.detect(sx, sy);
 
+        // A new press clears any measurement left on screen from a previous
+        // right-button drag (matches FidoCadJ, which deactivates the ruler at
+        // the start of every mouse press).
+        if (this._ruler.isActive()) {
+            this._ruler.setActive(false);
+            this.cb.render();
+        }
+
         if (this._isMovingSelected && e.button === 0) {
             this.moveStartLogX = lx;
             this.moveStartLogY = ly;
@@ -298,6 +327,14 @@ export class InputHandler {
         }
 
         if (e.button === 2) {
+            // Arm the measuring ruler. It only becomes visible once the user
+            // actually drags; a plain right-click falls through to the context
+            // menu (handled on the contextmenu event).
+            this._ruler.setActive(false);
+            this._ruler.setStart(sx, sy);
+            this._ruler.setEnd(sx, sy);
+            this.rulerArmed = true;
+            this.rulerDragged = false;
             this.cb.render();
             return;
         }
@@ -351,6 +388,15 @@ export class InputHandler {
         const ly = this.mapCoords.unmapYsnap(sy);
 
         this.cb.onCoordinatesChange?.(lx, ly);
+
+        // Measuring ruler: drag with the right button held down.
+        if (this.rulerArmed && (e.buttons & 2) !== 0) {
+            this._ruler.setEnd(sx, sy);
+            this._ruler.setActive(true);
+            this.rulerDragged = true;
+            this.cb.render();
+            return;
+        }
 
         if (this._isMovingSelected) {
             const dx = lx - this.moveStartLogX;
@@ -442,6 +488,14 @@ export class InputHandler {
     onMouseUp(e: MouseEvent, isLeave = false): void {
         if (this.textEditorJustCommitted) {
             this.textEditorJustCommitted = false;
+            return;
+        }
+
+        // Right-button release ends a ruler gesture. The measurement (if any
+        // dragging occurred) stays on screen until the next press; a plain
+        // right-click without dragging falls through to the context menu.
+        if (e.button === 2) {
+            this.rulerArmed = false;
             return;
         }
 
