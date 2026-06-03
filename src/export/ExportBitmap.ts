@@ -23,12 +23,28 @@ import { Drawing } from '../circuit/views/Drawing.js';
 import { PointG } from '../graphic/PointG.js';
 import { DimensionG } from '../graphic/DimensionG.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
+import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
 import { TeXMode } from '../graphic/TeXMode.js';
 import { Export } from '../circuit/views/Export.js';
 import type { ExportBitmapOptions } from './ExportBitmapOptions.js';
 
 /** Default mapping: 1 FCD unit = 1/72 inch at screen resolution. */
 const FCD_UNITS_PER_INCH = 72;
+
+/**
+ * Paint the opaque white background through the GraphicsCanvas abstraction.
+ *
+ * Doing this via `graphics.setColor` (rather than touching `ctx.fillStyle`
+ * directly) keeps GraphicsCanvas's cached colour in sync with the real
+ * context. Otherwise the first black fill — GraphicPrimitive.selectLayer
+ * compares the cached colour and skips re-applying an unchanged one — would
+ * inherit the leftover white fillStyle and render invisibly (white on white).
+ */
+function paintWhiteBackground(graphics: GraphicsCanvas, w: number, h: number): void {
+    graphics.setColor(new ColorCanvas(255, 255, 255));
+    graphics.setAlpha(1);
+    graphics.fillRect(0, 0, w, h);
+}
 
 /** Result of a single-layer bitmap render. */
 export interface BitmapLayerResult {
@@ -122,16 +138,13 @@ export function renderToOffscreen(
     const ctx = offscreen.getContext('2d');
     if (!ctx) throw new Error('Could not get 2D context for offscreen canvas');
 
-    // Background fill (white)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, w, h);
-
     // Anti-alias control
     ctx.imageSmoothingEnabled = options.antiAlias;
 
     // Wrap in GraphicsCanvas so Drawing can use it
     const graphics = new GraphicsCanvas(offscreen);
     graphics.setZoom(1);
+    paintWhiteBackground(graphics, w, h);
 
     // Render. Enable typeset math so exported bitmaps show LaTeX, then restore
     // the previous flag (the next on-screen render resets it from renderTeX).
@@ -171,12 +184,11 @@ export function renderLayerToOffscreen(
     const ctx = offscreen.getContext('2d');
     if (!ctx) throw new Error('Could not get 2D context');
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, w, h);
     ctx.imageSmoothingEnabled = options.antiAlias;
 
     const graphics = new GraphicsCanvas(offscreen);
     graphics.setZoom(1);
+    paintWhiteBackground(graphics, w, h);
 
     const prevTeX = TeXMode.active;
     TeXMode.active = true;
