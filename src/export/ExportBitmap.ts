@@ -127,8 +127,14 @@ export function renderToOffscreen(
     options: ExportBitmapOptions,
 ): HTMLCanvasElement {
     const { size, origin } = getImageBounds(model);
-    const magnitude = computeMagnitude(size.width, size.height, options);
-    const { w, h } = computePixelSize(size.width, size.height, magnitude);
+    // Match the vector exporters: pad the drawing extent by EXPORT_BORDER so the
+    // canvas has a symmetric margin. buildExportMapCoords offsets content by
+    // EXPORT_BORDER / 2; without the matching size padding the right/bottom edge
+    // is clipped.
+    const borderedWidth = size.width + Export.EXPORT_BORDER;
+    const borderedHeight = size.height + Export.EXPORT_BORDER;
+    const magnitude = computeMagnitude(borderedWidth, borderedHeight, options);
+    const { w, h } = computePixelSize(borderedWidth, borderedHeight, magnitude);
     const mp = buildExportMapCoords(origin, magnitude);
 
     const offscreen = document.createElement('canvas');
@@ -174,8 +180,14 @@ export function renderLayerToOffscreen(
     options: ExportBitmapOptions,
 ): HTMLCanvasElement {
     const { size, origin } = getImageBounds(model);
-    const magnitude = computeMagnitude(size.width, size.height, options);
-    const { w, h } = computePixelSize(size.width, size.height, magnitude);
+    // Match the vector exporters: pad the drawing extent by EXPORT_BORDER so the
+    // canvas has a symmetric margin. buildExportMapCoords offsets content by
+    // EXPORT_BORDER / 2; without the matching size padding the right/bottom edge
+    // is clipped.
+    const borderedWidth = size.width + Export.EXPORT_BORDER;
+    const borderedHeight = size.height + Export.EXPORT_BORDER;
+    const magnitude = computeMagnitude(borderedWidth, borderedHeight, options);
+    const { w, h } = computePixelSize(borderedWidth, borderedHeight, magnitude);
     const mp = buildExportMapCoords(origin, magnitude);
 
     const offscreen = document.createElement('canvas');
