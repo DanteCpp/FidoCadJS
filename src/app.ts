@@ -27,6 +27,17 @@ import { Category } from './librarymodel/Category.js';
 import { MacroDesc } from './primitives/MacroDesc.js';
 import type { ContextMenuAction } from './macropicker/MacroPicker.js';
 
+/**
+ * Minimal typings for the File Handling API (Launch Queue). These are not yet
+ * part of the standard DOM lib, so we declare just what we consume here.
+ */
+interface LaunchParams {
+    readonly files: readonly FileSystemFileHandle[];
+}
+interface LaunchQueue {
+    setConsumer(consumer: (params: LaunchParams) => void): void;
+}
+
 class FidoCadJS {
     private circuitPanel!: CircuitPanel;
     private toolbarEl!: HTMLElement;
@@ -211,7 +222,48 @@ class FidoCadJS {
         // Enable keyboard listeners
         this.circuitPanel.addKeyboardListeners();
 
+        // Open circuits launched from the OS (installed-PWA file handler).
+        this.initFileHandling();
+
+        // Register the service worker so the app is installable (a prerequisite
+        // for the File Handling API) and works offline after the first visit.
+        this.registerServiceWorker();
+
         console.log('FidoCadJS initialized');
+    }
+
+    /**
+     * Consume files the OS hands to the installed PWA when the user opens a
+     * `.fcd` circuit from the filesystem. The Launch Queue (Chromium-only)
+     * delivers FileSystemFileHandle objects; we load the first one and keep its
+     * handle so a later Save writes straight back to the same file.
+     */
+    private initFileHandling(): void {
+        const launchQueue = (window as unknown as { launchQueue?: LaunchQueue }).launchQueue;
+        if (!launchQueue) return;
+        launchQueue.setConsumer(async (params: LaunchParams) => {
+            if (!params.files || params.files.length === 0) return;
+            const handle = params.files[0];
+            try {
+                const file = await handle.getFile();
+                const text = await file.text();
+                this.circuitPanel.loadCircuit(text);
+                this.circuitPanel.setFileName(file.name);
+                this.circuitPanel.setFileHandle(handle);
+            } catch (e) {
+                console.error('Failed to open launched file:', e);
+            }
+        });
+    }
+
+    private registerServiceWorker(): void {
+        if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+        const base = import.meta.env.BASE_URL;
+        window.addEventListener('load', () => {
+            navigator.serviceWorker
+                .register(`${base}sw.js`, { scope: base })
+                .catch((e) => console.error('Service worker registration failed:', e));
+        });
     }
 
     private async initLibraries(): Promise<void> {
