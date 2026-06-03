@@ -34,7 +34,6 @@ import type { EditorFacade } from './EditorFacade.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
 import { CanvasManager } from './CanvasManager.js';
 import { GhostPreview } from './GhostPreview.js';
-import { TeXOverlay } from './views/TeXOverlay.js';
 import { MacroVectorizer } from './MacroVectorizer.js';
 import { ContextMenuManager } from './ContextMenuManager.js';
 import { ExportFacade } from '../export/ExportFacade.js';
@@ -47,7 +46,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
     private canvasManager: CanvasManager;
     private ghostPreview: GhostPreview;
-    private texOverlayManager: TeXOverlay;
     private exportFacade: ExportFacade;
     private macroVectorizer: MacroVectorizer;
     private contextMenuManager: ContextMenuManager;
@@ -268,9 +266,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             signal: this.lifecycle.signal,
         });
 
-        // TeX overlay — positioned on top of canvas for crisp math rendering
-        this.texOverlayManager = TeXOverlay.attach(container);
-
         // Wire up document title updates when the model is modified
         this.model.onTitleUpdate = () => this.updateDocumentTitle();
         this.updateDocumentTitle();
@@ -338,7 +333,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setRenderTeX(enabled: boolean): void {
         this.renderTeX = enabled;
-        this.texOverlayManager.setEnabled(enabled);
         this.render();
     }
 
@@ -480,9 +474,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             st.ghostPrimitive.draw(this.ctx, this.mapCoordinates, this.model.getLayers());
             ctx.restore();
         }
-
-        // Sync TeX overlay when LaTeX rendering is enabled
-        this.texOverlayManager.sync(this.model, this.mapCoordinates, window.devicePixelRatio || 1);
 
         this.model.setChanged(false);
     }

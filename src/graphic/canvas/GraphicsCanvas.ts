@@ -13,6 +13,7 @@ import type { ShapeInterface } from '../ShapeInterface.js';
 import type { PolygonInterface } from '../PolygonInterface.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
+import type { LaidOutSegment } from '../MathLayout.js';
 import { ColorCanvas } from './ColorCanvas.js';
 import { TextCanvas } from './TextCanvas.js';
 import { ShapeCanvas } from './ShapeCanvas.js';
@@ -228,6 +229,59 @@ export class GraphicsCanvas implements GraphicsInterface {
             this.ctx.scale(1, xyfactor);
         }
         this.ctx.fillText(txt, 0, h);
+        this.ctx.restore();
+    }
+
+    drawMathSegments(
+        segments: LaidOutSegment[],
+        xa: number,
+        ya: number,
+        baseline: number,
+        fontPx: number,
+        needsStretching: boolean,
+        xyfactor: number,
+        orientation: number,
+        mirror: boolean,
+    ): void {
+        this.ctx.save();
+        this.ctx.translate(xa, ya);
+        if (orientation !== 0) {
+            this.ctx.rotate((orientation * Math.PI) / 180);
+        }
+        if (mirror) {
+            this.ctx.scale(-1, 1);
+        }
+        if (needsStretching) {
+            this.ctx.scale(1, xyfactor);
+        }
+        for (const seg of segments) {
+            if (seg.kind === 'text') {
+                this.ctx.fillText(seg.text ?? '', seg.x, baseline);
+                continue;
+            }
+            const geom = seg.geom;
+            if (!geom) continue;
+            // Native MathJax units (y-down, baseline 0) → px.
+            const s = fontPx / geom.unitsPerEm;
+            this.ctx.save();
+            this.ctx.translate(seg.x, baseline);
+            this.ctx.scale(s, s);
+            for (const glyph of geom.glyphs) {
+                const m = glyph.m;
+                this.ctx.save();
+                this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                this.ctx.fill(new Path2D(glyph.d));
+                this.ctx.restore();
+            }
+            for (const r of geom.rects) {
+                const m = r.m;
+                this.ctx.save();
+                this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                this.ctx.fillRect(r.x, r.y, r.w, r.h);
+                this.ctx.restore();
+            }
+            this.ctx.restore();
+        }
         this.ctx.restore();
     }
 
