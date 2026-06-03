@@ -101,7 +101,9 @@ export class ParserActions {
             const l = layerV[i]!;
             if (l.isModified()) {
                 const rgb = l.getColor()!.getRGB();
-                const alpha = l.getAlpha();
+                // Alpha is edited via a 0–1, 3-decimal slider; round on save so
+                // the header never carries long floats (e.g. from older files).
+                const alpha = Math.round(l.getAlpha() * 1000) / 1000;
                 s += `FJC L ${i} ${rgb} ${alpha}\n`;
                 const defaultName = standardLayers[i]!.getDescription();
                 if (l.getDescription() !== defaultName) {

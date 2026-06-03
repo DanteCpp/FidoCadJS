@@ -10,6 +10,11 @@
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { getString } from '../i18n/i18n.js';
 
+/** Round an alpha value to 3 decimals — the precision of the opacity slider. */
+function round3(x: number): number {
+    return Math.round(x * 1000) / 1000;
+}
+
 /**
  * Show the layer edit dialog.
  * Returns a Promise that resolves when the dialog is closed (after changes are committed).
@@ -89,14 +94,15 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
             alphaSlider.setAttribute('data-testid', `layer-alpha-${i}`);
             alphaSlider.type = 'range';
             alphaSlider.min = '0';
-            alphaSlider.max = '255';
-            alphaSlider.value = String(Math.round(layer.getAlpha() * 255));
+            alphaSlider.max = '1';
+            alphaSlider.step = '0.001';
+            alphaSlider.value = String(round3(layer.getAlpha()));
             alphaSlider.style.cssText = 'width: 80px;';
             row.appendChild(alphaSlider);
 
             const alphaValue = document.createElement('span');
-            alphaValue.textContent = String(Math.round(layer.getAlpha() * 255));
-            alphaValue.style.cssText = 'min-width: 24px; font-size: 11px;';
+            alphaValue.textContent = alphaSlider.value;
+            alphaValue.style.cssText = 'min-width: 36px; font-size: 11px;';
             row.appendChild(alphaValue);
 
             alphaSlider.addEventListener('input', () => {
@@ -150,7 +156,7 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
                 // never touched is not flagged modified — only modified layers
                 // are written to the file header.
                 const curHex = color ? '#' + color.getRGB().toString(16).padStart(6, '0') : null;
-                const curAlpha = String(Math.round(layer.getAlpha() * 255));
+                const curAlpha = String(round3(layer.getAlpha()));
                 const colorChanged = curHex !== null && r.colorInput.value !== curHex;
                 const alphaChanged = r.alphaSlider.value !== curAlpha;
                 const visChanged = r.visCheck.checked !== layer.isVisible();
@@ -162,7 +168,7 @@ export function showLayerDialog(panel: EditorFacade): Promise<void> {
                     color.setRGB(parseInt(r.colorInput.value.replace('#', ''), 16));
                 }
                 layer.setDescription(r.nameInput.value);
-                layer.setAlpha(Number(r.alphaSlider.value) / 255);
+                layer.setAlpha(round3(Number(r.alphaSlider.value)));
                 layer.setVisible(r.visCheck.checked);
                 layer.setModified(true);
                 anyChanged = true;

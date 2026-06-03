@@ -34,9 +34,9 @@ test.describe('Layer dialog — header serialization', () => {
         await loadCircuit(page, TWO_LINES);
         await openLayerDialog(page);
 
-        // Change only layer 5's alpha.
+        // Change only layer 5's alpha — the slider is a 0–1, 3-decimal float.
         await page.locator('[data-testid="layer-alpha-5"]').evaluate((el) => {
-            (el as HTMLInputElement).value = '64';
+            (el as HTMLInputElement).value = '0.25';
             el.dispatchEvent(new Event('input', { bubbles: true }));
         });
         await page.locator('[data-testid="layer-dialog-ok"]').click();
@@ -44,7 +44,8 @@ test.describe('Layer dialog — header serialization', () => {
 
         const fjcL = (await getCircuitText(page)).split('\n').filter((l) => l.startsWith('FJC L '));
         expect(fjcL).toHaveLength(1);
-        expect(fjcL[0]).toMatch(/^FJC L 5 /);
+        // Layer 5, alpha written as a short 3-decimal float (no /255 conversion).
+        expect(fjcL[0]).toMatch(/^FJC L 5 \d+ 0\.25$/);
     });
 
     test('confirming with no changes writes no layer lines', async ({ page }) => {
