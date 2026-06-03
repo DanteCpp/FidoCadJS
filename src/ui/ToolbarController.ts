@@ -11,6 +11,40 @@ import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { LayerDropdown } from './LayerDropdown.js';
 import { getString } from '../i18n/i18n.js';
 
+/**
+ * Canonical, language-independent keyboard shortcut shown for each tool in its
+ * toolbar tooltip. These mirror the bindings in KeyboardController and match
+ * FidoCadJ 0.24.9 exactly. The shortcut label is injected at build time so it
+ * is always identical regardless of the UI language (translators only provide
+ * the descriptive text, never the key letter).
+ */
+const TOOL_SHORTCUTS: Record<number, string> = {
+    [ElementsEdtActions.SELECTION]: 'A / Space',
+    [ElementsEdtActions.LINE]: 'L',
+    [ElementsEdtActions.TEXT]: 'T',
+    [ElementsEdtActions.BEZIER]: 'B',
+    [ElementsEdtActions.POLYGON]: 'P',
+    [ElementsEdtActions.COMPLEXCURVE]: 'O',
+    [ElementsEdtActions.ELLIPSE]: 'E',
+    [ElementsEdtActions.RECTANGLE]: 'G',
+    [ElementsEdtActions.CONNECTION]: 'C',
+    [ElementsEdtActions.PCB_LINE]: 'I',
+    [ElementsEdtActions.PCB_PAD]: 'Z',
+};
+
+/**
+ * Build a tool tooltip whose leading shortcut hint is the canonical key letter,
+ * independent of the translated string. Any shortcut prefix already present in
+ * the localized text (everything up to the first ASCII ":" or full-width "：")
+ * is stripped and replaced with the canonical label.
+ */
+function tooltipWithShortcut(toolId: number, localized: string): string {
+    const key = TOOL_SHORTCUTS[toolId];
+    if (!key) return localized;
+    const description = localized.replace(/^[^:：]*[:：]\s*/, '');
+    return `${key}: ${description}`;
+}
+
 export class ToolbarController {
     private toolbar: HTMLElement;
     private circuitPanel: EditorFacade;
@@ -68,7 +102,7 @@ export class ToolbarController {
             const btn = this.addIconButton(
                 firstRow,
                 `${this.baseUrl}icons/${icon}`,
-                tooltip,
+                tooltipWithShortcut(toolId, tooltip),
                 () => {
                     this.circuitPanel.setTool(toolId);
                 },

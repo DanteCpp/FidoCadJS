@@ -26,7 +26,7 @@ test.describe('Drawing Tools — Keyboard Selection', () => {
         ['t', Tools.TEXT, 'Text'],
         ['b', Tools.BEZIER, 'Bezier'],
         ['p', Tools.POLYGON, 'Polygon'],
-        ['v', Tools.COMPLEXCURVE, 'Complex Curve'],
+        ['o', Tools.COMPLEXCURVE, 'Complex Curve'],
         ['e', Tools.ELLIPSE, 'Ellipse'],
         ['g', Tools.RECTANGLE, 'Rectangle'],
         ['c', Tools.CONNECTION, 'Connection'],
@@ -164,7 +164,7 @@ test.describe('Drawing Primitives', () => {
     });
 
     test('draw a complex curve and finish with double-click', async ({ page }) => {
-        await pressKey(page, 'v');
+        await pressKey(page, 'o');
         await clickCanvasScreen(page, 100, 200);
         await page.waitForTimeout(200);
         await clickCanvasScreen(page, 200, 100);

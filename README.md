@@ -56,19 +56,21 @@
 
 ### Keyboard Shortcuts
 
+These match FidoCadJ 0.24.9 exactly and are the same in every language.
+
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `A` | Select tool | `Space` | Fit to view |
-| `L` | Line tool | `T` | Text tool |
-| `B` | Bezier tool | `P` | Polygon tool |
-| `V` | Complex curve | `E` | Ellipse tool |
-| `G` | Rectangle tool | `C` | Connection dot |
-| `I` | PCB line | `Z` | PCB pad |
-| `M` | Move selected | `R` | Rotate selected |
-| `S` | Mirror selected | `Delete` | Delete selected |
+| `A` `Space` `Esc` | Select tool | `L` | Line tool |
+| `T` | Text tool | `B` | Bezier tool |
+| `P` | Polygon tool | `O` | Complex curve |
+| `E` | Ellipse tool | `G` | Rectangle tool |
+| `C` | Connection dot | `I` | PCB line |
+| `Z` | PCB pad | `M` | Move selected |
+| `R` | Rotate selected | `S` | Mirror selected |
+| `Delete` | Delete selected | `Home` | Fit to view |
 | `Ctrl+Z` | Undo | `Ctrl+Y` | Redo |
-| `Ctrl+C/V/X` | Clipboard | `Escape` | Deselect / exit tool |
-| `Alt+arrows` | Nudge 1px | `+`/`-` | Zoom in/out |
+| `Ctrl+C/V/X` | Clipboard | `Alt+arrows` | Nudge 1px |
+| `+`/`-` | Zoom in/out | `Right-drag` | Ruler |
 
 ### Example
 

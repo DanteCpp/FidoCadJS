@@ -178,8 +178,8 @@ describe('Keyboard Shortcuts', () => {
             expect(panel.getTool()).toBe(ElementsEdtActions.POLYGON);
         });
 
-        it('V selects the Complex curve tool', () => {
-            pressKey(canvas, 'v');
+        it('O selects the Complex curve tool', () => {
+            pressKey(canvas, 'o');
             expect(panel.getTool()).toBe(ElementsEdtActions.COMPLEXCURVE);
         });
 
@@ -220,7 +220,13 @@ describe('Keyboard Shortcuts', () => {
     // ─── Special action keys ────────────────────────────────────────────────
 
     describe('Special keys', () => {
-        it('Space triggers fit-to-view', () => {
+        it('Space selects the Selection tool (FidoCadJ binding)', () => {
+            panel.setTool(ElementsEdtActions.LINE);
+            pressKey(canvas, ' ');
+            expect(panel.getTool()).toBe(ElementsEdtActions.SELECTION);
+        });
+
+        it('Home triggers fit-to-view', () => {
             // Add primitives to create non-zero bounding box
             addLineToPanel(panel, 0, 0, 100, 100, 0);
             panel.render();
@@ -230,7 +236,7 @@ describe('Keyboard Shortcuts', () => {
             const zoomBefore = panel.getZoomPercent();
             expect(zoomBefore).toBeLessThan(100);
 
-            pressKey(canvas, ' ');
+            pressKey(canvas, 'Home');
             const zoomAfter = panel.getZoomPercent();
 
             // Fit-to-view should zoom to fit the 100×100 content,

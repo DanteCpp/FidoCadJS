@@ -66,9 +66,17 @@ test.describe('Keyboard Shortcuts — Tool Selection', () => {
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
     });
 
-    test('Ctrl+V does NOT switch to Complex curve tool', async ({ page }) => {
+    test('Ctrl+O does NOT switch to Complex curve tool', async ({ page, browserName }) => {
+        // Firefox: Ctrl+O triggers the native "Open File" dialog which crashes
+        // headless Firefox on CI ("Target page, context or browser has been closed").
+        // The assertion (that the app does not bind Ctrl+O to a tool) is engine-
+        // agnostic, so verifying on Chromium + WebKit is sufficient.
+        test.skip(
+            browserName === 'firefox',
+            'Ctrl+O opens the native Firefox file dialog and crashes headless',
+        );
         await pressKey(page, 'l');
-        await pressKey(page, 'Control+v');
+        await pressKey(page, 'Control+o');
         await page.waitForTimeout(300);
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
     });
