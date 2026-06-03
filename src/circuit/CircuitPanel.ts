@@ -500,7 +500,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
 
     getCircuitText(): string {
-        return this.parserActions.getText(true);
+        // The full circuit document always opens with the [FIDOCAD] magic
+        // marker so saved files and the "View code" output are recognised as
+        // FidoCadJ drawings. The parser ignores it on load.
+        return '[FIDOCAD]\n' + this.parserActions.getText(true);
     }
 
     /** Mark the model as saved (clean). Called after a successful save. */

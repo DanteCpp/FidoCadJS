@@ -74,6 +74,8 @@ test.describe('File Operations', () => {
         await loadCircuit(page, SIMPLE_FCD);
 
         const text = await getCircuitText(page);
+        // Always opens with the [FIDOCAD] magic marker.
+        expect(text.startsWith('[FIDOCAD]\n')).toBe(true);
         // Should contain FJC config + primitives
         expect(text).toContain('FJC');
         expect(text).toContain('LI');
