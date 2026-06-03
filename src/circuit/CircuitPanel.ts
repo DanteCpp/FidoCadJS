@@ -276,11 +276,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.updateDocumentTitle();
     }
 
-    /** Update the browser tab title to reflect the file name and modified state. */
+    /** Update the browser tab title to reflect the file name. */
     private updateDocumentTitle(): void {
-        const modified = this.model.isModified();
-        const name = this.currentFileName ?? getString('Untitled');
-        document.title = (modified ? '* ' : '') + name + ' - FidoCadJS';
+        document.title = this.currentFileName ?? getString('Untitled');
     }
 
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
