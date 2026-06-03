@@ -3,21 +3,46 @@
  * Author:      Dante Loi
  * Date:        2026-06-03
  * Description: Service worker for the FidoCadJS PWA. Provides installability
- *              (a prerequisite for the File Handling API) and basic offline
- *              support via runtime caching.
+ *              (a prerequisite for the File Handling API) and full offline
+ *              support via build-time precaching.
  * Copyright:   (c) 2026 Dante Loi. Released under the GPL v3 license.
- * Details:     Uses a network-first strategy: fresh responses are served and
- *              cached on success; on network failure the cached copy (if any)
- *              is returned. Asset filenames are content-hashed by Vite, so a
- *              runtime cache avoids hard-coding build-specific names. Bump
- *              CACHE_NAME to invalidate previously cached responses.
+ * Details:     On install the worker precaches the complete set of built
+ *              assets (app shell, hashed JS, libraries, icons, manifest).
+ *              The precache list and CACHE_NAME are injected at build time by
+ *              scripts/generate-sw-precache.mjs — the placeholders below are
+ *              replaced against the freshly built dist/ tree, so the cache is
+ *              invalidated automatically whenever any asset changes.
+ *
+ *              Runtime strategy:
+ *                - Navigations (HTML): network-first, falling back to the
+ *                  cached app shell so the editor still launches offline while
+ *                  preferring fresh markup when the network is available.
+ *                - Other same-origin GETs: cache-first. Built assets are
+ *                  content-hashed and therefore immutable, so a cache hit is
+ *                  always correct; misses are fetched and cached at runtime.
  */
 
-const CACHE_NAME = 'fidocadjs-v1';
+// Both placeholders are replaced at build time by generate-sw-precache.mjs.
+// An un-rewritten copy is harmless: the SW is only registered for PROD builds,
+// and an empty precache list simply disables precaching.
+const CACHE_NAME = '__CACHE_NAME__';
 
-self.addEventListener('install', () => {
-    // Activate this worker immediately rather than waiting for old tabs.
-    self.skipWaiting();
+// Replaced at build time with the list of precache URLs (relative to scope).
+const PRECACHE_URLS = [
+    /* __PRECACHE_URLS__ */
+];
+
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        (async () => {
+            if (PRECACHE_URLS.length > 0) {
+                const cache = await caches.open(CACHE_NAME);
+                await cache.addAll(PRECACHE_URLS);
+            }
+            // Activate this worker immediately rather than waiting for old tabs.
+            await self.skipWaiting();
+        })(),
+    );
 });
 
 self.addEventListener('activate', (event) => {
@@ -41,26 +66,37 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Navigations: prefer the network, fall back to the cached app shell.
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            (async () => {
+                try {
+                    return await fetch(request);
+                } catch {
+                    const cache = await caches.open(CACHE_NAME);
+                    return (
+                        (await cache.match(request)) ||
+                        (await cache.match('./index.html')) ||
+                        (await cache.match('./')) ||
+                        Response.error()
+                    );
+                }
+            })(),
+        );
+        return;
+    }
+
+    // Assets: cache-first. Immutable hashed filenames make hits always valid.
     event.respondWith(
         (async () => {
-            try {
-                const response = await fetch(request);
-                // Cache successful basic responses for offline fallback.
-                if (response && response.ok && response.type === 'basic') {
-                    const cache = await caches.open(CACHE_NAME);
-                    cache.put(request, response.clone());
-                }
-                return response;
-            } catch {
-                const cached = await caches.match(request);
-                if (cached) return cached;
-                // Last resort for navigations: serve the cached app shell.
-                if (request.mode === 'navigate') {
-                    const shell = await caches.match('./');
-                    if (shell) return shell;
-                }
-                throw new Error('Network error and no cached response available.');
+            const cache = await caches.open(CACHE_NAME);
+            const cached = await cache.match(request);
+            if (cached) return cached;
+            const response = await fetch(request);
+            if (response && response.ok && response.type === 'basic') {
+                cache.put(request, response.clone());
             }
+            return response;
         })(),
     );
 });
