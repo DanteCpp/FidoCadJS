@@ -50,6 +50,13 @@ class FidoCadJS {
     private toolbarController!: ToolbarController;
     private propertiesController!: PropertiesPanelController;
 
+    /**
+     * Resolves once the standard + user libraries have finished loading. A file
+     * launched from the OS must wait for this, otherwise its macros resolve
+     * against an empty library at parse time and render blank.
+     */
+    private librariesReady!: Promise<void>;
+
     constructor() {
         // Load the user's preferred locale (saved → browser → English) before
         // any UI is built.
@@ -216,8 +223,13 @@ class FidoCadJS {
         statusBar.style.cssText = 'height: 4px; background: #e0e0e0; border-top: 1px solid #ccc;';
         app.appendChild(statusBar);
 
-        // Load standard FCL libraries asynchronously
-        this.initLibraries();
+        // Load standard FCL libraries asynchronously. Keep the promise so the
+        // OS file-launch handler can wait for macros to be available. Swallow
+        // failures here so a launched file still loads (at least its
+        // primitives) even if library loading breaks.
+        this.librariesReady = this.initLibraries().catch((e) =>
+            console.error('Library load failed:', e),
+        );
 
         // Enable keyboard listeners
         this.circuitPanel.addKeyboardListeners();
@@ -247,6 +259,8 @@ class FidoCadJS {
             try {
                 const file = await handle.getFile();
                 const text = await file.text();
+                // Wait for libraries so macro references resolve at parse time.
+                await this.librariesReady;
                 this.circuitPanel.loadCircuit(text);
                 this.circuitPanel.setFileName(file.name);
                 this.circuitPanel.setFileHandle(handle);
