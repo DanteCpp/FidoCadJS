@@ -15,7 +15,6 @@ import type { ColorInterface } from '../graphic/ColorInterface.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
 import { registerExportHooks } from './views/Export.js';
 import { TeXMode } from '../graphic/TeXMode.js';
-import '../vendor/katex/katex.min.css';
 import { DrawingSize } from '../geom/DrawingSize.js';
 import { SelectionActions } from './controllers/SelectionActions.js';
 import { UndoActions } from './controllers/UndoActions.js';

@@ -172,6 +172,23 @@ The SVG, PGF, and TikZ exporters approximate some FidoCad primitives:
 
 These limitations are documented in the source with `// LIMITATION:` comments.
 
+### LaTeX Math
+
+Text primitives may embed LaTeX math between `$...$` (inline) or `$$...$$`
+(display). Math is rendered with a vendored, dependency-free **MathJax** SVG
+engine (`src/vendor/mathjax/`) that produces vector glyph outlines. The same
+engine drives every target, so math looks identical on-screen and in export:
+
+| Target | How math is rendered |
+|--------|----------------------|
+| **On-screen / PNG / JPG** | Glyph outlines painted onto the canvas as vector paths (crisp at any zoom). |
+| **SVG** | Glyph outlines embedded as `<path>`/`<rect>` geometry — self-contained, no external fonts or `foreignObject`. |
+| **PDF** | Glyph outlines emitted as vector path-fill operators. |
+| **PGF / TikZ** | Literal `$...$` is passed through for the downstream LaTeX compiler to typeset (idiomatic for these formats). |
+
+Malformed LaTeX degrades gracefully to the literal source text. On-screen math
+follows the *Render TeX* option; exports always typeset.
+
 ### Roadmap
 
 The project is currently at a **beta** release. Editing, parsing, and SVG export are stable and covered by tests; the FCL round-trip is validated for all 11 primitive types. Work in progress includes additional export formats, more locale bundles, and broader feature coverage versus FidoCadJ. Bug reports and pull requests are welcome (see [Contributing](#contributing)).
