@@ -133,10 +133,13 @@ export function renderToOffscreen(
     const graphics = new GraphicsCanvas(offscreen);
     graphics.setZoom(1);
 
-    // Render
-    TeXMode.active = false; // no TeX overlay in bitmap export
+    // Render. Enable typeset math so exported bitmaps show LaTeX, then restore
+    // the previous flag (the next on-screen render resets it from renderTeX).
+    const prevTeX = TeXMode.active;
+    TeXMode.active = true;
     const drawing = new Drawing(model);
     drawing.draw(graphics, mp);
+    TeXMode.active = prevTeX;
 
     // Black-and-white post-processing
     if (options.blackAndWhite) {
@@ -175,7 +178,8 @@ export function renderLayerToOffscreen(
     const graphics = new GraphicsCanvas(offscreen);
     graphics.setZoom(1);
 
-    TeXMode.active = false;
+    const prevTeX = TeXMode.active;
+    TeXMode.active = true;
     const drawing = new Drawing(model);
 
     // Set draw-only layer for this render pass
@@ -183,6 +187,7 @@ export function renderLayerToOffscreen(
     model.setDrawOnlyLayer(layerIndex);
     drawing.draw(graphics, mp);
     model.setDrawOnlyLayer(prevLayer);
+    TeXMode.active = prevTeX;
 
     if (options.blackAndWhite) {
         applyBlackAndWhite(offscreen);

@@ -17,6 +17,8 @@
 
 import { tex2mathgeom, type MathGeometry } from '../vendor/mathjax-shim.js';
 
+export type { MathGeometry } from '../vendor/mathjax-shim.js';
+
 /** A raw segment produced by splitting on `$`/`$$` delimiters. */
 export interface MathTextSegment {
     type: 'text' | 'math';

@@ -13,6 +13,7 @@ import type { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
 import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
+import { layoutMath, type MathGeometry } from '../graphic/MathLayout.js';
 
 export class ExportSVG implements ExportInterface {
     private buffer: string[] = [];
@@ -379,12 +380,72 @@ export class ExportSVG implements ExportInterface {
             this.buffer.push(` rotate(${alpha})`);
         }
         this.buffer.push(` scale(${xscale},${yscale})">`);
-        this.buffer.push(
-            `<text x="0" y="0" font-family="${this.escapeXml(fontname)}" font-size="${sizex * 2}" ` +
-                `fill="${this.currentColor}" style="font-weight:${isBold ? 'bold' : 'normal'};` +
-                `font-style:${isItalic ? 'italic' : 'normal'}">${this.escapeXml(text)}</text>`,
-        );
+
+        // Render LaTeX math (between $...$) as embedded glyph paths; plain text
+        // stays an SVG <text>. The whole run shares this group's transform.
+        const fontSize = sizex * 2;
+        const layout = layoutMath(text, fontSize, (s) => s.length * 0.6 * fontSize);
+        if (layout.hasMath) {
+            for (const seg of layout.segments) {
+                if (seg.kind === 'math' && seg.geom) {
+                    this.buffer.push(this.svgMathGroup(seg.geom, seg.x, fontSize));
+                } else {
+                    this.buffer.push(
+                        this.svgTextElement(
+                            seg.text ?? '',
+                            seg.x,
+                            fontSize,
+                            isBold,
+                            isItalic,
+                            fontname,
+                        ),
+                    );
+                }
+            }
+        } else {
+            this.buffer.push(this.svgTextElement(text, 0, fontSize, isBold, isItalic, fontname));
+        }
         this.buffer.push('</g>\n');
+    }
+
+    /** Format a number for SVG output, trimming to 3 decimals. */
+    private fmt(v: number): string {
+        return (Math.round(v * 1000) / 1000).toString();
+    }
+
+    /** A plain-text run as an SVG <text> at the given x-offset (baseline y=0). */
+    private svgTextElement(
+        text: string,
+        x: number,
+        fontSize: number,
+        isBold: boolean,
+        isItalic: boolean,
+        fontname: string,
+    ): string {
+        const xs = x === 0 ? '0' : this.fmt(x);
+        return (
+            `<text x="${xs}" y="0" font-family="${this.escapeXml(fontname)}" font-size="${fontSize}" ` +
+            `fill="${this.currentColor}" style="font-weight:${isBold ? 'bold' : 'normal'};` +
+            `font-style:${isItalic ? 'italic' : 'normal'}">${this.escapeXml(text)}</text>`
+        );
+    }
+
+    /** A math segment as a scaled group of MathJax glyph paths and rule rects. */
+    private svgMathGroup(geom: MathGeometry, x: number, fontSize: number): string {
+        const s = fontSize / geom.unitsPerEm;
+        let out =
+            `<g transform="translate(${this.fmt(x)},0) scale(${this.fmt(s)})" ` +
+            `fill="${this.currentColor}"${this.opacityAttr()}>`;
+        for (const glyph of geom.glyphs) {
+            out += `<path transform="matrix(${glyph.m.map((v) => this.fmt(v)).join(' ')})" d="${glyph.d}"/>`;
+        }
+        for (const r of geom.rects) {
+            out +=
+                `<rect transform="matrix(${r.m.map((v) => this.fmt(v)).join(' ')})" ` +
+                `x="${this.fmt(r.x)}" y="${this.fmt(r.y)}" width="${this.fmt(r.w)}" height="${this.fmt(r.h)}"/>`;
+        }
+        out += '</g>';
+        return out;
     }
 
     exportMacro(
