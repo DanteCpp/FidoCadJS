@@ -35,7 +35,7 @@
   "Ellipse": "Ellips",
   "tooltip_ellipse": "E: Teken een ellips (Control-toets vasthouden voor cirkel).",
   "Rectangle": "Rechthoek.",
-  "tooltip_rectangle": "R: Teken een rechthoek.",
+  "tooltip_rectangle": "G: Teken een rechthoek.",
   "Connection": "Connectie",
   "tooltip_connection": "C: Plaats een knooppunt.",
   "PCBline": "PCB Spoor",

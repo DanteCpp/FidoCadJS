@@ -61,12 +61,13 @@
 | `A` | Select tool | `Space` | Fit to view |
 | `L` | Line tool | `T` | Text tool |
 | `B` | Bezier tool | `P` | Polygon tool |
-| `E` | Ellipse tool | `G` | Rectangle tool |
-| `C` | Connection dot | `I` | PCB line |
-| `Z` | PCB pad | `R` | Rotate selected |
-| `S` | Mirror selected | `Ctrl+Z` | Undo |
-| `Ctrl+Y` | Redo | `Ctrl+C/V/X` | Clipboard |
-| `Delete` | Delete selected | `Escape` | Deselect / exit tool |
+| `V` | Complex curve | `E` | Ellipse tool |
+| `G` | Rectangle tool | `C` | Connection dot |
+| `I` | PCB line | `Z` | PCB pad |
+| `M` | Move selected | `R` | Rotate selected |
+| `S` | Mirror selected | `Delete` | Delete selected |
+| `Ctrl+Z` | Undo | `Ctrl+Y` | Redo |
+| `Ctrl+C/V/X` | Clipboard | `Escape` | Deselect / exit tool |
 | `Alt+arrows` | Nudge 1px | `+`/`-` | Zoom in/out |
 
 ### Example

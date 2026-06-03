@@ -178,8 +178,8 @@ describe('Keyboard Shortcuts', () => {
             expect(panel.getTool()).toBe(ElementsEdtActions.POLYGON);
         });
 
-        it('O selects the Complex curve tool', () => {
-            pressKey(canvas, 'o');
+        it('V selects the Complex curve tool', () => {
+            pressKey(canvas, 'v');
             expect(panel.getTool()).toBe(ElementsEdtActions.COMPLEXCURVE);
         });
 

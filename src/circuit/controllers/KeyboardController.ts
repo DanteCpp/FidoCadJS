@@ -245,8 +245,8 @@ export class KeyboardController {
             return;
         }
 
-        // O: Complex curve tool
-        if (key === 'o' && !isCtrlOrMeta) {
+        // V: Complex curve tool
+        if (key === 'v' && !isCtrlOrMeta) {
             e.preventDefault();
             this.host.setTool(ElementsEdtActions.COMPLEXCURVE);
             return;

@@ -35,7 +35,7 @@
   "Ellipse": "Ellipse",
   "tooltip_ellipse": "E: Place an ellipse (hold Control key to obtain a circle).",
   "Rectangle": "Rect.",
-  "tooltip_rectangle": "R: Place a rectangle.",
+  "tooltip_rectangle": "G: Place a rectangle.",
   "Connection": "Connection",
   "tooltip_connection": "C: Place an electrical connection.",
   "PCBline": "PCB Line",

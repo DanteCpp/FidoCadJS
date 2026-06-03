@@ -35,7 +35,7 @@
   "Ellipse": "Elipsa",
   "tooltip_ellipse": "E: vloží elipsu (při současném držení klávesy Ctrl to bude kruh).",
   "Rectangle": "Obdélník",
-  "tooltip_rectangle": "R: vloží obdélník.",
+  "tooltip_rectangle": "G: vloží obdélník.",
   "Connection": "Spojení",
   "tooltip_connection": "C: vloží elektrické propojení.",
   "PCBline": "PCB cesta",

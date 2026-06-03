@@ -35,7 +35,7 @@
   "Ellipse": "Elipse",
   "tooltip_ellipse": "E: Trazar un elipse (mantenga la tecla Control pulsada para obtener un circulo).",
   "Rectangle": "Rectángulo",
-  "tooltip_rectangle": "R: Trazar un rectángulo.",
+  "tooltip_rectangle": "G: Trazar un rectángulo.",
   "Connection": "Conexión",
   "tooltip_connection": "C: Crear una conexión eléctrica.",
   "PCBline": "Línea CI",
