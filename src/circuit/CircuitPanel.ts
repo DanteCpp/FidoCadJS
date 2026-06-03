@@ -228,22 +228,12 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.canvas.addEventListener(
             'contextmenu',
             (e) => {
+                // Only block the native browser menu here. Whether to show our
+                // own context menu (plain right-click) or keep the measuring
+                // ruler (right-drag) is decided on right-button release in
+                // InputHandler.onMouseUp, because the contextmenu event fires at
+                // mousedown — before we know if the user is dragging a ruler.
                 e.preventDefault();
-                // A right-button drag draws the measuring ruler; in that case the
-                // gesture was a measurement, not a menu request, so leave the
-                // ruler on screen and suppress the popup / tool change.
-                if (this.inputHandler.consumeRulerDrag()) {
-                    return;
-                }
-                // If a drawing tool is active, right-click cancels it (already dispatched
-                // via onMouseDown to handleClick). Sync the UI toolbar state and do NOT
-                // show the context menu.
-                if (this.currentTool !== ElementsEdtActions.SELECTION) {
-                    this.setTool(ElementsEdtActions.SELECTION);
-                    this.render();
-                } else {
-                    this.contextMenuManager.show(e.clientX, e.clientY);
-                }
             },
             { signal: this.lifecycle.signal },
         );

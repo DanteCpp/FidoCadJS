@@ -173,17 +173,6 @@ export class InputHandler {
         return this._ruler;
     }
 
-    /**
-     * Returns true (once) if the most recent right-button gesture was a drag
-     * that drew the ruler, clearing the flag. The contextmenu handler uses this
-     * to suppress the popup menu after a measurement.
-     */
-    consumeRulerDrag(): boolean {
-        const dragged = this.rulerDragged;
-        this.rulerDragged = false;
-        return dragged;
-    }
-
     // ── Constructor ────────────────────────────────────────────────────────
 
     constructor(
@@ -491,11 +480,23 @@ export class InputHandler {
             return;
         }
 
-        // Right-button release ends a ruler gesture. The measurement (if any
-        // dragging occurred) stays on screen until the next press; a plain
-        // right-click without dragging falls through to the context menu.
+        // Right-button release ends a ruler gesture. If the user dragged, the
+        // measurement stays on screen until the next press. Otherwise this was a
+        // plain right-click: cancel the active drawing tool, or pop the context
+        // menu when in selection mode (decided here, not on the contextmenu
+        // event, which fires too early to tell a click from a drag).
         if (e.button === 2) {
             this.rulerArmed = false;
+            if (!this.rulerDragged) {
+                const t = this.cb.getTool();
+                if (t !== ElementsEdtActions.SELECTION) {
+                    this.cb.setTool(ElementsEdtActions.SELECTION);
+                    this.cb.render();
+                } else {
+                    this.cb.showContextMenu(e.clientX, e.clientY);
+                }
+            }
+            this.rulerDragged = false;
             return;
         }
 
