@@ -11,6 +11,7 @@
 
 import { test, expect } from '@playwright/test';
 import { PNG } from 'pngjs';
+import pixelmatch from 'pixelmatch';
 import { gotoApp, loadCircuit } from './utils';
 
 // Black text on layer 0 (the colour that used to be skipped) inside a frame.
@@ -64,5 +65,32 @@ test.describe('Bitmap export rendering', () => {
         await loadCircuit(page, MATH_FCD);
         const png = await exportPng(page);
         expect(darkPixelCount(png)).toBeGreaterThan(200);
+    });
+
+    test('exporting does not corrupt the on-screen render', async ({ page }) => {
+        // Export renders primitives into its own coordinate space; if it leaves
+        // the shared per-primitive cache stale, the next on-screen redraw
+        // (triggered here by a click) shrinks/displaces the drawing.
+        await loadCircuit(page, TEXT_FCD);
+        await page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.zoomToFit?.());
+        await page.waitForTimeout(300);
+
+        const canvas = page.locator('[data-testid="editor-canvas"]');
+        const before = PNG.sync.read(await canvas.screenshot());
+
+        await exportPng(page);
+        const box = (await canvas.boundingBox())!;
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        await page.waitForTimeout(300);
+        const after = PNG.sync.read(await canvas.screenshot());
+
+        // The render must be essentially unchanged (a selection click may tint a
+        // few pixels, so allow a small tolerance — the bug changed thousands).
+        expect(before.width).toBe(after.width);
+        expect(before.height).toBe(after.height);
+        const diff = pixelmatch(before.data, after.data, null, before.width, before.height, {
+            threshold: 0.1,
+        });
+        expect(diff).toBeLessThan(before.width * before.height * 0.02);
     });
 });

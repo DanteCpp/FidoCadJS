@@ -159,6 +159,11 @@ export function renderToOffscreen(
     const drawing = new Drawing(model);
     drawing.draw(graphics, mp);
     TeXMode.active = prevTeX;
+    // Rendering recomputed each primitive's cached screen coordinates in this
+    // export's coordinate space. Mark the model changed so the next on-screen
+    // render recomputes them for the panel's zoom instead of reusing the stale
+    // export-space cache (which otherwise shrinks/displaces the drawing).
+    model.setChanged(true);
 
     // Black-and-white post-processing
     if (options.blackAndWhite) {
@@ -212,6 +217,9 @@ export function renderLayerToOffscreen(
     drawing.draw(graphics, mp);
     model.setDrawOnlyLayer(prevLayer);
     TeXMode.active = prevTeX;
+    // See renderToOffscreen: invalidate so the panel recomputes screen-space
+    // primitive coordinates on its next render rather than reusing this cache.
+    model.setChanged(true);
 
     if (options.blackAndWhite) {
         applyBlackAndWhite(offscreen);
