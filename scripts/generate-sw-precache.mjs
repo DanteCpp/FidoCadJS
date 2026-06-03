@@ -60,10 +60,18 @@ if (files.length === 0) {
 // Always serve "./" (the directory index) from cache for offline navigations.
 const precacheUrls = ['./', ...files];
 
-// Cache name derived from the manifest. Filenames are content-hashed by Vite,
-// so this changes whenever any asset changes, invalidating the old cache.
-const hash = createHash('sha256').update(precacheUrls.join('\n')).digest('hex').slice(0, 12);
-const cacheName = `fidocadjs-${hash}`;
+// Cache name derived from the actual file CONTENTS, not just the names. Most
+// assets are content-hashed by Vite, but index.html, manifest.webmanifest and
+// the .fcl libraries are not — so a content-only change to those must still
+// produce a new cache name, otherwise the activate handler would keep serving
+// the stale copies. Hashing contents covers every case. ("./" mirrors
+// index.html, which is already hashed via its own entry, so skip it.)
+const digest = createHash('sha256');
+for (const url of precacheUrls) {
+    digest.update(url);
+    if (url !== './') digest.update(readFileSync(join(distDir, url.slice(2))));
+}
+const cacheName = `fidocadjs-${digest.digest('hex').slice(0, 12)}`;
 
 let sw = readFileSync(swPath, 'utf8');
 
