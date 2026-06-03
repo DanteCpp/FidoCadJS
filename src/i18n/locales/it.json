@@ -345,6 +345,8 @@
   "prop_multiple": "Elementi multipli",
   "symb_origin_hint": "Origine (trascina il mirino, clic destro = mostra/nascondi griglia):",
   "macropicker_header": "Componenti",
+  "macropicker_add_library": "Aggiungi libreria…",
+  "macropicker_library_settings": "Impostazioni di archiviazione librerie…",
   "macropicker_search": "Cerca componenti...",
   "lib_overwrite_title": "Sovrascrivi libreria",
   "lib_overwrite_msg": "Esiste già una libreria utente con prefisso \"{0}\". Sovrascriverla?",

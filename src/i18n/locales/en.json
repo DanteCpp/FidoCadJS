@@ -355,6 +355,8 @@
   "prop_multiple": "Multiple elements",
   "symb_origin_hint": "Origin (drag crosshair, right-click=toggle grid):",
   "macropicker_header": "Components",
+  "macropicker_add_library": "Add library…",
+  "macropicker_library_settings": "Library storage settings…",
   "macropicker_search": "Search components...",
   "lib_overwrite_title": "Overwrite library",
   "lib_overwrite_msg": "A user library with prefix \"{0}\" already exists. Overwrite it?",

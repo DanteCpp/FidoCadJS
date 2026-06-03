@@ -20,6 +20,7 @@ import { Globals } from './globals/Globals.js';
 import { UserLibraryStorage } from './librarymodel/UserLibraryStorage.js';
 import { ConfirmDialog } from './ui/ConfirmDialog.js';
 import { DialogSymbolize } from './ui/DialogSymbolize.js';
+import { showOptionsDialog } from './ui/OptionsDialog.js';
 import { PromptDialog } from './ui/PromptDialog.js';
 import { LibUtils } from './librarymodel/LibUtils.js';
 import { Library } from './librarymodel/Library.js';
@@ -300,6 +301,10 @@ class FidoCadJS {
         this.macroPicker.onContextMenuAction = (action, node) => {
             this.handleMacroPickerContextAction(action, node);
         };
+        this.macroPicker.onAddLibrary = () => this.pickAndImportLibrary();
+        this.macroPicker.onConfigureLibrary = () => {
+            showOptionsDialog(this.circuitPanel, () => this.reloadAllLibraries(), 'libraries');
+        };
         this.circuitPanel.onSymbolizeRequested = () => {
             const dlg = new DialogSymbolize(
                 this.circuitPanel,
@@ -317,6 +322,30 @@ class FidoCadJS {
 
     private newCircuit(): void {
         this.circuitPanel.clearCircuit();
+    }
+
+    /**
+     * Open a file picker for an .fcl/.txt library and import the chosen file.
+     * Mirrors the "Import library" menu action so libraries can be added
+     * straight from the components sidebar.
+     */
+    private pickAndImportLibrary(): void {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.fcl,.txt';
+        input.addEventListener('change', () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = reader.result as string;
+                this.importLibrary(text, file.name).catch((err) =>
+                    console.error('Import failed:', err),
+                );
+            };
+            reader.readAsText(file);
+        });
+        input.click();
     }
 
     private async importLibrary(content: string, fileName: string): Promise<void> {
