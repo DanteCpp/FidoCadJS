@@ -273,11 +273,19 @@ class FidoCadJS {
     private registerServiceWorker(): void {
         if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
         const base = import.meta.env.BASE_URL;
-        window.addEventListener('load', () => {
+        const register = () => {
             navigator.serviceWorker
                 .register(`${base}sw.js`, { scope: base })
                 .catch((e) => console.error('Service worker registration failed:', e));
-        });
+        };
+        // App initialization can finish after the `load` event has already
+        // fired; in that case a `load` listener would never run, so register
+        // immediately. Otherwise defer to `load` to stay off the critical path.
+        if (document.readyState === 'complete') {
+            register();
+        } else {
+            window.addEventListener('load', register, { once: true });
+        }
     }
 
     private async initLibraries(): Promise<void> {
