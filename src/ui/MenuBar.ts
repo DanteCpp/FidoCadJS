@@ -35,6 +35,7 @@ export class MenuBar {
         | ((content: string, fileName: string) => Promise<void>)
         | undefined;
     private readonly onReloadLibraries: (() => void) | undefined;
+    private readonly librariesReady: (() => Promise<void>) | undefined;
     private undoMenuItem: HTMLElement | null = null;
     private redoMenuItem: HTMLElement | null = null;
 
@@ -43,11 +44,13 @@ export class MenuBar {
         onNewCircuit: () => void,
         onImportLibrary: ((content: string, fileName: string) => Promise<void>) | undefined,
         onReloadLibraries?: () => void,
+        librariesReady?: () => Promise<void>,
     ) {
         this.panel = panel;
         this.onNewCircuit = onNewCircuit;
         this.onImportLibrary = onImportLibrary;
         this.onReloadLibraries = onReloadLibraries;
+        this.librariesReady = librariesReady;
 
         this.el = document.createElement('div');
         this.el.style.cssText =
@@ -433,11 +436,17 @@ export class MenuBar {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const text = event.target?.result as string;
-                this.panel.loadCircuit(text);
-                // Remember the opened file's name for a later Save; the picker
-                // handle (if any) no longer matches this content.
-                this.panel.setFileName(file.name);
-                this.panel.setFileHandle(null);
+                // Wait for libraries so the circuit's macro references resolve
+                // at parse time. Macros are expanded once, when parsed; if the
+                // file is opened before the libraries finish loading, every
+                // macro is silently dropped and never recovers.
+                void Promise.resolve(this.librariesReady?.()).then(() => {
+                    this.panel.loadCircuit(text);
+                    // Remember the opened file's name for a later Save; the picker
+                    // handle (if any) no longer matches this content.
+                    this.panel.setFileName(file.name);
+                    this.panel.setFileHandle(null);
+                });
             };
             reader.readAsText(file);
         });

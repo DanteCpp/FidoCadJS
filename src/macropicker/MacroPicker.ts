@@ -33,6 +33,10 @@ export class MacroPicker {
     onContextMenuAction:
         | ((action: ContextMenuAction, node: Library | Category | MacroDesc) => void)
         | null = null;
+    /** Invoked when the user clicks the "+" button to add a library from a file. */
+    onAddLibrary: (() => void) | null = null;
+    /** Invoked when the user clicks the gear button to configure the library path. */
+    onConfigureLibrary: (() => void) | null = null;
 
     private treeContainer: HTMLElement;
     private searchInput: HTMLInputElement;
@@ -58,12 +62,25 @@ export class MacroPicker {
             'display: flex; flex-direction: column; height: 100%; overflow: hidden; ' +
             'background: #f8f8f8; border-left: 1px solid #ccc; font-family: sans-serif; font-size: 12px;';
 
-        // Header
+        // Header: title on the left, action buttons on the right.
         const header = document.createElement('div');
-        header.textContent = getString('macropicker_header');
         header.style.cssText =
-            'padding: 8px 10px; font-weight: bold; font-size: 13px; ' +
+            'display: flex; align-items: center; gap: 4px; padding: 6px 6px 6px 10px; ' +
             'border-bottom: 1px solid #ddd; background: #f0f0f0; flex-shrink: 0;';
+
+        const title = document.createElement('span');
+        title.textContent = getString('macropicker_header');
+        title.style.cssText = 'flex: 1; font-weight: bold; font-size: 13px; color: #333;';
+        header.appendChild(title);
+
+        const addBtn = this.buildHeaderButton('+', getString('macropicker_add_library'), () =>
+            this.onAddLibrary?.(),
+        );
+        const gearBtn = this.buildHeaderButton('⚙', getString('macropicker_library_settings'), () =>
+            this.onConfigureLibrary?.(),
+        );
+        header.appendChild(addBtn);
+        header.appendChild(gearBtn);
         this.element.appendChild(header);
 
         // Search box
@@ -222,6 +239,29 @@ export class MacroPicker {
     }
 
     // ── Private builders ──────────────────────────────────────────────────────
+
+    private buildHeaderButton(label: string, tooltip: string, onClick: () => void): HTMLElement {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        btn.title = tooltip;
+        btn.setAttribute('aria-label', tooltip);
+        btn.style.cssText =
+            'flex-shrink: 0; width: 24px; height: 24px; padding: 0; line-height: 1; ' +
+            'font-size: 15px; color: #444; background: transparent; border: 1px solid transparent; ' +
+            'border-radius: 4px; cursor: pointer; display: flex; align-items: center; ' +
+            'justify-content: center;';
+        btn.addEventListener('mouseenter', () => {
+            btn.style.background = '#e0e0e0';
+            btn.style.borderColor = '#ccc';
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.background = 'transparent';
+            btn.style.borderColor = 'transparent';
+        });
+        btn.addEventListener('click', onClick);
+        return btn;
+    }
 
     private buildLibrarySection(lib: Library, expanded: boolean): HTMLElement {
         const section = document.createElement('div');

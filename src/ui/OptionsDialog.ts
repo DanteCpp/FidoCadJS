@@ -21,7 +21,11 @@ import {
 
 type TabId = 'drawing' | 'pcb' | 'appearance' | 'libraries' | 'language';
 
-export function showOptionsDialog(panel: EditorFacade, onLibrariesChanged?: () => void): void {
+export function showOptionsDialog(
+    panel: EditorFacade,
+    onLibrariesChanged?: () => void,
+    initialTab: TabId = 'drawing',
+): void {
     const mgr = SettingsManager.getInstance();
     const s = mgr.getSettings();
 
@@ -107,7 +111,7 @@ export function showOptionsDialog(panel: EditorFacade, onLibrariesChanged?: () =
 
     dialog.appendChild(tabBar);
     dialog.appendChild(contentArea);
-    activateTab('drawing');
+    activateTab(initialTab);
 
     // ── Button row ─────────────────────────────────────────────────────────────
     const buttonRow = document.createElement('div');

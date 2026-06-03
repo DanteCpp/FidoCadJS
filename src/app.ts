@@ -20,12 +20,24 @@ import { Globals } from './globals/Globals.js';
 import { UserLibraryStorage } from './librarymodel/UserLibraryStorage.js';
 import { ConfirmDialog } from './ui/ConfirmDialog.js';
 import { DialogSymbolize } from './ui/DialogSymbolize.js';
+import { showOptionsDialog } from './ui/OptionsDialog.js';
 import { PromptDialog } from './ui/PromptDialog.js';
 import { LibUtils } from './librarymodel/LibUtils.js';
 import { Library } from './librarymodel/Library.js';
 import { Category } from './librarymodel/Category.js';
 import { MacroDesc } from './primitives/MacroDesc.js';
 import type { ContextMenuAction } from './macropicker/MacroPicker.js';
+
+/**
+ * Minimal typings for the File Handling API (Launch Queue). These are not yet
+ * part of the standard DOM lib, so we declare just what we consume here.
+ */
+interface LaunchParams {
+    readonly files: readonly FileSystemFileHandle[];
+}
+interface LaunchQueue {
+    setConsumer(consumer: (params: LaunchParams) => void): void;
+}
 
 class FidoCadJS {
     private circuitPanel!: CircuitPanel;
@@ -38,6 +50,13 @@ class FidoCadJS {
 
     private toolbarController!: ToolbarController;
     private propertiesController!: PropertiesPanelController;
+
+    /**
+     * Resolves once the standard + user libraries have finished loading. A file
+     * launched from the OS must wait for this, otherwise its macros resolve
+     * against an empty library at parse time and render blank.
+     */
+    private librariesReady!: Promise<void>;
 
     constructor() {
         // Load the user's preferred locale (saved → browser → English) before
@@ -65,6 +84,7 @@ class FidoCadJS {
                 () => this.newCircuit(),
                 (content, fileName) => this.importLibrary(content, fileName),
                 () => this.reloadAllLibraries(),
+                () => this.librariesReady ?? Promise.resolve(),
             );
             this.menuBar.getElement().replaceWith(newMenu.getElement());
             this.menuBar = newMenu;
@@ -171,6 +191,7 @@ class FidoCadJS {
             () => this.newCircuit(),
             (content, fileName) => this.importLibrary(content, fileName),
             () => this.reloadAllLibraries(),
+            () => this.librariesReady ?? Promise.resolve(),
         );
         this.circuitPanel.setMenuBar(this.menuBar);
         app.insertBefore(this.menuBar.getElement(), this.toolbarEl);
@@ -205,13 +226,69 @@ class FidoCadJS {
         statusBar.style.cssText = 'height: 4px; background: #e0e0e0; border-top: 1px solid #ccc;';
         app.appendChild(statusBar);
 
-        // Load standard FCL libraries asynchronously
-        this.initLibraries();
+        // Load standard FCL libraries asynchronously. Keep the promise so the
+        // OS file-launch handler can wait for macros to be available. Swallow
+        // failures here so a launched file still loads (at least its
+        // primitives) even if library loading breaks.
+        this.librariesReady = this.initLibraries().catch((e) =>
+            console.error('Library load failed:', e),
+        );
 
         // Enable keyboard listeners
         this.circuitPanel.addKeyboardListeners();
 
+        // Open circuits launched from the OS (installed-PWA file handler).
+        this.initFileHandling();
+
+        // Register the service worker so the app is installable (a prerequisite
+        // for the File Handling API) and works offline after the first visit.
+        this.registerServiceWorker();
+
         console.log('FidoCadJS initialized');
+    }
+
+    /**
+     * Consume files the OS hands to the installed PWA when the user opens a
+     * `.fcd` circuit from the filesystem. The Launch Queue (Chromium-only)
+     * delivers FileSystemFileHandle objects; we load the first one and keep its
+     * handle so a later Save writes straight back to the same file.
+     */
+    private initFileHandling(): void {
+        const launchQueue = (window as unknown as { launchQueue?: LaunchQueue }).launchQueue;
+        if (!launchQueue) return;
+        launchQueue.setConsumer(async (params: LaunchParams) => {
+            if (!params.files || params.files.length === 0) return;
+            const handle = params.files[0];
+            try {
+                const file = await handle.getFile();
+                const text = await file.text();
+                // Wait for libraries so macro references resolve at parse time.
+                await this.librariesReady;
+                this.circuitPanel.loadCircuit(text);
+                this.circuitPanel.setFileName(file.name);
+                this.circuitPanel.setFileHandle(handle);
+            } catch (e) {
+                console.error('Failed to open launched file:', e);
+            }
+        });
+    }
+
+    private registerServiceWorker(): void {
+        if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+        const base = import.meta.env.BASE_URL;
+        const register = () => {
+            navigator.serviceWorker
+                .register(`${base}sw.js`, { scope: base })
+                .catch((e) => console.error('Service worker registration failed:', e));
+        };
+        // App initialization can finish after the `load` event has already
+        // fired; in that case a `load` listener would never run, so register
+        // immediately. Otherwise defer to `load` to stay off the critical path.
+        if (document.readyState === 'complete') {
+            register();
+        } else {
+            window.addEventListener('load', register, { once: true });
+        }
     }
 
     private async initLibraries(): Promise<void> {
@@ -225,6 +302,10 @@ class FidoCadJS {
         };
         this.macroPicker.onContextMenuAction = (action, node) => {
             this.handleMacroPickerContextAction(action, node);
+        };
+        this.macroPicker.onAddLibrary = () => this.pickAndImportLibrary();
+        this.macroPicker.onConfigureLibrary = () => {
+            showOptionsDialog(this.circuitPanel, () => this.reloadAllLibraries(), 'libraries');
         };
         this.circuitPanel.onSymbolizeRequested = () => {
             const dlg = new DialogSymbolize(
@@ -243,6 +324,30 @@ class FidoCadJS {
 
     private newCircuit(): void {
         this.circuitPanel.clearCircuit();
+    }
+
+    /**
+     * Open a file picker for an .fcl/.txt library and import the chosen file.
+     * Mirrors the "Import library" menu action so libraries can be added
+     * straight from the components sidebar.
+     */
+    private pickAndImportLibrary(): void {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.fcl,.txt';
+        input.addEventListener('change', () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = reader.result as string;
+                this.importLibrary(text, file.name).catch((err) =>
+                    console.error('Import failed:', err),
+                );
+            };
+            reader.readAsText(file);
+        });
+        input.click();
     }
 
     private async importLibrary(content: string, fileName: string): Promise<void> {

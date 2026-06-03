@@ -10,10 +10,11 @@ import { test, expect } from '@playwright/test';
 import { gotoApp, getToolbarButtonLabels, getCoordsDisplay, primitiveCount } from './utils';
 
 test.describe('App Initialisation', () => {
-    test('page title shows app name and untitled drawing', async ({ page }) => {
+    test('page title shows the untitled drawing name', async ({ page }) => {
         await gotoApp(page);
-        // A fresh, unsaved drawing reads as "Untitled" in the tab title.
-        await expect(page).toHaveTitle('Untitled - FidoCadJS');
+        // The tab title shows only the file name; a fresh, unsaved drawing
+        // reads as "Untitled".
+        await expect(page).toHaveTitle('Untitled');
     });
 
     test('canvas element renders in the DOM', async ({ page }) => {

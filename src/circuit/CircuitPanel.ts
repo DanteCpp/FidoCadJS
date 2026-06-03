@@ -191,9 +191,13 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         // Initialize input handler (gesture state machine + mouse events)
         const inputCb: InputCallbacks = {
             render: () => this.render(),
-            onZoomChange: this.onZoomChange,
-            onUndoStateChange: this.onUndoStateChange,
-            onCoordinatesChange: this.onCoordinatesChange,
+            // Forward through thunks rather than capturing the current value:
+            // these panel callbacks are assigned after construction (e.g. by
+            // ToolbarController/app), so a by-value capture would stay null and
+            // wheel/drag gestures handled here would never notify listeners.
+            onZoomChange: () => this.onZoomChange?.(),
+            onUndoStateChange: () => this.onUndoStateChange?.(),
+            onCoordinatesChange: (lx, ly) => this.onCoordinatesChange?.(lx, ly),
             isTextEditActive: () => this.textEditDialog.isActive(),
             commitTextEdit: () => this.textEditDialog.commit(),
             getTool: () => this.currentTool,
@@ -272,11 +276,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.updateDocumentTitle();
     }
 
-    /** Update the browser tab title to reflect the file name and modified state. */
+    /** Update the browser tab title to reflect the file name. */
     private updateDocumentTitle(): void {
-        const modified = this.model.isModified();
-        const name = this.currentFileName ?? getString('Untitled');
-        document.title = (modified ? '* ' : '') + name + ' - FidoCadJS';
+        document.title = this.currentFileName ?? getString('Untitled');
     }
 
     /** Remove all global listeners and observers. Call when the panel is unmounted. */
@@ -496,7 +498,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
 
     getCircuitText(): string {
-        return this.parserActions.getText(true);
+        // The full circuit document always opens with the [FIDOCAD] magic
+        // marker so saved files and the "View code" output are recognised as
+        // FidoCadJ drawings. The parser ignores it on load.
+        return '[FIDOCAD]\n' + this.parserActions.getText(true);
     }
 
     /** Mark the model as saved (clean). Called after a successful save. */
