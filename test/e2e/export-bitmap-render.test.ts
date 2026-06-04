@@ -54,7 +54,22 @@ test.describe('Bitmap export rendering', () => {
         await gotoApp(page);
     });
 
-    test('exported PNG contains the (black) text — not white-on-white', async ({ page }) => {
+    test('exported PNG contains the (black) text — not white-on-white', async ({
+        page,
+        browserName,
+    }) => {
+        // The headless WebKitGTK build Playwright ships on Linux does not
+        // rasterize canvas fillText (it produces a blank result regardless of
+        // font family or fallback), although Path2D fills — including the
+        // typeset-math path exercised by the next test — render correctly.
+        // macOS/iOS Safari and all other engines render fillText fine, so no
+        // real user is affected. This assertion guards the (browser-independent)
+        // white-on-white colour-cache desync regression, which stays covered on
+        // Chromium and Firefox.
+        test.skip(
+            browserName === 'webkit',
+            'WebKitGTK headless on Linux does not rasterize canvas fillText',
+        );
         await loadCircuit(page, TEXT_FCD);
         const png = await exportPng(page);
         // "HELLO" at 24pt produces many ink pixels; the old bug yielded ~0.
