@@ -120,7 +120,13 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.fontItalic = isItalic ?? false;
         this.fontBold = isBold ?? false;
         const style = `${this.fontItalic ? 'italic ' : ''}${this.fontBold ? 'bold ' : ''}`;
-        this.ctx.font = `${style}${size}px ${name}`;
+        // Quote the family and always append a generic fallback. Without a
+        // generic family, headless WebKit on Linux (where named fonts such as
+        // "Courier New" are absent) renders canvas text as nothing instead of
+        // falling back, which silently drops text from bitmap exports. The
+        // app's default text font is monospace, so monospace is the closest
+        // fallback. Where the named font exists this changes nothing.
+        this.ctx.font = `${style}${size}px "${name}", monospace`;
         this.textInterface.setFont(name, size, isItalic, isBold);
     }
 

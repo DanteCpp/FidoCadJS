@@ -20,7 +20,11 @@ export class TextCanvas implements TextInterface {
     setFont(name: string, size: number, isItalic?: boolean, isBold?: boolean): void {
         this.fontSize = size;
         const style = `${isItalic ? 'italic ' : ''}${isBold ? 'bold ' : ''}`;
-        this.font = `${style}${size}px ${name}`;
+        // Match GraphicsCanvas.setFont: quote the family and append a generic
+        // monospace fallback so width measurement uses the same font the
+        // renderer does — and so headless Linux WebKit, which won't fall back
+        // for a missing named canvas font, still measures/draws real glyphs.
+        this.font = `${style}${size}px "${name}", monospace`;
         this.ctx.font = this.font;
     }
 
