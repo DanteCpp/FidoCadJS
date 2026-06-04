@@ -208,7 +208,7 @@ export class GraphicsCanvas implements GraphicsInterface {
         xyfactor: number,
         xa: number,
         ya: number,
-        _qq: number,
+        qq: number,
         h: number,
         _w: number,
         _th: number,
@@ -217,18 +217,46 @@ export class GraphicsCanvas implements GraphicsInterface {
         mirror: boolean,
         txt: string,
     ): void {
+        // Faithful port of FidoCadJ Graphics2DSwing.drawAdvText. The four cases
+        // (orientation 0/non-zero x not-mirrored/mirrored) must match the Java
+        // transform exactly, otherwise rendered text disagrees with the
+        // bounding box computed in PrimitiveAdvText.draw (which already mirrors
+        // the Java geometry: text extends along (cos o, -sin o), i.e. a
+        // -orientation rotation). Note `rotate(theta, cx, cy)` in AWT and a
+        // positive canvas rotate are both clockwise, so the sign carries over
+        // directly. The draw point is (xa, qq+h) — qq = ya / xyfactor, so after
+        // the vertical stretch the baseline lands at ya + h*xyfactor.
+        const rad = (orientation * Math.PI) / 180;
         this.ctx.save();
-        this.ctx.translate(xa, ya);
-        if (orientation !== 0) {
-            this.ctx.rotate((orientation * Math.PI) / 180);
-        }
-        if (mirror) {
+        if (orientation === 0) {
+            if (mirror) {
+                // Mirrored, unrotated: Java does at.scale(-1, xyfactor) then
+                // drawString(txt, -xa, qq+h) so the glyphs land at +xa flipped.
+                this.ctx.scale(-1, xyfactor);
+                this.ctx.fillText(txt, -xa, qq + h);
+            } else {
+                if (needsStretching) this.ctx.scale(1, xyfactor);
+                this.ctx.fillText(txt, xa, qq + h);
+            }
+        } else if (mirror) {
+            // Rotated and mirrored: Java concatenates scale(-1,1), then
+            // rotate(+orientation) about (-xa, ya), then optional stretch, and
+            // draws at (-xa, qq+h).
             this.ctx.scale(-1, 1);
+            this.ctx.translate(-xa, ya);
+            this.ctx.rotate(rad);
+            this.ctx.translate(xa, -ya);
+            if (needsStretching) this.ctx.scale(1, xyfactor);
+            this.ctx.fillText(txt, -xa, qq + h);
+        } else {
+            // Rotated only: Java rotates by -orientation about (xa, ya), then
+            // optional stretch, and draws at (xa, qq+h).
+            this.ctx.translate(xa, ya);
+            this.ctx.rotate(-rad);
+            this.ctx.translate(-xa, -ya);
+            if (needsStretching) this.ctx.scale(1, xyfactor);
+            this.ctx.fillText(txt, xa, qq + h);
         }
-        if (needsStretching) {
-            this.ctx.scale(1, xyfactor);
-        }
-        this.ctx.fillText(txt, 0, h);
         this.ctx.restore();
     }
 
