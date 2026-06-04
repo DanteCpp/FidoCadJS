@@ -479,7 +479,7 @@ export class MenuBar {
                 icon: 'info.png',
                 action: () =>
                     window.open(
-                        'https://github.com/DarwinNE/FCDlib',
+                        'https://github.com/FidoCadJ/FidoCadJ/tree/gh-pages/libs',
                         '_blank',
                         'noopener,noreferrer',
                     ),
