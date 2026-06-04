@@ -111,4 +111,73 @@ test.describe('Clipboard Operations', () => {
         });
         expect(ok).toBe(true);
     });
+
+    test('paste enters placement mode then commit inserts', async ({ page, browserName }) => {
+        test.skip(
+            browserName === 'firefox',
+            'Firefox clipboard API quirk with async readText fallback — tracked separately',
+        );
+        const ok = await page.evaluate(async () => {
+            const panel = (window as any).__FidoCadJS__.circuitPanel;
+            panel.selectAll();
+            panel.copySelected();
+            void panel.paste();
+            // Wait for the (async) clipboard read to arm placement mode.
+            for (let i = 0; i < 20; i++) {
+                await new Promise((r) => setTimeout(r, 50));
+                if (panel.isPastePlacing()) break;
+            }
+            if (!panel.isPastePlacing()) return 'did not enter placement';
+            // Nothing committed until the user confirms.
+            if (panel.getModel().getPrimitiveVector().length !== 2) return 'inserted too early';
+            panel.commitPastePlacement();
+            if (panel.isPastePlacing()) return 'still placing after commit';
+            return panel.getModel().getPrimitiveVector().length === 4;
+        });
+        expect(ok).toBe(true);
+    });
+
+    test('paste placement cancel inserts nothing', async ({ page, browserName }) => {
+        test.skip(
+            browserName === 'firefox',
+            'Firefox clipboard API quirk with async readText fallback — tracked separately',
+        );
+        const ok = await page.evaluate(async () => {
+            const panel = (window as any).__FidoCadJS__.circuitPanel;
+            panel.selectAll();
+            panel.copySelected();
+            void panel.paste();
+            for (let i = 0; i < 20; i++) {
+                await new Promise((r) => setTimeout(r, 50));
+                if (panel.isPastePlacing()) break;
+            }
+            if (!panel.isPastePlacing()) return false;
+            panel.cancelPastePlacement();
+            return !panel.isPastePlacing() && panel.getModel().getPrimitiveVector().length === 2;
+        });
+        expect(ok).toBe(true);
+    });
+
+    test('paste placement commit is undoable', async ({ page, browserName }) => {
+        test.skip(
+            browserName === 'firefox',
+            'Firefox clipboard API quirk with async readText fallback — tracked separately',
+        );
+        const ok = await page.evaluate(async () => {
+            const panel = (window as any).__FidoCadJS__.circuitPanel;
+            panel.selectAll();
+            panel.copySelected();
+            void panel.paste();
+            for (let i = 0; i < 20; i++) {
+                await new Promise((r) => setTimeout(r, 50));
+                if (panel.isPastePlacing()) break;
+            }
+            if (!panel.isPastePlacing()) return false;
+            panel.commitPastePlacement();
+            if (panel.getModel().getPrimitiveVector().length !== 4) return false;
+            panel.undo();
+            return panel.getModel().getPrimitiveVector().length === 2;
+        });
+        expect(ok).toBe(true);
+    });
 });

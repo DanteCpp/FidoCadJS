@@ -49,6 +49,11 @@ export interface KeyboardHost {
     duplicateSelected(): void;
     copyAsImage(): Promise<void>;
 
+    // Interactive paste placement
+    isPastePlacing(): boolean;
+    commitPastePlacement(): void;
+    cancelPastePlacement(): void;
+
     // Selection
     selectAll(): void;
 

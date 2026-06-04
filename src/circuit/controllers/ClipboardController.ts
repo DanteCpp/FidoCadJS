@@ -24,6 +24,13 @@ export class ClipboardController {
     onRenderRequested: (() => void) | null = null;
     /** Callback to notify that undo state has changed (enables/disables undo/redo buttons). */
     onUndoStateChange: (() => void) | null = null;
+    /**
+     * Optional hook for interactive paste. When set and an interactive paste
+     * resolves to non-empty content, the controller hands the text to the host
+     * (which shows a ghost preview the user positions with the mouse) instead of
+     * dropping it immediately. Return true if the host took over placement.
+     */
+    onInteractivePaste: ((text: string) => boolean) | null = null;
 
     constructor(
         selectionActions: SelectionActions,
@@ -59,7 +66,14 @@ export class ClipboardController {
         this.onUndoStateChange?.();
     }
 
-    async paste(): Promise<void> {
+    /**
+     * Paste clipboard content into the drawing.
+     * @param interactive when true (e.g. Ctrl+V / menu Paste) and an interactive
+     *        placement hook is registered, the caller positions the content with
+     *        the mouse. When false (e.g. duplicate) the content drops immediately
+     *        at a one-grid-step offset.
+     */
+    async paste(interactive = false): Promise<void> {
         let text = '';
         // Prefer system clipboard, but race against a short timeout: Firefox
         // can leave readText() pending indefinitely when permissions have not
@@ -82,6 +96,12 @@ export class ClipboardController {
             text = this.internalClipboard;
         }
         if (!text) return;
+
+        // Interactive paste: hand the content to the host so the user can pick
+        // where it lands. The host owns the undo bookkeeping on commit.
+        if (interactive && this.onInteractivePaste?.(text)) {
+            return;
+        }
 
         // Save pre-paste state so a single undo reverts the entire paste.
         this.undoActions.saveUndoState();

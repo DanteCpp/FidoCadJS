@@ -89,6 +89,17 @@ export class KeyboardController {
             return;
         }
 
+        // While a paste ghost is being positioned, Enter/Escape drop it at the
+        // current cursor; every other key is swallowed so the user can't switch
+        // tools or trigger shortcuts mid-placement.
+        if (this.host.isPastePlacing()) {
+            if (e.key === 'Enter' || e.key === 'Escape') {
+                e.preventDefault();
+                this.host.commitPastePlacement();
+            }
+            return;
+        }
+
         const key = e.key.toLowerCase();
         const isCtrlOrMeta = e.ctrlKey || e.metaKey;
         const isAlt = e.altKey;
