@@ -23,12 +23,28 @@ import { Drawing } from '../circuit/views/Drawing.js';
 import { PointG } from '../graphic/PointG.js';
 import { DimensionG } from '../graphic/DimensionG.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
+import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
 import { TeXMode } from '../graphic/TeXMode.js';
 import { Export } from '../circuit/views/Export.js';
 import type { ExportBitmapOptions } from './ExportBitmapOptions.js';
 
 /** Default mapping: 1 FCD unit = 1/72 inch at screen resolution. */
 const FCD_UNITS_PER_INCH = 72;
+
+/**
+ * Paint the opaque white background through the GraphicsCanvas abstraction.
+ *
+ * Doing this via `graphics.setColor` (rather than touching `ctx.fillStyle`
+ * directly) keeps GraphicsCanvas's cached colour in sync with the real
+ * context. Otherwise the first black fill — GraphicPrimitive.selectLayer
+ * compares the cached colour and skips re-applying an unchanged one — would
+ * inherit the leftover white fillStyle and render invisibly (white on white).
+ */
+function paintWhiteBackground(graphics: GraphicsCanvas, w: number, h: number): void {
+    graphics.setColor(new ColorCanvas(255, 255, 255));
+    graphics.setAlpha(1);
+    graphics.fillRect(0, 0, w, h);
+}
 
 /** Result of a single-layer bitmap render. */
 export interface BitmapLayerResult {
@@ -111,8 +127,14 @@ export function renderToOffscreen(
     options: ExportBitmapOptions,
 ): HTMLCanvasElement {
     const { size, origin } = getImageBounds(model);
-    const magnitude = computeMagnitude(size.width, size.height, options);
-    const { w, h } = computePixelSize(size.width, size.height, magnitude);
+    // Match the vector exporters: pad the drawing extent by EXPORT_BORDER so the
+    // canvas has a symmetric margin. buildExportMapCoords offsets content by
+    // EXPORT_BORDER / 2; without the matching size padding the right/bottom edge
+    // is clipped.
+    const borderedWidth = size.width + Export.EXPORT_BORDER;
+    const borderedHeight = size.height + Export.EXPORT_BORDER;
+    const magnitude = computeMagnitude(borderedWidth, borderedHeight, options);
+    const { w, h } = computePixelSize(borderedWidth, borderedHeight, magnitude);
     const mp = buildExportMapCoords(origin, magnitude);
 
     const offscreen = document.createElement('canvas');
@@ -122,21 +144,26 @@ export function renderToOffscreen(
     const ctx = offscreen.getContext('2d');
     if (!ctx) throw new Error('Could not get 2D context for offscreen canvas');
 
-    // Background fill (white)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, w, h);
-
     // Anti-alias control
     ctx.imageSmoothingEnabled = options.antiAlias;
 
     // Wrap in GraphicsCanvas so Drawing can use it
     const graphics = new GraphicsCanvas(offscreen);
     graphics.setZoom(1);
+    paintWhiteBackground(graphics, w, h);
 
-    // Render
-    TeXMode.active = false; // no TeX overlay in bitmap export
+    // Render. Enable typeset math so exported bitmaps show LaTeX, then restore
+    // the previous flag (the next on-screen render resets it from renderTeX).
+    const prevTeX = TeXMode.active;
+    TeXMode.active = true;
     const drawing = new Drawing(model);
     drawing.draw(graphics, mp);
+    TeXMode.active = prevTeX;
+    // Rendering recomputed each primitive's cached screen coordinates in this
+    // export's coordinate space. Mark the model changed so the next on-screen
+    // render recomputes them for the panel's zoom instead of reusing the stale
+    // export-space cache (which otherwise shrinks/displaces the drawing).
+    model.setChanged(true);
 
     // Black-and-white post-processing
     if (options.blackAndWhite) {
@@ -158,8 +185,14 @@ export function renderLayerToOffscreen(
     options: ExportBitmapOptions,
 ): HTMLCanvasElement {
     const { size, origin } = getImageBounds(model);
-    const magnitude = computeMagnitude(size.width, size.height, options);
-    const { w, h } = computePixelSize(size.width, size.height, magnitude);
+    // Match the vector exporters: pad the drawing extent by EXPORT_BORDER so the
+    // canvas has a symmetric margin. buildExportMapCoords offsets content by
+    // EXPORT_BORDER / 2; without the matching size padding the right/bottom edge
+    // is clipped.
+    const borderedWidth = size.width + Export.EXPORT_BORDER;
+    const borderedHeight = size.height + Export.EXPORT_BORDER;
+    const magnitude = computeMagnitude(borderedWidth, borderedHeight, options);
+    const { w, h } = computePixelSize(borderedWidth, borderedHeight, magnitude);
     const mp = buildExportMapCoords(origin, magnitude);
 
     const offscreen = document.createElement('canvas');
@@ -168,14 +201,14 @@ export function renderLayerToOffscreen(
     const ctx = offscreen.getContext('2d');
     if (!ctx) throw new Error('Could not get 2D context');
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, w, h);
     ctx.imageSmoothingEnabled = options.antiAlias;
 
     const graphics = new GraphicsCanvas(offscreen);
     graphics.setZoom(1);
+    paintWhiteBackground(graphics, w, h);
 
-    TeXMode.active = false;
+    const prevTeX = TeXMode.active;
+    TeXMode.active = true;
     const drawing = new Drawing(model);
 
     // Set draw-only layer for this render pass
@@ -183,6 +216,10 @@ export function renderLayerToOffscreen(
     model.setDrawOnlyLayer(layerIndex);
     drawing.draw(graphics, mp);
     model.setDrawOnlyLayer(prevLayer);
+    TeXMode.active = prevTeX;
+    // See renderToOffscreen: invalidate so the panel recomputes screen-space
+    // primitive coordinates on its next render rather than reusing this cache.
+    model.setChanged(true);
 
     if (options.blackAndWhite) {
         applyBlackAndWhite(offscreen);

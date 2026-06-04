@@ -10,6 +10,7 @@ import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { TeXMode } from '../graphic/TeXMode.js';
+import { layoutMath, hasMathDelimiter, type MathLayoutResult } from '../graphic/MathLayout.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
@@ -66,9 +67,10 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     private co: number = 0;
     private needsStretching: boolean = false;
 
-    /** Measured TeX overlay dimensions in logical units (set after KaTeX render). */
-    private texOverlayW: number = 0;
-    private texOverlayH: number = 0;
+    /** Canvas px size of one em for the current draw pass (math scale reference). */
+    private fontPx: number = 0;
+    /** Laid-out math/text segments for the current draw pass, null when no math. */
+    private mathLayout: MathLayoutResult | null = null;
 
     constructor();
     constructor(
@@ -143,9 +145,11 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.xa = coordSys.mapX(this.x1, this.y1);
             this.ya = coordSys.mapY(this.x1, this.y1);
 
+            this.fontPx =
+                this.six * PrimitiveAdvText.FONT_SIZE_RATIO * coordSys.getYMagnitude() + 0.5;
             g.setFont(
                 this.fontName,
-                this.six * PrimitiveAdvText.FONT_SIZE_RATIO * coordSys.getYMagnitude() + 0.5,
+                this.fontPx,
                 (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0,
                 (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0,
             );
@@ -171,6 +175,27 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.th = this.h + g.getFontDescent();
             // Phase 2: replace with DecoratedText.getDecoratedStringWidth(txt)
             this.w = g.getStringWidth(this.txt);
+
+            // Render LaTeX math to glyph geometry when enabled. The advance and
+            // height come back analytically from MathJax, so the bounding box
+            // below (zoom-to-fit, selection) reflects the typeset math.
+            this.mathLayout = null;
+            if (TeXMode.active && hasMathDelimiter(this.txt)) {
+                const layout = layoutMath(this.txt, this.fontPx, (s) => g.getStringWidth(s));
+                if (layout.hasMath) {
+                    this.mathLayout = layout;
+                    this.w = layout.totalWidth;
+                    let asc = this.h;
+                    let desc = this.th - this.h;
+                    for (const seg of layout.segments) {
+                        if (!seg.geom) continue;
+                        asc = Math.max(asc, seg.geom.heightEm * this.fontPx);
+                        desc = Math.max(desc, seg.geom.depthEm * this.fontPx);
+                    }
+                    this.h = asc;
+                    this.th = asc + desc;
+                }
+            }
 
             this.xyfactor = 1.0;
             this.needsStretching = false;
@@ -216,10 +241,21 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.qq = Math.trunc(this.ya / this.xyfactor);
         }
 
-        // When TeX overlay is active, skip canvas rendering for text with math
-        // (the overlay renders these via KaTeX instead).
-        // Bounding-box tracking must still happen above for zoom-to-fit.
-        if (!(TeXMode.active && this.txt.includes('$'))) {
+        // Render typeset math directly on the canvas when present; otherwise
+        // draw the string with the plain-text path (unchanged behaviour).
+        if (this.mathLayout) {
+            g.drawMathSegments(
+                this.mathLayout.segments,
+                this.xa,
+                this.ya,
+                this.h,
+                this.fontPx,
+                this.needsStretching,
+                this.xyfactor,
+                this.orientation,
+                this.mirror,
+            );
+        } else {
             g.drawAdvText(
                 this.xyfactor,
                 this.xa,
@@ -295,12 +331,23 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.hSCI = gSCI.getFontAscent();
             this.thSCI = this.hSCI + gSCI.getFontDescent();
 
-            // For LaTeX text, prefer the actual measured KaTeX overlay dimensions
-            // (set by CircuitPanel.syncTeXOverlay after DOM layout).
-            if (this.txt.includes('$') && this.texOverlayW > 0 && this.texOverlayH > 0) {
-                this.wSCI = this.texOverlayW;
-                this.thSCI = this.texOverlayH;
-                this.hSCI = Math.trunc(this.texOverlayH * 0.8);
+            // For LaTeX text, size the selection box from the typeset math
+            // geometry (analytical, in logical units), matching what is drawn.
+            if (TeXMode.active && hasMathDelimiter(this.txt)) {
+                const emPxLogical = Math.trunc(this.six * PrimitiveAdvText.FONT_SIZE_RATIO + 0.5);
+                const layout = layoutMath(this.txt, emPxLogical, (s) => gSCI.getStringWidth(s));
+                if (layout.hasMath) {
+                    this.wSCI = Math.trunc(layout.totalWidth);
+                    let asc = this.hSCI;
+                    let desc = this.thSCI - this.hSCI;
+                    for (const seg of layout.segments) {
+                        if (!seg.geom) continue;
+                        asc = Math.max(asc, seg.geom.heightEm * emPxLogical);
+                        desc = Math.max(desc, seg.geom.depthEm * emPxLogical);
+                    }
+                    this.hSCI = Math.trunc(asc);
+                    this.thSCI = Math.trunc(asc + desc);
+                }
             }
             this.recalcSize = false;
             this.xaSCI = this.virtualPoint[0]!.x;
@@ -465,17 +512,6 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         if (v) this.sty |= PrimitiveAdvText.TEXT_ITALIC;
         else this.sty &= ~PrimitiveAdvText.TEXT_ITALIC;
         this.recalcSize = true;
-    }
-
-    /**
-     * Store the actual measured dimensions of the KaTeX overlay rendering
-     * (in logical units). Called by CircuitPanel after the TeX overlay DOM
-     * is laid out. When set, getDistanceToPoint uses these instead of
-     * GraphicsNull estimates for text containing $.
-     */
-    setTeXOverlaySize(w: number, h: number): void {
-        this.texOverlayW = w;
-        this.texOverlayH = h;
     }
 
     override rotatePrimitive(bCounterClockWise: boolean, ix: number, iy: number): void {

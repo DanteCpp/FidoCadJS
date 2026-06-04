@@ -23,9 +23,14 @@ interface MenuItem {
     id?: string;
     label?: string;
     shortcut?: string;
+    /** PNG file name under public/icons/menu_icons/ (ported from FidoCadJ). */
+    icon?: string;
     action?: () => void;
     enabled?: () => boolean;
 }
+
+/** Base URL for menu icons, ported from FidoCadJ's /icons/menu_icons set. */
+const MENU_ICON_BASE = `${import.meta.env.BASE_URL}icons/menu_icons/`;
 
 export class MenuBar {
     private readonly el: HTMLElement;
@@ -92,10 +97,31 @@ export class MenuBar {
                     'padding: 6px 12px; cursor: pointer; display: flex; justify-content: space-between; ' +
                     'align-items: center; white-space: nowrap; font-size: 12px;';
 
+                // Left part: icon (or a same-size spacer to keep labels aligned)
+                // followed by the label text.
+                const left = document.createElement('span');
+                left.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+
+                const iconBox = document.createElement('span');
+                iconBox.style.cssText =
+                    'width: 16px; height: 16px; flex: none; display: flex; ' +
+                    'align-items: center; justify-content: center;';
+                if (item.icon) {
+                    const img = document.createElement('img');
+                    img.src = `${MENU_ICON_BASE}${item.icon}`;
+                    img.width = 16;
+                    img.height = 16;
+                    img.alt = '';
+                    img.style.display = 'block';
+                    iconBox.appendChild(img);
+                }
+                left.appendChild(iconBox);
+
                 const label = document.createElement('span');
                 label.textContent = item.label || '';
+                left.appendChild(label);
 
-                menuItem.appendChild(label);
+                menuItem.appendChild(left);
 
                 if (item.shortcut) {
                     const shortcutSpan = document.createElement('span');
@@ -155,12 +181,14 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('New'),
                 shortcut: 'Ctrl+N',
+                icon: 'new.png',
                 action: () => this.onNewCircuit(),
             },
             {
                 kind: 'action',
                 label: getString('Open'),
                 shortcut: 'Ctrl+O',
+                icon: 'open.png',
                 action: () => this.importCircuit(),
             },
             { kind: 'separator' },
@@ -168,18 +196,21 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Save'),
                 shortcut: 'Ctrl+S',
+                icon: 'save.png',
                 action: () => void this.saveCircuit(),
             },
             {
                 kind: 'action',
                 label: getString('SaveName'),
                 shortcut: 'Ctrl+Shift+S',
+                icon: 'save_name.png',
                 action: () => void this.saveCircuitAs(),
             },
             {
                 kind: 'action',
                 label: `${getString('Export')}...`,
                 shortcut: 'Ctrl+E',
+                icon: 'export.png',
                 action: () => this.exportFile(),
             },
         ];
@@ -197,6 +228,7 @@ export class MenuBar {
                 id: 'undo',
                 label: getString('Undo'),
                 shortcut: 'Ctrl+Z',
+                icon: 'undo.png',
                 action: () => this.panel.undo(),
                 enabled: () => this.panel.canUndo(),
             },
@@ -205,6 +237,7 @@ export class MenuBar {
                 id: 'redo',
                 label: getString('Redo'),
                 shortcut: 'Ctrl+Y',
+                icon: 'redo.png',
                 action: () => this.panel.redo(),
                 enabled: () => this.panel.canRedo(),
             },
@@ -213,6 +246,7 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Cut'),
                 shortcut: 'Ctrl+X',
+                icon: 'cut.png',
                 action: () => this.panel.cutSelected(),
                 enabled: hasSel,
             },
@@ -220,6 +254,7 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Copy'),
                 shortcut: 'Ctrl+C',
+                icon: 'copy.png',
                 action: () => this.panel.copySelected(),
                 enabled: hasSel,
             },
@@ -227,6 +262,7 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Paste_btn'),
                 shortcut: 'Ctrl+V',
+                icon: 'paste.png',
                 action: () => void this.panel.paste(),
                 enabled: () => this.panel.canPaste(),
             },
@@ -234,6 +270,7 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Duplicate'),
                 shortcut: 'Ctrl+D',
+                icon: 'duplicate.png',
                 action: () => this.panel.duplicateSelected(),
                 enabled: hasSel,
             },
@@ -241,6 +278,7 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Copy_as_image'),
                 shortcut: 'Ctrl+I',
+                icon: 'copy_image.png',
                 action: () => void this.panel.copyAsImage(),
             },
             { kind: 'separator' },
@@ -248,12 +286,14 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('SelectAll'),
                 shortcut: 'Ctrl+A',
+                icon: 'select_all.png',
                 action: () => this.panel.selectAll(),
             },
             {
                 kind: 'action',
                 label: getString('Delete'),
                 shortcut: 'Del',
+                icon: 'delete.png',
                 action: () => this.panel.deleteSelected(),
             },
             { kind: 'separator' },
@@ -261,54 +301,64 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Rotate'),
                 shortcut: 'R',
+                icon: 'rotate.png',
                 action: () => this.panel.rotateSelected(),
             },
             {
                 kind: 'action',
                 label: getString('Mirror_E'),
                 shortcut: 'S',
+                icon: 'mirror.png',
                 action: () => this.panel.mirrorSelected(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
                 label: getString('alignLeftSelected'),
+                icon: 'align_left.png',
                 action: () => this.panel.alignLeftSelected(),
             },
             {
                 kind: 'action',
                 label: getString('alignRightSelected'),
+                icon: 'align_right.png',
                 action: () => this.panel.alignRightSelected(),
             },
             {
                 kind: 'action',
                 label: getString('alignTopSelected'),
+                icon: 'align_top.png',
                 action: () => this.panel.alignTopSelected(),
             },
             {
                 kind: 'action',
                 label: getString('alignBottomSelected'),
+                icon: 'align_bottom.png',
                 action: () => this.panel.alignBottomSelected(),
             },
             {
                 kind: 'action',
                 label: getString('alignHorizontalCenterSelected'),
+                icon: 'align_horizontal_center.png',
                 action: () => this.panel.alignHorizontalCenterSelected(),
             },
             {
                 kind: 'action',
                 label: getString('alignVerticalCenterSelected'),
+                icon: 'align_vertical_center.png',
                 action: () => this.panel.alignVerticalCenterSelected(),
             },
             { kind: 'separator' },
             {
                 kind: 'action',
                 label: getString('distributeHorizontallySelected'),
+                icon: 'horizonta_distribute.png',
                 action: () => this.panel.distributeHorizontallySelected(),
             },
             {
                 kind: 'action',
                 label: getString('distributeVerticallySelected'),
+                icon: 'vertical_distribute.png',
                 action: () => this.panel.distributeVerticallySelected(),
             },
         ];
@@ -346,6 +396,7 @@ export class MenuBar {
             {
                 kind: 'action',
                 label: `${getString('Attach_image_menu')}...`,
+                icon: 'back_image.png',
                 action: () => this.attachImageFile(),
             },
             {
@@ -362,12 +413,14 @@ export class MenuBar {
                 kind: 'action',
                 label: `${getString('Layer_options')}...`,
                 shortcut: 'Ctrl+L',
+                icon: 'layers.png',
                 action: () => showLayerDialog(this.panel),
             },
             {
                 kind: 'action',
                 label: `${getString('Circ_opt')}...`,
                 shortcut: 'Ctrl+,',
+                icon: 'options.png',
                 action: () => showOptionsDialog(this.panel, this.onReloadLibraries),
             },
         ];
@@ -406,11 +459,13 @@ export class MenuBar {
                 kind: 'action',
                 label: getString('Define'),
                 shortcut: 'Ctrl+G',
+                icon: 'code.png',
                 action: () => this.showDefineDialog(),
             },
             {
                 kind: 'action',
                 label: `${getString('ImportLibrary_menu')}...`,
+                icon: 'libs.png',
                 action: () => this.importLibraryFile(),
             },
         ];
@@ -421,6 +476,7 @@ export class MenuBar {
             {
                 kind: 'action',
                 label: getString('About_menu'),
+                icon: 'info.png',
                 action: () => showAboutDialog(),
             },
         ];

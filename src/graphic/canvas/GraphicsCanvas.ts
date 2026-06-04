@@ -13,6 +13,7 @@ import type { ShapeInterface } from '../ShapeInterface.js';
 import type { PolygonInterface } from '../PolygonInterface.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
+import type { LaidOutSegment } from '../MathLayout.js';
 import { ColorCanvas } from './ColorCanvas.js';
 import { TextCanvas } from './TextCanvas.js';
 import { ShapeCanvas } from './ShapeCanvas.js';
@@ -119,7 +120,13 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.fontItalic = isItalic ?? false;
         this.fontBold = isBold ?? false;
         const style = `${this.fontItalic ? 'italic ' : ''}${this.fontBold ? 'bold ' : ''}`;
-        this.ctx.font = `${style}${size}px ${name}`;
+        // Quote the family and always append a generic fallback. Without a
+        // generic family, headless WebKit on Linux (where named fonts such as
+        // "Courier New" are absent) renders canvas text as nothing instead of
+        // falling back, which silently drops text from bitmap exports. The
+        // app's default text font is monospace, so monospace is the closest
+        // fallback. Where the named font exists this changes nothing.
+        this.ctx.font = `${style}${size}px "${name}", monospace`;
         this.textInterface.setFont(name, size, isItalic, isBold);
     }
 
@@ -207,7 +214,7 @@ export class GraphicsCanvas implements GraphicsInterface {
         xyfactor: number,
         xa: number,
         ya: number,
-        _qq: number,
+        qq: number,
         h: number,
         _w: number,
         _th: number,
@@ -215,6 +222,60 @@ export class GraphicsCanvas implements GraphicsInterface {
         orientation: number,
         mirror: boolean,
         txt: string,
+    ): void {
+        // Faithful port of FidoCadJ Graphics2DSwing.drawAdvText. The four cases
+        // (orientation 0/non-zero x not-mirrored/mirrored) must match the Java
+        // transform exactly, otherwise rendered text disagrees with the
+        // bounding box computed in PrimitiveAdvText.draw (which already mirrors
+        // the Java geometry: text extends along (cos o, -sin o), i.e. a
+        // -orientation rotation). Note `rotate(theta, cx, cy)` in AWT and a
+        // positive canvas rotate are both clockwise, so the sign carries over
+        // directly. The draw point is (xa, qq+h) — qq = ya / xyfactor, so after
+        // the vertical stretch the baseline lands at ya + h*xyfactor.
+        const rad = (orientation * Math.PI) / 180;
+        this.ctx.save();
+        if (orientation === 0) {
+            if (mirror) {
+                // Mirrored, unrotated: Java does at.scale(-1, xyfactor) then
+                // drawString(txt, -xa, qq+h) so the glyphs land at +xa flipped.
+                this.ctx.scale(-1, xyfactor);
+                this.ctx.fillText(txt, -xa, qq + h);
+            } else {
+                if (needsStretching) this.ctx.scale(1, xyfactor);
+                this.ctx.fillText(txt, xa, qq + h);
+            }
+        } else if (mirror) {
+            // Rotated and mirrored: Java concatenates scale(-1,1), then
+            // rotate(+orientation) about (-xa, ya), then optional stretch, and
+            // draws at (-xa, qq+h).
+            this.ctx.scale(-1, 1);
+            this.ctx.translate(-xa, ya);
+            this.ctx.rotate(rad);
+            this.ctx.translate(xa, -ya);
+            if (needsStretching) this.ctx.scale(1, xyfactor);
+            this.ctx.fillText(txt, -xa, qq + h);
+        } else {
+            // Rotated only: Java rotates by -orientation about (xa, ya), then
+            // optional stretch, and draws at (xa, qq+h).
+            this.ctx.translate(xa, ya);
+            this.ctx.rotate(-rad);
+            this.ctx.translate(-xa, -ya);
+            if (needsStretching) this.ctx.scale(1, xyfactor);
+            this.ctx.fillText(txt, xa, qq + h);
+        }
+        this.ctx.restore();
+    }
+
+    drawMathSegments(
+        segments: LaidOutSegment[],
+        xa: number,
+        ya: number,
+        baseline: number,
+        fontPx: number,
+        needsStretching: boolean,
+        xyfactor: number,
+        orientation: number,
+        mirror: boolean,
     ): void {
         this.ctx.save();
         this.ctx.translate(xa, ya);
@@ -227,7 +288,34 @@ export class GraphicsCanvas implements GraphicsInterface {
         if (needsStretching) {
             this.ctx.scale(1, xyfactor);
         }
-        this.ctx.fillText(txt, 0, h);
+        for (const seg of segments) {
+            if (seg.kind === 'text') {
+                this.ctx.fillText(seg.text ?? '', seg.x, baseline);
+                continue;
+            }
+            const geom = seg.geom;
+            if (!geom) continue;
+            // Native MathJax units (y-down, baseline 0) → px.
+            const s = fontPx / geom.unitsPerEm;
+            this.ctx.save();
+            this.ctx.translate(seg.x, baseline);
+            this.ctx.scale(s, s);
+            for (const glyph of geom.glyphs) {
+                const m = glyph.m;
+                this.ctx.save();
+                this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                this.ctx.fill(new Path2D(glyph.d));
+                this.ctx.restore();
+            }
+            for (const r of geom.rects) {
+                const m = r.m;
+                this.ctx.save();
+                this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                this.ctx.fillRect(r.x, r.y, r.w, r.h);
+                this.ctx.restore();
+            }
+            this.ctx.restore();
+        }
         this.ctx.restore();
     }
 

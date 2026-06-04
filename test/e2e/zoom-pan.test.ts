@@ -62,22 +62,32 @@ test.describe('Zoom Operations', () => {
         expect(zoomedOut).toBeLessThan(zoomedIn);
     });
 
-    test('Space triggers fit-to-view', async ({ page }) => {
-        // Load content so fit has something to fit to
+    test('Home triggers fit-to-view', async ({ page }) => {
+        // Load content so fit has something to fit to. Fit-to-view is bound to
+        // Home (FidoCadJ 0.24.9 binds Space to the selection tool instead).
         await loadCircuit(page, FOUR_PRIMITIVES_FCD);
 
-        // Force a low zoom first
-        await pressKey(page, '-');
-        await pressKey(page, '-');
-        await page.waitForTimeout(200);
-        const lowZoom = await getZoomPercent(page);
-        expect(lowZoom).toBeLessThan(100);
+        // Zoom in until the zoom is comfortably above any possible fit value.
+        // For this small drawing in the fixed 1280x900 viewport, fit-to-view is
+        // always well below 100 % (bounded by viewport/content, ~40 % at most),
+        // so 150 % is safely above it. We loop rather than press a fixed number
+        // of times because loadCircuit auto-fits to a low, viewport- and
+        // layout-dependent zoom, and the canvas container can keep resizing for
+        // a moment after load — so neither the starting zoom nor the fit value
+        // is a stable constant to assert against.
+        let zoomedIn = await getZoomPercent(page);
+        for (let i = 0; i < 20 && zoomedIn < 150; i++) {
+            await pressKey(page, '+');
+            zoomedIn = await getZoomPercent(page);
+        }
+        expect(zoomedIn).toBeGreaterThanOrEqual(150);
 
-        // Fit to view
-        await pressKey(page, ' ');
+        // Fit-to-view must zoom back out so the whole drawing is visible, i.e.
+        // below the zoomed-in level.
+        await pressKey(page, 'Home');
         await page.waitForTimeout(200);
         const fitZoom = await getZoomPercent(page);
-        expect(fitZoom).toBeGreaterThan(lowZoom);
+        expect(fitZoom).toBeLessThan(zoomedIn);
     });
 
     test('mouse wheel zooms toward cursor', async ({ page }) => {

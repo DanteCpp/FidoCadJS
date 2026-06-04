@@ -56,18 +56,21 @@
 
 ### Keyboard Shortcuts
 
+These match FidoCadJ 0.24.9 exactly and are the same in every language.
+
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `A` | Select tool | `Space` | Fit to view |
-| `L` | Line tool | `T` | Text tool |
-| `B` | Bezier tool | `P` | Polygon tool |
+| `A` `Space` `Esc` | Select tool | `L` | Line tool |
+| `T` | Text tool | `B` | Bezier tool |
+| `P` | Polygon tool | `O` | Complex curve |
 | `E` | Ellipse tool | `G` | Rectangle tool |
 | `C` | Connection dot | `I` | PCB line |
-| `Z` | PCB pad | `R` | Rotate selected |
-| `S` | Mirror selected | `Ctrl+Z` | Undo |
-| `Ctrl+Y` | Redo | `Ctrl+C/V/X` | Clipboard |
-| `Delete` | Delete selected | `Escape` | Deselect / exit tool |
-| `Alt+arrows` | Nudge 1px | `+`/`-` | Zoom in/out |
+| `Z` | PCB pad | `M` | Move selected |
+| `R` | Rotate selected | `S` | Mirror selected |
+| `Delete` | Delete selected | `Home` | Fit to view |
+| `Ctrl+Z` | Undo | `Ctrl+Y` | Redo |
+| `Ctrl+C/V/X` | Clipboard | `Alt+arrows` | Nudge 1px |
+| `+`/`-` | Zoom in/out | `Right-drag` | Ruler |
 
 ### Example
 
@@ -171,6 +174,23 @@ The SVG, PGF, and TikZ exporters approximate some FidoCad primitives:
 | **SVG** | Complex curves are rendered as polyline approximations (24 segments per control point). Macro instances are fully expanded. Text mirroring uses CSS transforms. |
 
 These limitations are documented in the source with `// LIMITATION:` comments.
+
+### LaTeX Math
+
+Text primitives may embed LaTeX math between `$...$` (inline) or `$$...$$`
+(display). Math is rendered with a vendored, dependency-free **MathJax** SVG
+engine (`src/vendor/mathjax/`) that produces vector glyph outlines. The same
+engine drives every target, so math looks identical on-screen and in export:
+
+| Target | How math is rendered |
+|--------|----------------------|
+| **On-screen / PNG / JPG** | Glyph outlines painted onto the canvas as vector paths (crisp at any zoom). |
+| **SVG** | Glyph outlines embedded as `<path>`/`<rect>` geometry — self-contained, no external fonts or `foreignObject`. |
+| **PDF** | Glyph outlines emitted as vector path-fill operators. |
+| **PGF / TikZ** | Literal `$...$` is passed through for the downstream LaTeX compiler to typeset (idiomatic for these formats). |
+
+Malformed LaTeX degrades gracefully to the literal source text. On-screen math
+follows the *Render TeX* option; exports always typeset.
 
 ### Roadmap
 

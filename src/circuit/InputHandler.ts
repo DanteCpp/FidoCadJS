@@ -12,6 +12,7 @@
 
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { DrawingModel } from './model/DrawingModel.js';
+import { Ruler } from './Ruler.js';
 import { ElementsEdtActions } from './controllers/ElementsEdtActions.js';
 import type { EditorActions } from './controllers/EditorActions.js';
 import type { UndoActions } from './controllers/UndoActions.js';
@@ -32,6 +33,7 @@ export interface InputState {
     readonly selStartScreenY: number;
     readonly selRectLtoR: boolean;
     readonly isMovingSelected: boolean;
+    readonly ruler: Ruler;
 }
 
 /** Callbacks from InputHandler into CircuitPanel. */
@@ -130,6 +132,11 @@ export class InputHandler {
     private moveStartLogX = 0;
     private moveStartLogY = 0;
 
+    // Measuring ruler (right-button drag), ported from FidoCadJ.
+    private _ruler = new Ruler();
+    private rulerArmed = false;
+    private rulerDragged = false;
+
     private static readonly DRAG_THRESHOLD_PX = 5;
 
     // ── Public state (readonly for CircuitPanel) ───────────────────────────
@@ -161,6 +168,9 @@ export class InputHandler {
     }
     get isMovingSelected() {
         return this._isMovingSelected;
+    }
+    get ruler() {
+        return this._ruler;
     }
 
     // ── Constructor ────────────────────────────────────────────────────────
@@ -273,6 +283,14 @@ export class InputHandler {
 
         this.dblClick.detect(sx, sy);
 
+        // A new press clears any measurement left on screen from a previous
+        // right-button drag (matches FidoCadJ, which deactivates the ruler at
+        // the start of every mouse press).
+        if (this._ruler.isActive()) {
+            this._ruler.setActive(false);
+            this.cb.render();
+        }
+
         if (this._isMovingSelected && e.button === 0) {
             this.moveStartLogX = lx;
             this.moveStartLogY = ly;
@@ -298,6 +316,14 @@ export class InputHandler {
         }
 
         if (e.button === 2) {
+            // Arm the measuring ruler. It only becomes visible once the user
+            // actually drags; a plain right-click falls through to the context
+            // menu (handled on the contextmenu event).
+            this._ruler.setActive(false);
+            this._ruler.setStart(sx, sy);
+            this._ruler.setEnd(sx, sy);
+            this.rulerArmed = true;
+            this.rulerDragged = false;
             this.cb.render();
             return;
         }
@@ -351,6 +377,15 @@ export class InputHandler {
         const ly = this.mapCoords.unmapYsnap(sy);
 
         this.cb.onCoordinatesChange?.(lx, ly);
+
+        // Measuring ruler: drag with the right button held down.
+        if (this.rulerArmed && (e.buttons & 2) !== 0) {
+            this._ruler.setEnd(sx, sy);
+            this._ruler.setActive(true);
+            this.rulerDragged = true;
+            this.cb.render();
+            return;
+        }
 
         if (this._isMovingSelected) {
             const dx = lx - this.moveStartLogX;
@@ -442,6 +477,26 @@ export class InputHandler {
     onMouseUp(e: MouseEvent, isLeave = false): void {
         if (this.textEditorJustCommitted) {
             this.textEditorJustCommitted = false;
+            return;
+        }
+
+        // Right-button release ends a ruler gesture. If the user dragged, the
+        // measurement stays on screen until the next press. Otherwise this was a
+        // plain right-click: cancel the active drawing tool, or pop the context
+        // menu when in selection mode (decided here, not on the contextmenu
+        // event, which fires too early to tell a click from a drag).
+        if (e.button === 2) {
+            this.rulerArmed = false;
+            if (!this.rulerDragged) {
+                const t = this.cb.getTool();
+                if (t !== ElementsEdtActions.SELECTION) {
+                    this.cb.setTool(ElementsEdtActions.SELECTION);
+                    this.cb.render();
+                } else {
+                    this.cb.showContextMenu(e.clientX, e.clientY);
+                }
+            }
+            this.rulerDragged = false;
             return;
         }
 

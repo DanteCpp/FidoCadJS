@@ -194,8 +194,18 @@ export class KeyboardController {
             return;
         }
 
-        // Space: Fit to view
+        // Space: Selection tool (FidoCadJ binds Space, like A and Escape, to
+        // the selection state). Home is the fit-to-view shortcut.
         if (key === ' ' && !isCtrlOrMeta) {
+            e.preventDefault();
+            this.host.setTool(ElementsEdtActions.SELECTION);
+            this.host.clearGhostAndSelection();
+            this.host.render();
+            return;
+        }
+
+        // Home: Fit to view
+        if (key === 'home' && !isCtrlOrMeta) {
             e.preventDefault();
             this.host.zoomToFit();
             return;

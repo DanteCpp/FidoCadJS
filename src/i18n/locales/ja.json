@@ -35,7 +35,7 @@
   "Ellipse": "円",
   "tooltip_ellipse": "E: 円を描画 (Ctrlを押すと正円を描画)",
   "Rectangle": "四角",
-  "tooltip_rectangle": "R: 四角形を描画",
+  "tooltip_rectangle": "G: 四角形を描画",
   "Connection": "接続",
   "tooltip_connection": "C: 電気的接続点を描画",
   "PCBline": "PCB配線",

@@ -35,6 +35,8 @@ import type { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
 import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
+import { layoutMath, type MathGeometry } from '../graphic/MathLayout.js';
+import { svgPathToPdfOps } from './SvgPathToPdf.js';
 
 const RES_MULT = 200.0 / 72.0;
 const BORDER = 5;
@@ -358,8 +360,55 @@ export class ExportPDF implements ExportInterface {
         this.applyColorAndWidth(layer, 0.33);
 
         const ys = sizex * (12.0 / 7.0) + 0.5;
+        const ratio = sizey / sizex === 10 / 7 ? 1.0 : ((sizey / sizex) * 22.0) / 40.0;
         const font = this.pickFont(fontname, isBold);
+        const _italic = isItalic; // accepted; italics need a separate font slot we do not allocate
+        void _italic;
 
+        // Render LaTeX math (between $...$) as filled glyph paths; plain text
+        // stays a PDF text run. Pen advances come from MathLayout (emPx = ys).
+        const layout = layoutMath(text, ys, (s) => s.length * 0.6 * ys);
+        if (!layout.hasMath) {
+            this.emitPdfTextRun(text, 0, x, y, ys, ratio, isMirrored, orientation, font);
+            return;
+        }
+        for (const seg of layout.segments) {
+            if (seg.kind === 'math' && seg.geom) {
+                this.emitPdfMathRun(seg.geom, seg.x, x, y, ys, ratio, isMirrored, orientation);
+            } else {
+                this.emitPdfTextRun(
+                    seg.text ?? '',
+                    seg.x,
+                    x,
+                    y,
+                    ys,
+                    ratio,
+                    isMirrored,
+                    orientation,
+                    font,
+                );
+            }
+        }
+    }
+
+    /**
+     * Emit a plain-text run. With `dx === 0` this reproduces the original
+     * single-string text placement exactly; a non-zero `dx` advances the run
+     * horizontally (mixed text/math). Mirror/rotation use the same chain as
+     * the original exporter.
+     */
+    private emitPdfTextRun(
+        text: string,
+        dx: number,
+        x: number,
+        y: number,
+        ys: number,
+        ratio: number,
+        isMirrored: boolean,
+        orientation: number,
+        font: string,
+    ): void {
+        if (!text) return;
         this.content.push('BT');
         this.content.push(`${font} ${this.fmt(ys)} Tf`);
         this.content.push('q');
@@ -370,18 +419,73 @@ export class ExportPDF implements ExportInterface {
                 `  ${this.fmt(Math.cos(a))} ${this.fmt(Math.sin(a))} ${this.fmt(-Math.sin(a))} ${this.fmt(Math.cos(a))} 0 0 cm`,
             );
         }
-        if (isMirrored) {
-            this.content.push('  -1 0 0 -1 0 0 cm');
-        } else {
-            this.content.push('  1 0 0 -1 0 0 cm');
+        if (dx !== 0) {
+            this.content.push(`  1 0 0 1 ${this.fmt(dx)} 0 cm`);
         }
-        const ratio = sizey / sizex === 10 / 7 ? 1.0 : ((sizey / sizex) * 22.0) / 40.0;
+        this.content.push(isMirrored ? '  -1 0 0 -1 0 0 cm' : '  1 0 0 -1 0 0 cm');
         this.content.push(`  1 0 0 ${this.fmt(ratio)} 0 ${this.fmt(-ys * ratio * 0.8)} cm`);
-        const _italic = isItalic; // accepted; italics need a separate font slot we do not allocate
-        void _italic;
         this.content.push(`(${this.escapePdfString(text)}) Tj`);
         this.content.push('Q');
         this.content.push('ET');
+    }
+
+    /**
+     * Emit a math segment as filled glyph paths. The geometry is y-down with
+     * the baseline at 0 (no text y-flip), so the baseline is moved down by the
+     * ascent to sit where the text baseline does, and `s` scales MathJax native
+     * units into PDF user units.
+     */
+    private emitPdfMathRun(
+        geom: MathGeometry,
+        dx: number,
+        x: number,
+        y: number,
+        ys: number,
+        ratio: number,
+        isMirrored: boolean,
+        orientation: number,
+    ): void {
+        const s = ys / geom.unitsPerEm;
+        this.content.push('q');
+        this.content.push(`  1 0 0 1 ${this.fmt(x)} ${this.fmt(y)} cm`);
+        if (orientation !== 0) {
+            const a = ((isMirrored ? orientation : -orientation) * Math.PI) / 180;
+            this.content.push(
+                `  ${this.fmt(Math.cos(a))} ${this.fmt(Math.sin(a))} ${this.fmt(-Math.sin(a))} ${this.fmt(Math.cos(a))} 0 0 cm`,
+            );
+        }
+        if (dx !== 0) {
+            this.content.push(`  1 0 0 1 ${this.fmt(dx)} 0 cm`);
+        }
+        if (isMirrored) {
+            this.content.push('  -1 0 0 1 0 0 cm');
+        }
+        // Stretch y by ratio; drop the baseline by the ascent (content y-down).
+        this.content.push(`  1 0 0 ${this.fmt(ratio)} 0 ${this.fmt(ys * ratio * 0.8)} cm`);
+        this.content.push(`  ${this.fmt(s)} 0 0 ${this.fmt(s)} 0 0 cm`);
+        for (const glyph of geom.glyphs) {
+            const m = glyph.m;
+            this.content.push('  q');
+            this.content.push(
+                `    ${this.fmt(m[0])} ${this.fmt(m[1])} ${this.fmt(m[2])} ${this.fmt(m[3])} ${this.fmt(m[4])} ${this.fmt(m[5])} cm`,
+            );
+            this.content.push(svgPathToPdfOps(glyph.d, (v) => this.fmt(v)));
+            this.content.push('  f');
+            this.content.push('  Q');
+        }
+        for (const r of geom.rects) {
+            const m = r.m;
+            this.content.push('  q');
+            this.content.push(
+                `    ${this.fmt(m[0])} ${this.fmt(m[1])} ${this.fmt(m[2])} ${this.fmt(m[3])} ${this.fmt(m[4])} ${this.fmt(m[5])} cm`,
+            );
+            this.content.push(
+                `    ${this.fmt(r.x)} ${this.fmt(r.y)} ${this.fmt(r.w)} ${this.fmt(r.h)} re`,
+            );
+            this.content.push('  f');
+            this.content.push('  Q');
+        }
+        this.content.push('Q');
     }
 
     exportMacro(

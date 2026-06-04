@@ -164,7 +164,7 @@
   "tooltip_pcbline": "I: Eine Leiterbahn zeichnen.",
   "tooltip_pcbpad": "Z: Ein Pad legen.",
   "tooltip_polygon": "P: Ein Polygon zeichnen.",
-  "tooltip_rectangle": "R: Ein Rechteck zeichnen.",
+  "tooltip_rectangle": "G: Ein Rechteck zeichnen.",
   "tooltip_selection": "A oder Leertaste: Objekte auswählen und bewegen. R zum Drehen, S zum Spiegeln.",
   "tooltip_text": "T: Text einfügen",
   "tooltip_zoom": "Linksklick: Vergrößern, Rechtsklick: Verkleinern.",

@@ -13,6 +13,7 @@ import type { PolygonInterface } from '../PolygonInterface.js';
 import type { ShapeInterface } from '../ShapeInterface.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
+import type { LaidOutSegment } from '../MathLayout.js';
 import { PolygonCanvas } from '../canvas/PolygonCanvas.js';
 import { ShapeCanvas } from '../canvas/ShapeCanvas.js';
 import { ColorCanvas } from '../canvas/ColorCanvas.js';
@@ -39,17 +40,31 @@ export class GraphicsNull implements GraphicsInterface {
         return this.offscreenCtx ?? this.canvas2dCtx;
     }
 
-    getColor(): ColorInterface { return this.color; }
+    getColor(): ColorInterface {
+        return this.color;
+    }
     setZoom(_z: number): void {}
-    getZoom(): number { return 1; }
-    setColor(c: ColorInterface): void { this.color = c; }
-    getTextInterface(): TextInterface { return this; }
+    getZoom(): number {
+        return 1;
+    }
+    setColor(c: ColorInterface): void {
+        this.color = c;
+    }
+    getTextInterface(): TextInterface {
+        return this;
+    }
     applyStroke(_w: number, _dashStyle: number): void {}
 
     drawRect(_x: number, _y: number, _width: number, _height: number): void {}
     fillRect(_x: number, _y: number, _width: number, _height: number): void {}
-    fillRoundRect(_x: number, _y: number, _width: number, _height: number,
-        _arcWidth: number, _arcHeight: number): void {}
+    fillRoundRect(
+        _x: number,
+        _y: number,
+        _width: number,
+        _height: number,
+        _arcWidth: number,
+        _arcHeight: number,
+    ): void {}
     hitClip(_x: number, _y: number, _width: number, _height: number): boolean {
         return true;
     }
@@ -59,8 +74,12 @@ export class GraphicsNull implements GraphicsInterface {
     setFont(_name: string, _size: number, _isItalic?: boolean, _isBold?: boolean): void {
         this.fontSize = _size;
     }
-    getFontSize(): number { return this.fontSize; }
-    setFontSize(size: number): void { this.fontSize = size; }
+    getFontSize(): number {
+        return this.fontSize;
+    }
+    setFontSize(size: number): void {
+        this.fontSize = size;
+    }
     getFontAscent(): number {
         const ctx = this.getContext();
         if (!ctx) return this.fontSize * 0.8;
@@ -100,14 +119,41 @@ export class GraphicsNull implements GraphicsInterface {
     activateSelectColor(_l: LayerDesc): void {}
     setSelectedColor(_c: ColorInterface): void {}
 
-    drawAdvText(_xyfactor: number, _xa: number, _ya: number,
-        _qq: number, _h: number, _w: number, _th: number,
-        _needsStretching: boolean, _orientation: number, _mirror: boolean,
-        _txt: string): void {}
+    drawAdvText(
+        _xyfactor: number,
+        _xa: number,
+        _ya: number,
+        _qq: number,
+        _h: number,
+        _w: number,
+        _th: number,
+        _needsStretching: boolean,
+        _orientation: number,
+        _mirror: boolean,
+        _txt: string,
+    ): void {}
 
-    drawGrid(_cs: MapCoordinates, _xmin: number, _ymin: number,
-        _xmax: number, _ymax: number,
-        _colorDots: ColorInterface, _colorLines: ColorInterface): void {}
+    drawMathSegments(
+        _segments: LaidOutSegment[],
+        _xa: number,
+        _ya: number,
+        _baseline: number,
+        _fontPx: number,
+        _needsStretching: boolean,
+        _xyfactor: number,
+        _orientation: number,
+        _mirror: boolean,
+    ): void {}
+
+    drawGrid(
+        _cs: MapCoordinates,
+        _xmin: number,
+        _ymin: number,
+        _xmax: number,
+        _ymax: number,
+        _colorDots: ColorInterface,
+        _colorLines: ColorInterface,
+    ): void {}
 
     createPolygon(): PolygonInterface {
         return new PolygonCanvas();

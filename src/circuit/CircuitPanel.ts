@@ -15,7 +15,6 @@ import type { ColorInterface } from '../graphic/ColorInterface.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
 import { registerExportHooks } from './views/Export.js';
 import { TeXMode } from '../graphic/TeXMode.js';
-import '../vendor/katex/katex.min.css';
 import { DrawingSize } from '../geom/DrawingSize.js';
 import { SelectionActions } from './controllers/SelectionActions.js';
 import { UndoActions } from './controllers/UndoActions.js';
@@ -34,7 +33,6 @@ import type { EditorFacade } from './EditorFacade.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
 import { CanvasManager } from './CanvasManager.js';
 import { GhostPreview } from './GhostPreview.js';
-import { TeXOverlay } from './views/TeXOverlay.js';
 import { MacroVectorizer } from './MacroVectorizer.js';
 import { ContextMenuManager } from './ContextMenuManager.js';
 import { ExportFacade } from '../export/ExportFacade.js';
@@ -47,7 +45,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
     private canvasManager: CanvasManager;
     private ghostPreview: GhostPreview;
-    private texOverlayManager: TeXOverlay;
     private exportFacade: ExportFacade;
     private macroVectorizer: MacroVectorizer;
     private contextMenuManager: ContextMenuManager;
@@ -231,16 +228,12 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.canvas.addEventListener(
             'contextmenu',
             (e) => {
+                // Only block the native browser menu here. Whether to show our
+                // own context menu (plain right-click) or keep the measuring
+                // ruler (right-drag) is decided on right-button release in
+                // InputHandler.onMouseUp, because the contextmenu event fires at
+                // mousedown — before we know if the user is dragging a ruler.
                 e.preventDefault();
-                // If a drawing tool is active, right-click cancels it (already dispatched
-                // via onMouseDown to handleClick). Sync the UI toolbar state and do NOT
-                // show the context menu.
-                if (this.currentTool !== ElementsEdtActions.SELECTION) {
-                    this.setTool(ElementsEdtActions.SELECTION);
-                    this.render();
-                } else {
-                    this.contextMenuManager.show(e.clientX, e.clientY);
-                }
             },
             { signal: this.lifecycle.signal },
         );
@@ -267,9 +260,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.canvas.addEventListener('dblclick', (e) => this.inputHandler.onDoubleClick(e), {
             signal: this.lifecycle.signal,
         });
-
-        // TeX overlay — positioned on top of canvas for crisp math rendering
-        this.texOverlayManager = TeXOverlay.attach(container);
 
         // Wire up document title updates when the model is modified
         this.model.onTitleUpdate = () => this.updateDocumentTitle();
@@ -338,7 +328,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setRenderTeX(enabled: boolean): void {
         this.renderTeX = enabled;
-        this.texOverlayManager.setEnabled(enabled);
         this.render();
     }
 
@@ -481,8 +470,12 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             ctx.restore();
         }
 
-        // Sync TeX overlay when LaTeX rendering is enabled
-        this.texOverlayManager.sync(this.model, this.mapCoordinates, window.devicePixelRatio || 1);
+        // Draw measuring ruler (right-button drag)
+        if (st.ruler.isActive()) {
+            ctx.save();
+            st.ruler.draw(ctx, this.mapCoordinates, window.devicePixelRatio || 1);
+            ctx.restore();
+        }
 
         this.model.setChanged(false);
     }
