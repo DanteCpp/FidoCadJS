@@ -475,6 +475,18 @@ export class MenuBar {
         return [
             {
                 kind: 'action',
+                label: getString('CommunityLibraries_menu'),
+                icon: 'info.png',
+                action: () =>
+                    window.open(
+                        'https://github.com/DarwinNE/FCDlib',
+                        '_blank',
+                        'noopener,noreferrer',
+                    ),
+            },
+            { kind: 'separator' },
+            {
+                kind: 'action',
                 label: getString('About_menu'),
                 icon: 'info.png',
                 action: () => showAboutDialog(),
