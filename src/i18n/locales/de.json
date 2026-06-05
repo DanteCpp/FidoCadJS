@@ -257,6 +257,7 @@
   "size_export": "Setze Größe in Pixel",
   "Split_layers_multiple_files": "Teile Ebenen in mehrere Dateien auf",
   "Copy_as_image": "Kopiere alle als Bild",
+  "Copy_as_primitives": "Kopiere alle als Primitive",
   "param_hints": "Hinweise",
   "param_greek": "Griechisch",
   "param_misc": "Sonstige",

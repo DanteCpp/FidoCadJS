@@ -281,6 +281,13 @@ export class MenuBar {
                 icon: 'copy_image.png',
                 action: () => void this.panel.copyAsImage(),
             },
+            {
+                kind: 'action',
+                label: getString('Copy_as_primitives'),
+                icon: 'copy.png',
+                action: () => this.panel.copyAllAsPrimitives(),
+                enabled: () => this.panel.getModel().getPrimitiveVector().length > 0,
+            },
             { kind: 'separator' },
             {
                 kind: 'action',

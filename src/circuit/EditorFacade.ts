@@ -68,6 +68,7 @@ export interface EditorFacade {
     duplicateSelected(): void;
     canPaste(): boolean;
     copyAsImage(): Promise<void>;
+    copyAllAsPrimitives(): void;
 
     // ─── File ─────────────────────────────────────────────────────────────
     getCircuitText(): string;

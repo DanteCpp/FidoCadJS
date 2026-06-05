@@ -910,6 +910,15 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.macroVectorizer.vectorize();
     }
 
+    /**
+     * Copy the entire drawing to the clipboard with every macro flattened into
+     * its constituent primitives. The drawing itself is not modified.
+     */
+    copyAllAsPrimitives(): void {
+        const text = this.macroVectorizer.vectorizeAllToString();
+        this.clipboardController.copyText(text);
+    }
+
     // ─── Keyboard (delegated) ────────────────────────────────────────────────
 
     addKeyboardListeners(): void {

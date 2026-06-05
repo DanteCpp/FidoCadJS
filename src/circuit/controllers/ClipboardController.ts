@@ -50,6 +50,16 @@ export class ClipboardController {
         const selected = this.selectionActions.getSelectedPrimitives();
         if (selected.length === 0) return;
         const text = this.selectionActions.getSelectedString(true, this.parserActions);
+        this.copyText(text);
+    }
+
+    /**
+     * Place arbitrary FidoCadJ text on both the internal and system clipboards.
+     * Used by copy operations that build their own payload (e.g. "Copy all as
+     * primitives") rather than serializing the current selection.
+     */
+    copyText(text: string): void {
+        if (!text) return;
         this.internalClipboard = text;
         // Also push to the system clipboard so it can be pasted into other apps
         if (navigator.clipboard?.writeText) {

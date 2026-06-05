@@ -158,6 +158,28 @@ test.describe('Clipboard Operations', () => {
         expect(ok).toBe(true);
     });
 
+    test('copy all as primitives fills a pasteable clipboard', async ({ page, browserName }) => {
+        test.skip(
+            browserName === 'firefox',
+            'Firefox clipboard API quirk with async readText fallback — tracked separately',
+        );
+        const ok = await page.evaluate(async () => {
+            const panel = (window as any).__FidoCadJS__.circuitPanel;
+            // Copy the whole drawing (2 primitives) as flattened primitives, then
+            // paste it back and confirm it inserts a second copy.
+            panel.copyAllAsPrimitives();
+            void panel.paste();
+            for (let i = 0; i < 20; i++) {
+                await new Promise((r) => setTimeout(r, 50));
+                if (panel.isPastePlacing()) break;
+            }
+            if (!panel.isPastePlacing()) return 'did not enter placement';
+            panel.commitPastePlacement();
+            return panel.getModel().getPrimitiveVector().length === 4;
+        });
+        expect(ok).toBe(true);
+    });
+
     test('paste placement commit is undoable', async ({ page, browserName }) => {
         test.skip(
             browserName === 'firefox',

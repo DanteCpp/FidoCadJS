@@ -267,6 +267,7 @@
   "size_export": "Set size in pixels",
   "Split_layers_multiple_files": "Split layers in multiple files",
   "Copy_as_image": "Copy all as image",
+  "Copy_as_primitives": "Copy all as primitives",
   "param_hints": "Hints",
   "param_greek": "Greek",
   "param_misc": "Misc",

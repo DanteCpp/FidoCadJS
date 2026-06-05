@@ -257,6 +257,7 @@
   "size_export": "Configurar resolución en píxeles",
   "Split_layers_multiple_files": "Dividir capas en múltiples ficheros",
   "Copy_as_image": "Copiar todo como imagen",
+  "Copy_as_primitives": "Copiar todo como primitivas",
   "param_hints": "Sugerencias",
   "param_greek": "Griego",
   "param_misc": "Varios",

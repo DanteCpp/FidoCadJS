@@ -257,6 +257,7 @@
   "size_export": "Установить размер в пикселях",
   "Split_layers_multiple_files": "Разделить слои на несколько файлов",
   "Copy_as_image": "Копировать все как изображение",
+  "Copy_as_primitives": "Копировать все как примитивы",
   "param_hints": "Подсказки",
   "param_greek": "Греческий",
   "param_misc": "Разное",
