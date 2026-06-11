@@ -33,6 +33,7 @@ import type { EditorFacade } from './EditorFacade.js';
 import { ClipboardController } from './controllers/ClipboardController.js';
 import { CanvasManager } from './CanvasManager.js';
 import { GhostPreview } from './GhostPreview.js';
+import { PastePlacement } from './PastePlacement.js';
 import { MacroVectorizer } from './MacroVectorizer.js';
 import { ContextMenuManager } from './ContextMenuManager.js';
 import { ExportFacade } from '../export/ExportFacade.js';
@@ -45,6 +46,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private container: HTMLElement;
     private canvasManager: CanvasManager;
     private ghostPreview: GhostPreview;
+    private pastePlacement = new PastePlacement();
+    /** Last logical cursor position seen on the canvas (snapped), for Esc/Enter drop. */
+    private lastCursorLx = 0;
+    private lastCursorLy = 0;
     private exportFacade: ExportFacade;
     private macroVectorizer: MacroVectorizer;
     private contextMenuManager: ContextMenuManager;
@@ -149,6 +154,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         // Wire clipboard callbacks (controller already created by services factory)
         this.clipboardController.onRenderRequested = () => this.render();
         this.clipboardController.onUndoStateChange = () => this.onUndoStateChange?.();
+        this.clipboardController.onInteractivePaste = (text) => this.beginPastePlacement(text);
 
         // Initialize extracted managers
         this.exportFacade = new ExportFacade(this.model);
@@ -194,7 +200,11 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             // wheel/drag gestures handled here would never notify listeners.
             onZoomChange: () => this.onZoomChange?.(),
             onUndoStateChange: () => this.onUndoStateChange?.(),
-            onCoordinatesChange: (lx, ly) => this.onCoordinatesChange?.(lx, ly),
+            onCoordinatesChange: (lx, ly) => {
+                this.lastCursorLx = lx;
+                this.lastCursorLy = ly;
+                this.onCoordinatesChange?.(lx, ly);
+            },
             isTextEditActive: () => this.textEditDialog.isActive(),
             commitTextEdit: () => this.textEditDialog.commit(),
             getTool: () => this.currentTool,
@@ -203,6 +213,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             clampCenter: () => this.clampCenter(),
             showContextMenu: (cx, cy) => this.contextMenuManager.show(cx, cy),
             onSelectionCleared: () => this.onSelectionCleared?.(),
+            isPastePlacing: () => this.pastePlacement.isActive(),
+            updatePastePlacement: (lx, ly) => this.pastePlacement.moveTo(lx, ly),
+            commitPastePlacement: () => this.commitPastePlacement(),
+            cancelPastePlacement: () => this.cancelPastePlacement(),
         };
         this.inputHandler = new InputHandler(
             this.canvas,
@@ -467,6 +481,14 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             ctx.save();
             ctx.globalAlpha = 0.4;
             st.ghostPrimitive.draw(this.ctx, this.mapCoordinates, this.model.getLayers());
+            ctx.restore();
+        }
+
+        // Draw interactive paste ghost (green preview that follows the cursor)
+        if (this.pastePlacement.isActive()) {
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            this.pastePlacement.draw(this.ctx, this.mapCoordinates);
             ctx.restore();
         }
 
@@ -803,13 +825,65 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.clipboardController.cutSelected();
     }
     async paste(): Promise<void> {
-        await this.clipboardController.paste();
+        await this.clipboardController.paste(true);
     }
     duplicateSelected(): void {
         this.clipboardController.duplicateSelected();
     }
     canPaste(): boolean {
         return this.clipboardController.canPaste();
+    }
+
+    // ─── Interactive paste placement ─────────────────────────────────────────
+
+    /** Whether a paste ghost is currently following the cursor. */
+    isPastePlacing(): boolean {
+        return this.pastePlacement.isActive();
+    }
+
+    /**
+     * Arm interactive paste: parse the clipboard text into a green ghost anchored
+     * at the last cursor position. Returns true if placement mode was entered
+     * (false when the text held no primitives, so the caller drops it normally).
+     */
+    private beginPastePlacement(text: string): boolean {
+        if (!this.pastePlacement.begin(text, this.model.getLibrary())) {
+            return false;
+        }
+        // Drop any in-progress drawing-tool ghost so the two don't overlap.
+        this.inputHandler.setGhostPrimitive(null);
+        this.pastePlacement.moveTo(this.lastCursorLx, this.lastCursorLy);
+        this.canvas.style.cursor = 'move';
+        this.render();
+        return true;
+    }
+
+    /** Drop the pasted content at the ghost's current position. */
+    commitPastePlacement(): void {
+        if (!this.pastePlacement.isActive()) return;
+        const text = this.pastePlacement.getOriginalText();
+        const { dx, dy } = this.pastePlacement.getOffset();
+        this.pastePlacement.end();
+
+        this.undoActions.saveUndoState();
+        this.selectionActions.setSelectionAll(false);
+        this.parserActions.addString(text, true);
+        if (dx !== 0 || dy !== 0) {
+            // Undo state already captured above — don't double-save.
+            this.editorActions.moveAllSelected(dx, dy, false);
+        }
+        this.model.setModified(true);
+        this.inputHandler.updateCursor(this.currentTool);
+        this.render();
+        this.onUndoStateChange?.();
+    }
+
+    /** Abandon the interactive paste without inserting anything. */
+    cancelPastePlacement(): void {
+        if (!this.pastePlacement.isActive()) return;
+        this.pastePlacement.end();
+        this.inputHandler.updateCursor(this.currentTool);
+        this.render();
     }
 
     async copyAsImage(): Promise<void> {
@@ -834,6 +908,15 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     /** Convert a selected macro instance back into individual primitives. */
     vectorizeSelectedMacro(): void {
         this.macroVectorizer.vectorize();
+    }
+
+    /**
+     * Copy the entire drawing to the clipboard with every macro flattened into
+     * its constituent primitives. The drawing itself is not modified.
+     */
+    copyAllAsPrimitives(): void {
+        const text = this.macroVectorizer.vectorizeAllToString();
+        this.clipboardController.copyText(text);
     }
 
     // ─── Keyboard (delegated) ────────────────────────────────────────────────

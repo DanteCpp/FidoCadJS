@@ -51,6 +51,14 @@ export interface InputCallbacks {
     showContextMenu(clientX: number, clientY: number): void;
     /** Fired when a selection-mode click on an empty region leaves nothing selected. */
     onSelectionCleared: (() => void) | null;
+    /** True while an interactive paste ghost is following the cursor. */
+    isPastePlacing(): boolean;
+    /** Move the paste ghost to the given (snapped) logical point. */
+    updatePastePlacement(lx: number, ly: number): void;
+    /** Drop the pasted content at its current ghost position. */
+    commitPastePlacement(): void;
+    /** Abandon the interactive paste without inserting anything. */
+    cancelPastePlacement(): void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -283,6 +291,13 @@ export class InputHandler {
 
         this.dblClick.detect(sx, sy);
 
+        // Interactive paste mode owns the press entirely: a left click commits and
+        // a right click cancels (both resolved on release). Swallow the press here
+        // so it can't start a rubber-band, pan, or ruler gesture underneath.
+        if (this.cb.isPastePlacing()) {
+            return;
+        }
+
         // A new press clears any measurement left on screen from a previous
         // right-button drag (matches FidoCadJ, which deactivates the ruler at
         // the start of every mouse press).
@@ -377,6 +392,13 @@ export class InputHandler {
         const ly = this.mapCoords.unmapYsnap(sy);
 
         this.cb.onCoordinatesChange?.(lx, ly);
+
+        // Interactive paste: the ghost tracks the cursor until the user commits.
+        if (this.cb.isPastePlacing()) {
+            this.cb.updatePastePlacement(lx, ly);
+            this.cb.render();
+            return;
+        }
 
         // Measuring ruler: drag with the right button held down.
         if (this.rulerArmed && (e.buttons & 2) !== 0) {
@@ -477,6 +499,18 @@ export class InputHandler {
     onMouseUp(e: MouseEvent, isLeave = false): void {
         if (this.textEditorJustCommitted) {
             this.textEditorJustCommitted = false;
+            return;
+        }
+
+        // Interactive paste: a genuine left click drops the content where the
+        // ghost sits; a right click abandons it. mouseleave must do neither.
+        if (this.cb.isPastePlacing()) {
+            if (isLeave) return;
+            if (e.button === 0) {
+                this.cb.commitPastePlacement();
+            } else if (e.button === 2) {
+                this.cb.cancelPastePlacement();
+            }
             return;
         }
 

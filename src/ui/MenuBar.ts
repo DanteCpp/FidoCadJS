@@ -281,6 +281,13 @@ export class MenuBar {
                 icon: 'copy_image.png',
                 action: () => void this.panel.copyAsImage(),
             },
+            {
+                kind: 'action',
+                label: getString('Copy_as_primitives'),
+                icon: 'copy.png',
+                action: () => this.panel.copyAllAsPrimitives(),
+                enabled: () => this.panel.getModel().getPrimitiveVector().length > 0,
+            },
             { kind: 'separator' },
             {
                 kind: 'action',
@@ -473,6 +480,18 @@ export class MenuBar {
 
     private buildHelpMenu(): MenuItem[] {
         return [
+            {
+                kind: 'action',
+                label: getString('CommunityLibraries_menu'),
+                icon: 'info.png',
+                action: () =>
+                    window.open(
+                        'https://github.com/FidoCadJ/FidoCadJ/tree/gh-pages/libs',
+                        '_blank',
+                        'noopener,noreferrer',
+                    ),
+            },
+            { kind: 'separator' },
             {
                 kind: 'action',
                 label: getString('About_menu'),
