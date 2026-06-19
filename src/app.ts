@@ -233,6 +233,11 @@ class FidoCadJS {
         this.librariesReady = this.initLibraries().catch((e) =>
             console.error('Library load failed:', e),
         );
+        // Readiness flag for E2E tests: lets them wait on an observable
+        // signal instead of a fixed delay for the standard libraries.
+        void this.librariesReady.then(() => {
+            (window as any).__FidoCadJS__.librariesLoaded = true;
+        });
 
         // Enable keyboard listeners
         this.circuitPanel.addKeyboardListeners();

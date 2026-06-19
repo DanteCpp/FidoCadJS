@@ -6,7 +6,7 @@
  * @copyright Copyright 2026 Dante Loi - GPL v3
  */
 
-import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { CircuitPanel } from '../../src/circuit/CircuitPanel.js';
 import { ElementsEdtActions } from '../../src/circuit/controllers/ElementsEdtActions.js';
 import { PrimitiveLine } from '../../src/primitives/PrimitiveLine.js';
@@ -278,19 +278,44 @@ describe('Keyboard Shortcuts', () => {
             expect(panel.getZoomPercent()).toBeLessThan(before);
         });
 
-        it('Ctrl+Z triggers undo', () => {
-            // Verify the shortcut dispatches without errors
-            addLineToPanel(panel, 0, 0, 10, 10, 0);
-            (panel as any).undoActions.saveUndoState();
-            expect(() => pressKey(canvas, 'z', { ctrlKey: true })).not.toThrow();
+        it('Ctrl+Z undoes the last edit', () => {
+            // Coordinates stay positive after rotation: the undo stack
+            // round-trips through the parser, which clamps negatives.
+            addLineToPanel(panel, 200, 200, 280, 200, 0);
+            selectAll(panel);
+            const before = panel.getCircuitText();
+            panel.rotateSelected();
+            expect(panel.getCircuitText()).not.toBe(before);
+
+            pressKey(canvas, 'z', { ctrlKey: true });
+
+            expect(panel.getCircuitText()).toBe(before);
         });
 
-        it('Ctrl+Y triggers redo', () => {
-            expect(() => pressKey(canvas, 'y', { ctrlKey: true })).not.toThrow();
+        it('Ctrl+Y redoes an undone edit', () => {
+            addLineToPanel(panel, 200, 200, 280, 200, 0);
+            selectAll(panel);
+            panel.rotateSelected();
+            const rotated = panel.getCircuitText();
+            pressKey(canvas, 'z', { ctrlKey: true });
+            expect(panel.getCircuitText()).not.toBe(rotated);
+
+            pressKey(canvas, 'y', { ctrlKey: true });
+
+            expect(panel.getCircuitText()).toBe(rotated);
         });
 
-        it('Ctrl+Shift+Z also triggers redo', () => {
-            expect(() => pressKey(canvas, 'z', { ctrlKey: true, shiftKey: true })).not.toThrow();
+        it('Ctrl+Shift+Z also redoes', () => {
+            addLineToPanel(panel, 200, 200, 280, 200, 0);
+            selectAll(panel);
+            panel.rotateSelected();
+            const rotated = panel.getCircuitText();
+            pressKey(canvas, 'z', { ctrlKey: true });
+            expect(panel.getCircuitText()).not.toBe(rotated);
+
+            pressKey(canvas, 'z', { ctrlKey: true, shiftKey: true });
+
+            expect(panel.getCircuitText()).toBe(rotated);
         });
     });
 
@@ -502,9 +527,14 @@ describe('Keyboard Shortcuts', () => {
         it('Ctrl+C copies selected primitives to clipboard', () => {
             addLineToPanel(panel, 10, 10, 30, 10, 0);
             selectAll(panel);
+            const clipboard = (panel as any).clipboardController;
+            expect(clipboard.canPaste()).toBe(false);
 
-            // clipboard is private; verify no crash
-            expect(() => pressKey(canvas, 'c', { ctrlKey: true })).not.toThrow();
+            pressKey(canvas, 'c', { ctrlKey: true });
+
+            // The copy lands on the internal clipboard as FidoCad text.
+            expect(clipboard.canPaste()).toBe(true);
+            expect((clipboard as any).internalClipboard).toContain('LI 10 10 30 10');
         });
 
         it('Ctrl+X cuts selected primitives', () => {
@@ -517,13 +547,20 @@ describe('Keyboard Shortcuts', () => {
             expect(getModelPrimitives(panel)).toHaveLength(0);
         });
 
-        it('Ctrl+D duplicates selected primitives', () => {
+        it('Ctrl+D duplicates selected primitives', async () => {
             addLineToPanel(panel, 10, 10, 30, 10, 0);
             selectAll(panel);
             expect(getModelPrimitives(panel)).toHaveLength(1);
 
-            // Ctrl+D copy + paste — verify no crash
-            expect(() => pressKey(canvas, 'd', { ctrlKey: true })).not.toThrow();
+            pressKey(canvas, 'd', { ctrlKey: true });
+
+            // Duplicate pastes asynchronously (clipboard read is a promise).
+            await vi.waitFor(() => {
+                expect(getModelPrimitives(panel)).toHaveLength(2);
+            });
+            // The copy is offset by one grid step from the original.
+            const [orig, copy] = getModelPrimitives(panel);
+            expect(copy.virtualPoint[0].x).not.toBe(orig.virtualPoint[0].x);
         });
     });
 
@@ -581,9 +618,18 @@ describe('Keyboard Shortcuts', () => {
             document.body.appendChild(input);
             input.focus();
 
-            // Verify no crash when Ctrl+S is pressed while input is focused
-            // (menuBar is null so saveFile is not called, but the event is forwarded)
-            expect(() => pressKey(input, 's', { ctrlKey: true })).not.toThrow();
+            // The handler must intercept the shortcut (preventDefault) even
+            // while focus is on the input, proving it was forwarded past the
+            // input-element blocking logic (menuBar is null, so the only
+            // observable effect is the cancelled default).
+            const ev = new KeyboardEvent('keydown', {
+                key: 's',
+                ctrlKey: true,
+                bubbles: true,
+                cancelable: true,
+            });
+            input.dispatchEvent(ev);
+            expect(ev.defaultPrevented).toBe(true);
 
             document.body.removeChild(input);
             canvas.focus();

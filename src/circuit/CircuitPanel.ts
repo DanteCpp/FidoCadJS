@@ -354,6 +354,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.mapCoordinates.setXMagnitudeNoCheck(this.mapCoordinates.getXMagnitude() * factor);
         this.mapCoordinates.setYMagnitudeNoCheck(this.mapCoordinates.getYMagnitude() * factor);
         this.render();
+        this.onZoomChange?.();
     }
 
     zoomOut(): void {
@@ -361,12 +362,14 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.mapCoordinates.setXMagnitudeNoCheck(this.mapCoordinates.getXMagnitude() * factor);
         this.mapCoordinates.setYMagnitudeNoCheck(this.mapCoordinates.getYMagnitude() * factor);
         this.render();
+        this.onZoomChange?.();
     }
 
     setZoom(magnitude: number): void {
         this.mapCoordinates.setXMagnitudeNoCheck(magnitude);
         this.mapCoordinates.setYMagnitudeNoCheck(magnitude);
         this.render();
+        this.onZoomChange?.();
     }
 
     getZoom(): number {
@@ -510,6 +513,31 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         } else {
             this.render();
         }
+        const imgCanvas = this.model.getImgCanvas();
+        if (imgCanvas.takePendingRestore()) {
+            // The .fcd only carries the image geometry; re-attach the bytes
+            // from the local tracing-aid cache if they are still available.
+            let dataUrl: string | null = null;
+            try {
+                dataUrl = localStorage.getItem('fidocadjs_bg_image');
+            } catch {
+                // localStorage may be unavailable — image stays detached.
+            }
+            if (dataUrl) {
+                imgCanvas.startRestore({
+                    dataUrl,
+                    x: imgCanvas.getX(),
+                    y: imgCanvas.getY(),
+                    scale: imgCanvas.getScale(),
+                    alpha: imgCanvas.getAlpha(),
+                    naturalWidth: 0,
+                    naturalHeight: 0,
+                });
+            }
+        }
+        void imgCanvas.whenReady().then(() => {
+            if (imgCanvas.isAttached()) this.zoomToFit();
+        });
     }
 
     getCircuitText(): string {
@@ -663,41 +691,49 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     alignLeftSelected(): void {
         this.editorActions.alignLeftSelected();
+        if (this.selectionActions.getSelectedPrimitives().length > 0) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
     alignRightSelected(): void {
         this.editorActions.alignRightSelected();
+        if (this.selectionActions.getSelectedPrimitives().length > 0) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
     alignTopSelected(): void {
         this.editorActions.alignTopSelected();
+        if (this.selectionActions.getSelectedPrimitives().length > 0) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
     alignBottomSelected(): void {
         this.editorActions.alignBottomSelected();
+        if (this.selectionActions.getSelectedPrimitives().length > 0) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
     alignHorizontalCenterSelected(): void {
         this.editorActions.alignHorizontalCenterSelected();
+        if (this.selectionActions.getSelectedPrimitives().length > 0) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
     alignVerticalCenterSelected(): void {
         this.editorActions.alignVerticalCenterSelected();
+        if (this.selectionActions.getSelectedPrimitives().length > 0) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
     distributeHorizontallySelected(): void {
         this.editorActions.distributeHorizontallySelected();
+        if (this.selectionActions.getSelectedPrimitives().length >= 3) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
     distributeVerticallySelected(): void {
         this.editorActions.distributeVerticallySelected();
+        if (this.selectionActions.getSelectedPrimitives().length >= 3) this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
@@ -810,7 +846,9 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.inputHandler.clearGhostAndSelection();
     }
     nudgeSelected(dx: number, dy: number): void {
+        const hasSelection = this.selectionActions.getSelectedPrimitives().length > 0;
         this.editorActions.moveAllSelected(dx, dy);
+        if (hasSelection) this.model.setModified(true);
         // moveAllSelected already saves undo state — do not double-save
         this.render();
         this.onUndoStateChange?.();
@@ -933,11 +971,19 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     async attachImage(file: File): Promise<void> {
         await this.model.getImgCanvas().attachFile(file);
+        this.model.setModified(true);
         this.render();
     }
 
     detachImage(): void {
         this.model.getImgCanvas().detach();
+        // Drop the local cache so the removed image is not re-attached on reload.
+        try {
+            localStorage.removeItem('fidocadjs_bg_image');
+        } catch {
+            // localStorage may be unavailable — nothing to clean up.
+        }
+        this.model.setModified(true);
         this.render();
     }
 
@@ -951,6 +997,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setImageAlpha(a: number): void {
         this.model.getImgCanvas().setAlpha(a);
+        this.model.setModified(true);
         this.render();
     }
 
@@ -960,6 +1007,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setImageScale(s: number): void {
         this.model.getImgCanvas().setScale(s);
+        this.model.setModified(true);
         this.render();
     }
 
@@ -969,6 +1017,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setImageX(x: number): void {
         this.model.getImgCanvas().setX(x);
+        this.model.setModified(true);
         this.render();
     }
 
@@ -978,6 +1027,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setImageY(y: number): void {
         this.model.getImgCanvas().setY(y);
+        this.model.setModified(true);
         this.render();
     }
 }

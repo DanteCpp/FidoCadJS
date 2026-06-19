@@ -163,6 +163,12 @@ export class KeyboardController {
             return;
         }
 
+        if (key === 'g' && isCtrlOrMeta) {
+            e.preventDefault();
+            this.host.getMenuBar()?.showCircuitCodeDialog();
+            return;
+        }
+
         if (key === 'e' && isCtrlOrMeta) {
             e.preventDefault();
             this.host.getMenuBar()?.exportFile();

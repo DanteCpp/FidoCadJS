@@ -30,15 +30,17 @@ export default defineConfig({
             reporter: ['text', 'lcov', 'html'],
             include: ['src/**/*.ts'],
             exclude: ['src/vendor/**'],
-            // Starting thresholds — chosen against the present coverage
-            // numbers so the gate is enforcing the current floor rather
-            // than aspirational. Ratchet upward as Phase 5+ work lands.
+            // Ratcheting thresholds — set ~1 pt under the measured coverage
+            // (66.9 % lines, 60.9 % functions, 80.4 % branches as of
+            // 2026-06-11) so the gate enforces the current floor without
+            // flaking on minor refactors. Bump these after every PR that
+            // raises coverage; never lower them to make a build pass.
             // Failures here block `npm run test:coverage`.
             thresholds: {
-                lines: 55,
-                statements: 55,
-                functions: 58,
-                branches: 75,
+                lines: 65,
+                statements: 65,
+                functions: 60,
+                branches: 79,
             },
         },
     },

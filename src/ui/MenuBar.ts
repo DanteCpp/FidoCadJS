@@ -443,14 +443,14 @@ export class MenuBar {
             if (!file) return;
             try {
                 await this.panel.attachImage(file);
-                // Store the data URL in localStorage for FCD round-trip
-                const imgCanvas = this.panel.getModel().getImgCanvas();
-                const state = imgCanvas.getState();
+                // Cache the bytes locally so the image can be re-attached when a
+                // saved .fcd (which stores only geometry) is reopened.
+                const state = this.panel.getModel().getImgCanvas().getState();
                 if (state) {
                     try {
                         localStorage.setItem('fidocadjs_bg_image', state.dataUrl);
                     } catch {
-                        // localStorage may be full — ignore
+                        // localStorage may be full — ignore.
                     }
                 }
             } catch (err) {
@@ -703,6 +703,12 @@ export class MenuBar {
             input.focus();
             input.select();
         });
+    }
+
+    /** Open the circuit-code ("Define") dialog. Public so the Ctrl+G
+     *  keyboard shortcut advertised in the Circuit menu can reach it. */
+    showCircuitCodeDialog(): void {
+        this.showDefineDialog();
     }
 
     private showDefineDialog(): void {

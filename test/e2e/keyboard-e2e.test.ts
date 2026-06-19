@@ -11,11 +11,13 @@ import {
     gotoApp,
     pressKey,
     getCurrentTool,
+    getCircuitText,
     primitiveCount,
     loadCircuit,
     clearCircuit,
     canUndo,
     canRedo,
+    settle,
     Tools,
 } from './utils';
 
@@ -25,7 +27,6 @@ async function selectAll(page: any) {
         const panel = (window as any).__FidoCadJS__.circuitPanel;
         panel.selectAll();
     });
-    await page.waitForTimeout(200);
 }
 
 const TEST_FCD = `FJC A 1
@@ -54,7 +55,6 @@ test.describe('Keyboard Shortcuts — Tool Selection', () => {
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
 
         await pressKey(page, 'Control+e');
-        await page.waitForTimeout(300);
         // Tool should still be LINE (Ctrl+E triggers export, not ellipse tool)
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
     });
@@ -62,7 +62,6 @@ test.describe('Keyboard Shortcuts — Tool Selection', () => {
     test('Ctrl+P does NOT switch to Polygon tool', async ({ page }) => {
         await pressKey(page, 'l');
         await pressKey(page, 'Control+p');
-        await page.waitForTimeout(300);
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
     });
 
@@ -77,14 +76,12 @@ test.describe('Keyboard Shortcuts — Tool Selection', () => {
         );
         await pressKey(page, 'l');
         await pressKey(page, 'Control+o');
-        await page.waitForTimeout(300);
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
     });
 
     test('Ctrl+Z does NOT switch to PCB pad tool', async ({ page }) => {
         await pressKey(page, 'l');
         await pressKey(page, 'Control+z');
-        await page.waitForTimeout(300);
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
     });
 
@@ -94,7 +91,6 @@ test.describe('Keyboard Shortcuts — Tool Selection', () => {
 
         await selectAll(page);
         await pressKey(page, 'Control+s');
-        await page.waitForTimeout(300);
 
         // Primitive count unchanged (Ctrl+S saves, does not mirror)
         expect(await primitiveCount(page)).toBe(before);
@@ -105,7 +101,6 @@ test.describe('Keyboard Shortcuts — Tool Selection', () => {
         await selectAll(page);
 
         await pressKey(page, 'Control+Shift+s');
-        await page.waitForTimeout(300);
 
         // Circuit unchanged (mirror not triggered by Ctrl+Shift+S)
         expect(await primitiveCount(page)).toBe(2);
@@ -128,24 +123,29 @@ test.describe('Keyboard Shortcuts — Undo/Redo', () => {
     });
 
     test('Ctrl+Z undoes, Ctrl+Y redoes', async ({ page }) => {
-        // Load a circuit, rotate to create undo state, then undo/redo
+        // Load a circuit placed away from the origin: rotation must keep all
+        // coordinates positive, because the undo stack round-trips through
+        // the parser, which clamps negative coordinates to zero (so a
+        // rotation that went negative would not redo to identical text).
+        await loadCircuit(page, 'FJC A 1\nFJC B 1\nLI 200 200 280 200 0\nRV 210 220 270 260 2\n');
+        const original = await getCircuitText(page);
         await page.evaluate(() => {
             const panel = (window as any).__FidoCadJS__.circuitPanel;
-            panel.loadCircuit('FJC A 1\nFJC B 1\nLI 10 10 90 10 0\nRV 20 50 80 80 2\n');
             panel.selectAll();
             panel.rotateSelected();
         });
-        await page.waitForTimeout(200);
-        expect(await primitiveCount(page)).toBe(2);
+        const rotated = await getCircuitText(page);
+        expect(rotated).not.toBe(original);
+        expect(await canUndo(page)).toBe(true);
 
+        // Undo restores the pre-rotation circuit…
         await pressKey(page, 'Control+z');
-        await page.waitForTimeout(200);
-        expect(await primitiveCount(page)).toBe(2);
+        expect(await getCircuitText(page)).toBe(original);
         expect(await canRedo(page)).toBe(true);
 
+        // …and redo re-applies the rotation.
         await pressKey(page, 'Control+y');
-        await page.waitForTimeout(200);
-        expect(await primitiveCount(page)).toBe(2);
+        expect(await getCircuitText(page)).toBe(rotated);
     });
 });
 
@@ -169,7 +169,7 @@ test.describe('Keyboard Shortcuts — Input Blocking', () => {
 
         // Press L while input is focused
         await page.keyboard.press('l');
-        await page.waitForTimeout(200);
+        await settle(page);
 
         // Tool should still be SELECTION (default)
         expect(await getCurrentTool(page)).toBe(Tools.SELECTION);
@@ -194,7 +194,7 @@ test.describe('Keyboard Shortcuts — Input Blocking', () => {
 
         // Ctrl+S should still work (save file)
         await page.keyboard.press('Control+s');
-        await page.waitForTimeout(300);
+        await settle(page);
 
         await page.evaluate(() => {
             document.getElementById('temp-input')?.remove();
@@ -219,7 +219,6 @@ test.describe('Keyboard Shortcuts — Nudge', () => {
         });
 
         await pressKey(page, 'Alt+ArrowLeft');
-        await page.waitForTimeout(200);
 
         const after = await page.evaluate(() => {
             const panel = (window as any).__FidoCadJS__.circuitPanel;

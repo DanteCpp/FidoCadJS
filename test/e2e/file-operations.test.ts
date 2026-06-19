@@ -33,9 +33,8 @@ test.describe('File Operations', () => {
 
         // Use Ctrl+N keyboard shortcut which IS wired in KeyboardController
         await pressKey(page, 'Control+n');
-        await page.waitForTimeout(200);
 
-        expect(await primitiveCount(page)).toBe(0);
+        await expect.poll(() => primitiveCount(page)).toBe(0);
     });
 
     test('Ctrl+N shortcut triggers new circuit', async ({ page }) => {
@@ -43,9 +42,8 @@ test.describe('File Operations', () => {
         expect(await primitiveCount(page)).toBe(2);
 
         await pressKey(page, 'Control+n');
-        await page.waitForTimeout(200);
 
-        expect(await primitiveCount(page)).toBe(0);
+        await expect.poll(() => primitiveCount(page)).toBe(0);
     });
 
     test('loadCircuit via API loads FCD text', async ({ page }) => {
@@ -59,18 +57,6 @@ test.describe('File Operations', () => {
 
     test('getCircuitText produces valid FCD with FCJ config', async ({ page }) => {
         await clearCircuit(page);
-        // Draw a line
-        await pressKey(page, 'l');
-        await page.evaluate(() => {
-            const panel = (window as any).__FidoCadJS__.circuitPanel;
-            const mc = panel.getMapCoordinates();
-            const sx = mc.mapX(10, 10);
-            const sy = mc.mapY(10, 10);
-            const sx2 = mc.mapX(90, 10);
-            const sy2 = mc.mapY(90, 10);
-            // Simulate two clicks at logical coords
-            panel.getModel().getPrimitiveVector().splice(0);
-        });
         await loadCircuit(page, SIMPLE_FCD);
 
         const text = await getCircuitText(page);
@@ -104,12 +90,17 @@ test.describe('File Operations', () => {
         });
 
         // First save: no handle yet → picker opens once and content is written.
+        // The save path is async (createWritable/write promises), so poll.
         await pressKey(page, 'Control+s');
-        await page.waitForTimeout(200);
+        await expect
+            .poll(() => page.evaluate(() => (window as any).__saveTest.writes.length))
+            .toBe(1);
 
         // Second save: handle stored → write straight back, no new picker.
         await pressKey(page, 'Control+s');
-        await page.waitForTimeout(200);
+        await expect
+            .poll(() => page.evaluate(() => (window as any).__saveTest.writes.length))
+            .toBe(2);
 
         const result = await page.evaluate(() => (window as any).__saveTest);
         expect(result.pickerCalls).toBe(1);
@@ -134,7 +125,6 @@ test.describe('File Operations', () => {
 
         // Save As (Ctrl+Shift+S) should open the filename prompt dialog.
         await pressKey(page, 'Control+Shift+s');
-        await page.waitForTimeout(200);
 
         const input = page.locator('dialog[open] input[type="text"]');
         await expect(input).toBeVisible();
@@ -148,18 +138,18 @@ test.describe('File Operations', () => {
         expect(download.suggestedFilename()).toBe('schematic.fcd');
     });
 
-    test('View code shows FCD text', async ({ page }) => {
+    test('View code shows the FCD text and OK reloads edits', async ({ page }) => {
         await loadCircuit(page, SIMPLE_FCD);
         await pressKey(page, 'Control+g');
-        await page.waitForTimeout(300);
 
-        // View Code dialog should appear (we check for a dialog/overlay)
-        const overlay = page
-            .locator('div')
-            .filter({ hasText: /View Code|Circuit code/ })
-            .first();
-        // Even if the dialog format varies, Ctrl+G should not crash
-        const stillLoaded = await primitiveCount(page);
-        expect(stillLoaded).toBe(2);
+        // The code dialog presents the current circuit text in a textarea.
+        const textarea = page.locator('dialog[open] textarea');
+        await expect(textarea).toBeVisible();
+        await expect(textarea).toHaveValue(/LI 10 10 90 10/);
+
+        // Editing the code and confirming reloads the circuit from it.
+        await textarea.fill('[FIDOCAD]\nLI 10 10 90 10 0\n');
+        await page.locator('dialog[open] button', { hasText: /^OK$/i }).click();
+        await expect.poll(() => primitiveCount(page)).toBe(1);
     });
 });

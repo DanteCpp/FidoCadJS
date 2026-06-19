@@ -153,12 +153,7 @@ export class EditorActions {
         const layerV = this.model.getLayers();
 
         for (const prim of this.model.getPrimitiveVector()) {
-            const layer = prim.getLayer();
-            if (
-                layer >= layerV.length ||
-                layerV[layer].isVisible() ||
-                prim instanceof PrimitiveMacro
-            ) {
+            if (this.isVisibleForSelection(prim, layerV)) {
                 const distance = prim.getDistanceToPoint(px, py);
                 if (distance <= minDistance) {
                     gpsel = prim;
@@ -184,18 +179,27 @@ export class EditorActions {
 
         let selected = false;
         for (const prim of this.model.getPrimitiveVector()) {
-            const layer = prim.getLayer();
             const layerV = this.model.getLayers();
-            if (
-                (layer >= layerV.length ||
-                    layerV[layer].isVisible() ||
-                    prim instanceof PrimitiveMacro) &&
-                prim.selectRect(px, py, w, h)
-            ) {
+            if (this.isVisibleForSelection(prim, layerV) && prim.selectRect(px, py, w, h)) {
                 selected = true;
             }
         }
         return selected;
+    }
+
+    private isVisibleForSelection(
+        prim: GraphicPrimitive,
+        layerV: ReturnType<DrawingModel['getLayers']>,
+    ): boolean {
+        const layer = prim.getLayer();
+        if (layer >= 0 && layer < layerV.length) return layerV[layer]!.isVisible();
+        if (prim instanceof PrimitiveMacro) {
+            for (let i = 0; i < layerV.length; i++) {
+                if (prim.containsLayer(i)) return layerV[i]!.isVisible();
+            }
+            return false;
+        }
+        return layer >= layerV.length;
     }
 
     /** Align selected primitives to leftmost position */

@@ -12,7 +12,7 @@
 import { test, expect } from '@playwright/test';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
-import { gotoApp, loadCircuit } from './utils';
+import { gotoApp, loadCircuit, settle } from './utils';
 
 // Black text on layer 0 (the colour that used to be skipped) inside a frame.
 const TEXT_FCD = `[FIDOCAD]
@@ -27,7 +27,7 @@ TY 40 55 24 16 0 0 0 * $\\frac{a}{b}+\\sqrt{x}$
 /** Export a PNG through the real dialog and return its decoded pixels. */
 async function exportPng(page: import('@playwright/test').Page): Promise<PNG> {
     await page.keyboard.press('Control+e');
-    await page.waitForTimeout(300);
+    // The Export button click below auto-waits for the dialog to be actionable.
     const [download] = await Promise.all([
         page.waitForEvent('download'),
         page.locator('button', { hasText: 'Export' }).click(),
@@ -88,7 +88,7 @@ test.describe('Bitmap export rendering', () => {
         // (triggered here by a click) shrinks/displaces the drawing.
         await loadCircuit(page, TEXT_FCD);
         await page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.zoomToFit?.());
-        await page.waitForTimeout(300);
+        await settle(page);
 
         const canvas = page.locator('[data-testid="editor-canvas"]');
         const before = PNG.sync.read(await canvas.screenshot());
@@ -96,7 +96,7 @@ test.describe('Bitmap export rendering', () => {
         await exportPng(page);
         const box = (await canvas.boundingBox())!;
         await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-        await page.waitForTimeout(300);
+        await settle(page);
         const after = PNG.sync.read(await canvas.screenshot());
 
         // The render must be essentially unchanged (a selection click may tint a

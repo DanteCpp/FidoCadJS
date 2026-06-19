@@ -22,6 +22,7 @@ import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
 import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import { Globals } from '../../src/globals/Globals.js';
 
 function parser(): ParserActions {
     const m = new DrawingModel();
@@ -29,14 +30,25 @@ function parser(): ParserActions {
     return new ParserActions(m);
 }
 
+/** Parser plus its model, for tests that assert on the parsed result. */
+function parserWithModel(): { pa: ParserActions; model: DrawingModel } {
+    const m = new DrawingModel();
+    m.setLayers(StandardLayers.createStandardLayers());
+    return { pa: new ParserActions(m), model: m };
+}
+
 describe('ParserActions adversarial input', () => {
     describe('malformed structure', () => {
-        it('empty string does not throw', () => {
-            expect(() => parser().parseString('')).not.toThrow();
+        it('empty string yields an empty model', () => {
+            const { pa, model } = parserWithModel();
+            pa.parseString('');
+            expect(model.getPrimitiveVector()).toHaveLength(0);
         });
 
-        it('only the [FIDOCAD] header does not throw', () => {
-            expect(() => parser().parseString('[FIDOCAD]\n')).not.toThrow();
+        it('only the [FIDOCAD] header yields an empty model', () => {
+            const { pa, model } = parserWithModel();
+            pa.parseString('[FIDOCAD]\n');
+            expect(model.getPrimitiveVector()).toHaveLength(0);
         });
 
         it('truncated final line does not throw', () => {
@@ -57,17 +69,20 @@ describe('ParserActions adversarial input', () => {
             expect(() => parser().parseString('[FIDOCAD]\rLI 10 20 30 40 0\r')).not.toThrow();
         });
 
-        it('garbage tokens are skipped or swallowed without crashing', () => {
-            expect(() =>
-                parser().parseString('[FIDOCAD]\nXYZ this is not a primitive\nLI 10 20 30 40 0\n'),
-            ).not.toThrow();
+        it('garbage tokens are skipped; valid primitives still parse', () => {
+            const { pa, model } = parserWithModel();
+            pa.parseString('[FIDOCAD]\nXYZ this is not a primitive\nLI 10 20 30 40 0\n');
+            expect(model.getPrimitiveVector()).toHaveLength(1);
+            expect(pa.getText(false)).toContain('LI 10 20 30 40 0');
         });
     });
 
     describe('boundary values', () => {
         it('very large positive integer coordinates parse', () => {
             const big = Number.MAX_SAFE_INTEGER - 1;
-            expect(() => parser().parseString(`[FIDOCAD]\nLI 0 0 ${big} ${big} 0\n`)).not.toThrow();
+            const { pa, model } = parserWithModel();
+            pa.parseString(`[FIDOCAD]\nLI 0 0 ${big} ${big} 0\n`);
+            expect(model.getPrimitiveVector()).toHaveLength(1);
         });
 
         it('very negative integer coordinates parse', () => {
@@ -97,23 +112,27 @@ describe('ParserActions adversarial input', () => {
     });
 
     describe('long input', () => {
-        it('1000-line document parses', () => {
+        it('1000-line document parses every line into a primitive', () => {
             const lines = ['[FIDOCAD]'];
             for (let i = 0; i < 1000; i++) {
                 lines.push(`LI ${i} ${i} ${i + 5} ${i + 5} 0`);
             }
             const start = Date.now();
-            expect(() => parser().parseString(lines.join('\n'))).not.toThrow();
+            const { pa, model } = parserWithModel();
+            pa.parseString(lines.join('\n'));
+            expect(model.getPrimitiveVector()).toHaveLength(1000);
             // Sanity check: < 5s on any reasonable machine.
             expect(Date.now() - start).toBeLessThan(5_000);
         });
 
-        it('long polygon (1000 vertices) parses', () => {
+        it('long polygon (1000 vertices) parses to a single primitive', () => {
             // PV with 2000 numeric tokens (1000 x,y pairs) + trailing layer.
             const verts: string[] = [];
             for (let i = 0; i < 1000; i++) verts.push(`${i}`, `${i * 2}`);
             const line = 'PV ' + verts.join(' ') + ' 0';
-            expect(() => parser().parseString('[FIDOCAD]\n' + line + '\n')).not.toThrow();
+            const { pa, model } = parserWithModel();
+            pa.parseString('[FIDOCAD]\n' + line + '\n');
+            expect(model.getPrimitiveVector()).toHaveLength(1);
         });
     });
 
@@ -170,10 +189,31 @@ describe('ParserActions adversarial input', () => {
     });
 
     describe('macro robustness', () => {
-        it('reference to non-existent macro does not throw', () => {
-            expect(() =>
-                parser().parseString('[FIDOCAD]\nMC 100 100 0 0 nonexistent_macro\n'),
-            ).not.toThrow();
+        it('reference to non-existent macro is dropped without throwing', () => {
+            // PrimitiveMacro.parseTokens throws "Unrecognized macro" and the
+            // parser swallows it per line — matching Java FidoCadJ, which
+            // also logs and drops the MC. Note the consequence: loading a
+            // drawing whose library is missing loses those macros on save.
+            const { pa, model } = parserWithModel();
+            pa.parseString('[FIDOCAD]\nMC 100 100 0 0 nonexistent_macro\n');
+            expect(model.getPrimitiveVector()).toHaveLength(0);
+            expect(pa.getText(false)).not.toContain('nonexistent_macro');
+        });
+
+        it('cyclic macro expansion stops at the configured depth limit', () => {
+            const pa = parser();
+            pa.readLibraryString(
+                ['[FIDOLIB Recursive]', '{Test}', '[self Self]', 'MC 0 0 0 0 lib.self'].join('\n'),
+                'lib',
+            );
+
+            expect(() => pa.parseString('[FIDOCAD]\nMC 100 100 0 0 lib.self\n')).not.toThrow();
+            expect(
+                pa
+                    .getText(false)
+                    .split('\n')
+                    .filter((line) => line.startsWith('MC ')).length,
+            ).toBeLessThanOrEqual(Globals.MAX_MACRO_DEPTH + 1);
         });
     });
 });

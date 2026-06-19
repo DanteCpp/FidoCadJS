@@ -20,23 +20,19 @@ test.describe('Grid Toggle', () => {
 
         // Click to toggle off
         await gridBtn.click();
-        await page.waitForTimeout(200);
-        expect(
-            await page.evaluate(() => {
-                const panel = (window as any).__FidoCadJS__.circuitPanel;
-                return panel.isGridVisible();
-            }),
-        ).toBe(false);
+        await expect
+            .poll(() =>
+                page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.isGridVisible()),
+            )
+            .toBe(false);
 
         // Click to toggle back on
         await gridBtn.click();
-        await page.waitForTimeout(200);
-        expect(
-            await page.evaluate(() => {
-                const panel = (window as any).__FidoCadJS__.circuitPanel;
-                return panel.isGridVisible();
-            }),
-        ).toBe(true);
+        await expect
+            .poll(() =>
+                page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.isGridVisible()),
+            )
+            .toBe(true);
     });
 });
 
@@ -59,22 +55,18 @@ test.describe('Snap Toggle', () => {
 
         // Toggle off
         await snapBtn.click();
-        await page.waitForTimeout(200);
-        expect(
-            await page.evaluate(() => {
-                const panel = (window as any).__FidoCadJS__.circuitPanel;
-                return panel.isSnapActive();
-            }),
-        ).toBe(false);
+        await expect
+            .poll(() =>
+                page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.isSnapActive()),
+            )
+            .toBe(false);
 
         // Toggle back on
         await snapBtn.click();
-        await page.waitForTimeout(200);
-        expect(
-            await page.evaluate(() => {
-                const panel = (window as any).__FidoCadJS__.circuitPanel;
-                return panel.isSnapActive();
-            }),
-        ).toBe(true);
+        await expect
+            .poll(() =>
+                page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.isSnapActive()),
+            )
+            .toBe(true);
     });
 });

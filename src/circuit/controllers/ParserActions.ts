@@ -29,24 +29,24 @@ const MAX_TOKENS = 10000;
 export class ParserActions {
     private readonly model: DrawingModel;
     openFileName: string | null = null;
-    private macroExpansionDepth = 0;
+    private static macroExpansionDepth = 0;
 
     constructor(pp: DrawingModel) {
         this.model = pp;
-        this.macroExpansionDepth = 0;
         // Inject the macro parser callback to break circular dependency.
-        // Arrow function captures 'this' so per-instance depth counter is used.
+        // Macro expansion depth is process-wide because nested PrimitiveMacro
+        // parsing constructs new ParserActions instances.
         PrimitiveMacro.parserFn = (model, description) => {
-            if (this.macroExpansionDepth >= Globals.MAX_MACRO_DEPTH) {
+            if (ParserActions.macroExpansionDepth >= Globals.MAX_MACRO_DEPTH) {
                 console.warn('Macro expansion exceeds MAX_MACRO_DEPTH; aborting branch');
                 return;
             }
-            this.macroExpansionDepth++;
+            ParserActions.macroExpansionDepth++;
             try {
                 const pa = new ParserActions(model);
                 pa.addString(description, false);
             } finally {
-                this.macroExpansionDepth--;
+                ParserActions.macroExpansionDepth--;
             }
         };
     }
@@ -88,8 +88,9 @@ export class ParserActions {
         const state = imgCanvas.getState();
         if (!state) return '';
         // FJC IMG x y scale alpha
-        // The data URL is too large for FCD; stored in localStorage.
-        // A hash suffix allows reconnecting on load.
+        // Only the geometry is stored so the .fcd stays pure, readable text.
+        // The image bytes are a local tracing aid kept in localStorage and
+        // re-attached on load by the UI (see CircuitPanel.loadCircuit).
         return `FJC IMG ${state.x} ${state.y} ${state.scale} ${state.alpha}\n`;
     }
 
@@ -401,11 +402,17 @@ export class ParserActions {
             const scale = parseFloat(tokens[4]!);
             const alpha = parseFloat(tokens[5]!);
             const imgCanvas = this.model.getImgCanvas();
-            if (!isNaN(x)) imgCanvas.setX(x);
-            if (!isNaN(y)) imgCanvas.setY(y);
-            if (!isNaN(scale)) imgCanvas.setScale(scale);
-            if (!isNaN(alpha)) imgCanvas.setAlpha(alpha);
-            // The image data is restored from localStorage on the UI side
+            const safeX = isNaN(x) ? imgCanvas.getX() : x;
+            const safeY = isNaN(y) ? imgCanvas.getY() : y;
+            const safeScale = isNaN(scale) ? imgCanvas.getScale() : scale;
+            const safeAlpha = isNaN(alpha) ? imgCanvas.getAlpha() : alpha;
+            imgCanvas.setX(safeX);
+            imgCanvas.setY(safeY);
+            imgCanvas.setScale(safeScale);
+            imgCanvas.setAlpha(safeAlpha);
+            // The image bytes are not stored in the file. Flag the pending
+            // restore so the UI can re-attach them from localStorage.
+            imgCanvas.markPendingRestore();
         } else if (tokens[1] === 'A') {
             const v = parseFloat(tokens[2]!);
             if (v > 0) Globals.lineWidth = v;
