@@ -13,6 +13,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:prod": "npm run build && playwright test",
     "test:e2e:ui": "playwright test --ui",
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run test:run",
@@ -20,6 +21,7 @@
     "lint:fix": "eslint src/ test/ --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "test:coverage": "vitest run --coverage",
+    "docs:tests": "node scripts/generate-tests-md.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

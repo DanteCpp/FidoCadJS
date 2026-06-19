@@ -16,13 +16,31 @@ export async function gotoApp(page: Page): Promise<void> {
     await page.goto('/FidoCadJS/', { waitUntil: 'networkidle' });
     await page.waitForSelector('[data-testid="editor-canvas"]', { timeout: 10_000 });
     // Wait for the localized menu bar (File button) to confirm i18n has
-    // populated the toolbar/menu. Then a short settle for library loading
-    // (675 macros) and any post-init renders.
+    // populated the toolbar/menu, then for the standard-library readiness
+    // flag (675 macros) that app.ts sets once initLibraries() resolves.
     await page
         .locator('button', { hasText: 'File' })
         .first()
         .waitFor({ state: 'visible', timeout: 10_000 });
-    await page.waitForTimeout(300);
+    await page.waitForFunction(
+        () => (window as any).__FidoCadJS__?.librariesLoaded === true,
+        undefined,
+        { timeout: 15_000 },
+    );
+    await settle(page);
+}
+
+/** Wait until the browser has produced a paint frame. App actions mutate
+ *  the model synchronously and schedule a repaint, so two animation
+ *  frames are a sufficient barrier — unlike a fixed sleep, this costs
+ *  ~16 ms instead of hundreds and cannot hide slower regressions. */
+export async function settle(page: Page): Promise<void> {
+    await page.evaluate(
+        () =>
+            new Promise<void>((resolve) =>
+                requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+            ),
+    );
 }
 
 /** Grant clipboard permissions needed for copy/paste operations. */
@@ -48,11 +66,36 @@ export async function clickCanvasScreen(
     await page.mouse.click(box.x + sx, box.y + sy, { button: btn });
 }
 
-/** Press a key while the canvas is focused, with a settle delay. */
+/** Press a key while the canvas is focused, then wait for a repaint. */
 export async function pressKey(page: Page, key: string): Promise<void> {
     await page.locator('[data-testid="editor-canvas"]').focus();
     await page.keyboard.press(key);
-    await page.waitForTimeout(200);
+    await settle(page);
+}
+
+/** Get the number of currently selected primitives. */
+export async function selectedCount(page: Page): Promise<number> {
+    return page.evaluate(() => {
+        const panel = (window as any).__FidoCadJS__.circuitPanel;
+        return panel.getSelectedPrimitives().length;
+    });
+}
+
+/** Map a logical circuit coordinate to canvas-relative CSS pixels. */
+export async function logicalToScreen(
+    page: Page,
+    x: number,
+    y: number,
+): Promise<{ x: number; y: number }> {
+    return page.evaluate(
+        ([lx, ly]) => {
+            const panel = (window as any).__FidoCadJS__.circuitPanel;
+            const mc = panel.getMapCoordinates();
+            const dpr = window.devicePixelRatio || 1;
+            return { x: mc.mapXr(lx, ly) / dpr, y: mc.mapYr(lx, ly) / dpr };
+        },
+        [x, y],
+    );
 }
 
 /** Get the number of primitives in the model. */
@@ -133,7 +176,7 @@ export async function loadCircuit(page: Page, fcd: string): Promise<void> {
         const panel = (window as any).__FidoCadJS__.circuitPanel;
         panel.loadCircuit(circuit);
     }, fcd);
-    await page.waitForTimeout(300);
+    await settle(page);
 }
 
 /** Clear the circuit. */
@@ -142,7 +185,7 @@ export async function clearCircuit(page: Page): Promise<void> {
         const panel = (window as any).__FidoCadJS__.circuitPanel;
         panel.clearCircuit();
     });
-    await page.waitForTimeout(200);
+    await settle(page);
 }
 
 /** Get the list of button text labels in the toolbar. */

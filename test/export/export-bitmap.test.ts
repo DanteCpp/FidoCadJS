@@ -115,29 +115,45 @@ describe('ExportBitmap', () => {
             expect(canvas.height).toBeLessThanOrEqual(200);
         });
 
-        it('accepts antiAlias option without error', () => {
+        it('applies the antiAlias option to the offscreen context', () => {
             const prim = makeBBoxPrim(0, 0, 20, 20);
             const model = makeModel([prim]);
 
             const optsAA = defaultBitmapOptions();
             optsAA.dpi = 150;
             optsAA.antiAlias = true;
-            expect(() => renderToOffscreen(model, optsAA)).not.toThrow();
+            const cAA = renderToOffscreen(model, optsAA);
+            expect((cAA.getContext('2d') as any).imageSmoothingEnabled).toBe(true);
 
             const optsNoAA = defaultBitmapOptions();
             optsNoAA.dpi = 150;
             optsNoAA.antiAlias = false;
-            expect(() => renderToOffscreen(model, optsNoAA)).not.toThrow();
+            const cNoAA = renderToOffscreen(model, optsNoAA);
+            expect((cNoAA.getContext('2d') as any).imageSmoothingEnabled).toBe(false);
         });
 
-        it('accepts blackAndWhite option without error', () => {
+        it('blackAndWhite option triggers the pixel post-processing pass', () => {
             const prim = makeBBoxPrim(0, 0, 20, 20);
             const model = makeModel([prim]);
 
             const opts = defaultBitmapOptions();
             opts.dpi = 150;
             opts.blackAndWhite = true;
-            expect(() => renderToOffscreen(model, opts)).not.toThrow();
+            const cBW = renderToOffscreen(model, opts);
+            const ctxBW = cBW.getContext('2d') as any;
+            // The B&W pass reads the pixels back and writes the thresholded
+            // result via putImageData (pixel values themselves are covered by
+            // the E2E bitmap tests; jsdom's stub canvas has no real pixels).
+            expect(ctxBW.putImageDataCalls).toHaveLength(1);
+            expect(ctxBW.putImageDataCalls[0].data.every((v: number) => v === 0 || v === 255)).toBe(
+                true,
+            );
+
+            const optsColor = defaultBitmapOptions();
+            optsColor.dpi = 150;
+            optsColor.blackAndWhite = false;
+            const cColor = renderToOffscreen(model, optsColor);
+            expect((cColor.getContext('2d') as any).putImageDataCalls).toHaveLength(0);
         });
     });
 

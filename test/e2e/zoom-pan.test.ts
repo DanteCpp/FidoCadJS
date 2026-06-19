@@ -7,7 +7,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { gotoApp, pressKey, getZoomPercent, loadCircuit, canvasBox } from './utils';
+import { gotoApp, pressKey, getZoomPercent, loadCircuit, canvasBox, settle } from './utils';
 
 const FOUR_PRIMITIVES_FCD = `FJC A 1
 FJC B 1
@@ -52,12 +52,10 @@ test.describe('Zoom Operations', () => {
         const initial = await getZoomPercent(page);
 
         await pressKey(page, '+');
-        await page.waitForTimeout(100);
         const zoomedIn = await getZoomPercent(page);
         expect(zoomedIn).toBeGreaterThan(initial);
 
         await pressKey(page, '-');
-        await page.waitForTimeout(100);
         const zoomedOut = await getZoomPercent(page);
         expect(zoomedOut).toBeLessThan(zoomedIn);
     });
@@ -85,9 +83,7 @@ test.describe('Zoom Operations', () => {
         // Fit-to-view must zoom back out so the whole drawing is visible, i.e.
         // below the zoomed-in level.
         await pressKey(page, 'Home');
-        await page.waitForTimeout(200);
-        const fitZoom = await getZoomPercent(page);
-        expect(fitZoom).toBeLessThan(zoomedIn);
+        await expect.poll(() => getZoomPercent(page)).toBeLessThan(zoomedIn);
     });
 
     test('mouse wheel zooms toward cursor', async ({ page }) => {
@@ -96,38 +92,44 @@ test.describe('Zoom Operations', () => {
 
         const before = await getZoomPercent(page);
 
-        // Scroll down (zoom in). The amount may need to be larger to trigger a change.
-        await page.mouse.wheel(box!.x + box!.width / 2, box!.y + box!.height / 2, 0, -120);
-        await page.waitForTimeout(300);
-
-        const after = await getZoomPercent(page);
-        // Zoom may or may not have changed depending on clamping; we just verify no crash
-        expect(after).toBeGreaterThan(0);
+        // Scroll down (zoom in). Starting from 100 % no clamp applies, so the
+        // zoom must strictly increase.
+        await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+        await page.mouse.wheel(0, -120);
+        await expect.poll(() => getZoomPercent(page)).toBeGreaterThan(before);
     });
 
-    test('Fit button exists and is clickable', async ({ page }) => {
+    test('Fit button zooms out a zoomed-in drawing', async ({ page }) => {
+        await loadCircuit(page, FOUR_PRIMITIVES_FCD);
+        let zoomedIn = await getZoomPercent(page);
+        for (let i = 0; i < 20 && zoomedIn < 150; i++) {
+            await pressKey(page, '+');
+            zoomedIn = await getZoomPercent(page);
+        }
+        expect(zoomedIn).toBeGreaterThanOrEqual(150);
+
         const fitBtn = page.locator('button', { hasText: 'Fit' });
         await expect(fitBtn).toBeVisible();
         await fitBtn.click();
-        await page.waitForTimeout(200);
-        // Should not crash
-        const zoom = await getZoomPercent(page);
-        expect(zoom).toBeGreaterThan(0);
+        await expect.poll(() => getZoomPercent(page)).toBeLessThan(zoomedIn);
     });
 
     test('zoom select dropdown updates on keyboard zoom', async ({ page }) => {
         const select = page.locator('[data-testid="zoom-select"]');
-        const initialVal = await select.inputValue();
 
         // Zoom in several times to ensure a change
         await pressKey(page, '+');
         await pressKey(page, '+');
-        await page.waitForTimeout(300);
 
-        const newVal = await select.inputValue();
-        // The dropdown should have changed if zoom changed enough
-        // (it snaps to nearest preset level)
-        expect(newVal).toBeDefined();
+        // The dropdown snaps to the preset level nearest the actual zoom.
+        const zoomLevels = [
+            25, 50, 75, 100, 150, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000, 4000,
+        ];
+        const pct = await getZoomPercent(page);
+        const nearest = zoomLevels.reduce((best, lvl) =>
+            Math.abs(lvl - pct) < Math.abs(best - pct) ? lvl : best,
+        );
+        await expect.poll(async () => Number(await select.inputValue())).toBe(nearest);
     });
 
     // Regression: wheel zoom is handled by InputHandler, whose onZoomChange
@@ -144,13 +146,11 @@ test.describe('Zoom Operations', () => {
         await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
         for (let i = 0; i < 3; i++) {
             await page.mouse.wheel(0, -120);
-            await page.waitForTimeout(120);
+            await settle(page);
         }
-        await page.waitForTimeout(200);
 
-        const newVal = await select.inputValue();
         // The dropdown must have moved off its initial preset…
-        expect(newVal).not.toBe(initialVal);
+        await expect.poll(() => select.inputValue()).not.toBe(initialVal);
 
         // …and must match the preset nearest to the actual zoom percent.
         const zoomLevels = [
@@ -160,7 +160,7 @@ test.describe('Zoom Operations', () => {
         const nearest = zoomLevels.reduce((best, lvl) =>
             Math.abs(lvl - pct) < Math.abs(best - pct) ? lvl : best,
         );
-        expect(Number(newVal)).toBe(nearest);
+        expect(Number(await select.inputValue())).toBe(nearest);
     });
 });
 
@@ -169,19 +169,33 @@ test.describe('Pan Operations', () => {
         await gotoApp(page);
     });
 
-    test('middle mouse button starts panning', async ({ page }) => {
+    test('middle mouse button pans the view', async ({ page }) => {
         const box = await canvasBox(page);
         expect(box).not.toBeNull();
 
-        // Middle-click drag on canvas
-        await page.mouse.move(box!.x + 300, box!.y + 300);
-        await page.mouse.down({ button: 'middle' });
-        await page.mouse.move(box!.x + 350, box!.y + 320, { steps: 5 });
-        await page.mouse.up({ button: 'middle' });
-        await page.waitForTimeout(200);
+        const centerBefore = await page.evaluate(() => {
+            const mc = (window as any).__FidoCadJS__.circuitPanel.getMapCoordinates();
+            return { x: mc.getXCenter(), y: mc.getYCenter() };
+        });
 
-        // Should not crash
-        expect(true).toBe(true);
+        // Middle-click drag on canvas. Drag left/up: the view centre is
+        // clamped to ≤ 0 (clampCenter), so from the initial origin only a
+        // negative-direction pan can actually move it.
+        await page.mouse.move(box!.x + 350, box!.y + 320);
+        await page.mouse.down({ button: 'middle' });
+        await page.mouse.move(box!.x + 300, box!.y + 290, { steps: 5 });
+        await page.mouse.up({ button: 'middle' });
+
+        // The drag must have shifted the view origin.
+        await expect
+            .poll(async () => {
+                const center = await page.evaluate(() => {
+                    const mc = (window as any).__FidoCadJS__.circuitPanel.getMapCoordinates();
+                    return { x: mc.getXCenter(), y: mc.getYCenter() };
+                });
+                return center.x !== centerBefore.x || center.y !== centerBefore.y;
+            })
+            .toBe(true);
     });
 });
 
@@ -190,17 +204,18 @@ test.describe('Resize behavior', () => {
         await gotoApp(page);
     });
 
-    test('viewport resize does not crash the app', async ({ page }) => {
-        await page.setViewportSize({ width: 800, height: 600 });
-        await page.waitForTimeout(300);
-
-        // The canvas should still be present and have non-zero dimensions
+    test('viewport resize keeps a non-degenerate canvas', async ({ page }) => {
         const canvas = page.locator('[data-testid="editor-canvas"]');
-        await expect(canvas).toBeVisible();
+        const before = await canvas.boundingBox();
 
+        await page.setViewportSize({ width: 800, height: 600 });
+
+        // The canvas must shrink with the viewport (ResizeObserver-driven).
+        await expect(canvas).toBeVisible();
+        await expect
+            .poll(async () => (await canvas.boundingBox())!.width)
+            .toBeLessThan(before!.width);
         const box = await canvas.boundingBox();
-        expect(box).not.toBeNull();
-        expect(box!.width).toBeGreaterThan(0);
         expect(box!.height).toBeGreaterThan(0);
     });
 
@@ -208,17 +223,15 @@ test.describe('Resize behavior', () => {
         // Load content first so we have something to verify
         await loadCircuit(page, FOUR_PRIMITIVES_FCD);
 
-        // Resize the viewport
+        // Resize the viewport and wait for the canvas to follow.
+        const canvas = page.locator('[data-testid="editor-canvas"]');
         await page.setViewportSize({ width: 1024, height: 768 });
-        await page.waitForTimeout(500);
+        await expect.poll(async () => (await canvas.boundingBox())!.width).toBeLessThan(1024 + 1);
 
-        // Force a render by zooming
+        // App must still be functional — zooming in must take effect.
+        const before = await getZoomPercent(page);
         await pressKey(page, '+');
-        await page.waitForTimeout(200);
-
-        // App should still be functional — zoom should work
-        const zoom = await getZoomPercent(page);
-        expect(zoom).toBeGreaterThan(0);
+        await expect.poll(() => getZoomPercent(page)).toBeGreaterThan(before);
     });
 
     test('multiple consecutive resizes do not crash', async ({ page }) => {
@@ -231,7 +244,7 @@ test.describe('Resize behavior', () => {
 
         for (const size of sizes) {
             await page.setViewportSize(size);
-            await page.waitForTimeout(200);
+            await settle(page);
         }
 
         // Verify canvas is still alive

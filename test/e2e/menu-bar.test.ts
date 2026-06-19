@@ -23,7 +23,6 @@ test.describe('Menu Bar — File Menu', () => {
     test('File menu opens and shows items', async ({ page }) => {
         const fileBtn = page.locator('button', { hasText: 'File' });
         await fileBtn.hover();
-        await page.waitForTimeout(200);
 
         await expect(page.locator('div', { hasText: 'New' }).first()).toBeVisible();
         await expect(page.locator('div', { hasText: 'Open file' }).first()).toBeVisible();
@@ -33,7 +32,6 @@ test.describe('Menu Bar — File Menu', () => {
     test('Edit menu shows Undo/Redo/Cut/Copy/Paste', async ({ page }) => {
         const editBtn = page.locator('button', { hasText: 'Edit' });
         await editBtn.hover();
-        await page.waitForTimeout(200);
 
         await expect(page.locator('div', { hasText: 'Undo' }).first()).toBeVisible();
         await expect(page.locator('div', { hasText: 'Redo' }).first()).toBeVisible();
@@ -45,7 +43,6 @@ test.describe('Menu Bar — File Menu', () => {
     test('View menu shows Zoom and Options', async ({ page }) => {
         const viewBtn = page.locator('button', { hasText: 'View' });
         await viewBtn.hover();
-        await page.waitForTimeout(200);
 
         await expect(page.locator('div', { hasText: 'Zoom In' }).first()).toBeVisible();
         await expect(page.locator('div', { hasText: 'Zoom Out' }).first()).toBeVisible();
@@ -55,7 +52,6 @@ test.describe('Menu Bar — File Menu', () => {
     test('Circuit menu shows View code', async ({ page }) => {
         const circuitBtn = page.locator('button', { hasText: 'Circuit' });
         await circuitBtn.hover();
-        await page.waitForTimeout(200);
 
         await expect(page.locator('div', { hasText: 'View code' }).first()).toBeVisible();
     });
@@ -63,7 +59,6 @@ test.describe('Menu Bar — File Menu', () => {
     test('menu items show shortcut text', async ({ page }) => {
         const editBtn = page.locator('button', { hasText: 'Edit' });
         await editBtn.hover();
-        await page.waitForTimeout(200);
 
         await expect(page.locator('span', { hasText: 'Ctrl+Z' }).first()).toBeVisible();
         await expect(page.locator('span', { hasText: 'Ctrl+Y' }).first()).toBeVisible();
@@ -73,7 +68,6 @@ test.describe('Menu Bar — File Menu', () => {
     test('Options dialog has a Libraries tab with a folder picker', async ({ page }) => {
         // Open View ▸ Options.
         await page.locator('button', { hasText: 'View' }).hover();
-        await page.waitForTimeout(200);
         await page.getByText('Options...', { exact: true }).click();
 
         const dialog = page.locator('dialog[open]');
@@ -107,22 +101,21 @@ test.describe('Menu Bar — Actions via API', () => {
     test('Ctrl+N clears circuit (new)', async ({ page }) => {
         expect(await primitiveCount(page)).toBe(2);
         await pressKey(page, 'Control+n');
-        await page.waitForTimeout(200);
-        expect(await primitiveCount(page)).toBe(0);
+        await expect.poll(() => primitiveCount(page)).toBe(0);
     });
 
     test('Ctrl+S triggers save (does not modify circuit)', async ({ page }) => {
         expect(await primitiveCount(page)).toBe(2);
         await pressKey(page, 'Control+s');
-        await page.waitForTimeout(300);
         expect(await primitiveCount(page)).toBe(2);
     });
 
-    test('Ctrl+E triggers export dialog (does not modify circuit)', async ({ page }) => {
+    test('Ctrl+E opens the export dialog without modifying the circuit', async ({ page }) => {
         expect(await primitiveCount(page)).toBe(2);
         await pressKey(page, 'Control+e');
-        await page.waitForTimeout(300);
-        // Export dialog should appear, circuit unchanged
+        // The export dialog must actually appear (format dropdown visible)…
+        await expect(page.locator('select option', { hasText: 'PNG (Bitmap)' })).toHaveCount(1);
+        // …and the circuit must be unchanged.
         expect(await primitiveCount(page)).toBe(2);
     });
 });

@@ -20,7 +20,6 @@ LI 45 35 60 15 0
 
 async function openLayerDialog(page: import('@playwright/test').Page) {
     await page.locator('button', { hasText: 'View' }).hover();
-    await page.waitForTimeout(200);
     await page.getByText('Layer options...', { exact: true }).click();
     await expect(page.locator('[data-testid="layer-dialog"]')).toBeVisible();
 }
@@ -40,7 +39,7 @@ test.describe('Layer dialog — header serialization', () => {
             el.dispatchEvent(new Event('input', { bubbles: true }));
         });
         await page.locator('[data-testid="layer-dialog-ok"]').click();
-        await page.waitForTimeout(150);
+        await expect(page.locator('[data-testid="layer-dialog"]')).toBeHidden();
 
         const fjcL = (await getCircuitText(page)).split('\n').filter((l) => l.startsWith('FJC L '));
         expect(fjcL).toHaveLength(1);
@@ -52,7 +51,7 @@ test.describe('Layer dialog — header serialization', () => {
         await loadCircuit(page, TWO_LINES);
         await openLayerDialog(page);
         await page.locator('[data-testid="layer-dialog-ok"]').click();
-        await page.waitForTimeout(150);
+        await expect(page.locator('[data-testid="layer-dialog"]')).toBeHidden();
 
         expect(await getCircuitText(page)).not.toContain('FJC L ');
     });

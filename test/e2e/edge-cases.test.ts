@@ -13,7 +13,6 @@ import {
     primitiveCount,
     getCircuitText,
     clickCanvasScreen,
-    canvasBox,
     clearCircuit,
     loadCircuit,
     exportSVG,
@@ -21,6 +20,8 @@ import {
     exportTikZ,
     canUndo,
     getCurrentTool,
+    getZoomPercent,
+    settle,
     Tools,
 } from './utils';
 
@@ -45,11 +46,13 @@ test.describe('Edge Cases — Empty/Degenerate', () => {
         expect(await primitiveCount(page)).toBe(0);
     });
 
-    test("empty circuit zoom in/out doesn't crash", async ({ page }) => {
+    test('empty circuit zoom in/out still adjusts zoom', async ({ page }) => {
+        const initial = await getZoomPercent(page);
         await pressKey(page, '+');
         await pressKey(page, '+');
         await pressKey(page, '-');
-        expect(true).toBe(true);
+        // Two zoom-ins and one zoom-out must leave us above the initial zoom.
+        expect(await getZoomPercent(page)).toBeGreaterThan(initial);
     });
 
     test('empty circuit Ctrl+Z does nothing', async ({ page }) => {
@@ -63,23 +66,14 @@ test.describe('Edge Cases — Empty/Degenerate', () => {
         await pressKey(page, 'l');
         // Click same position twice
         await clickCanvasScreen(page, 300, 300);
-        await page.waitForTimeout(200);
+        await settle(page);
         await clickCanvasScreen(page, 300, 300);
-        await page.waitForTimeout(200);
+        await settle(page);
 
         // Zero-length lines are dropped on serialisation
         expect(await primitiveCount(page)).toBe(0);
     });
 });
-
-/** Select all via the panel API. */
-async function selectAll(page: any) {
-    await page.evaluate(() => {
-        const panel = (window as any).__FidoCadJS__.circuitPanel;
-        panel.selectAll();
-    });
-    await page.waitForTimeout(200);
-}
 
 test.describe('Edge Cases — Rapid Operations', () => {
     test.beforeEach(async ({ page }) => {
@@ -100,13 +94,11 @@ test.describe('Edge Cases — Rapid Operations', () => {
         for (let i = 0; i < 3; i++) {
             await pressKey(page, 'l');
             await clickCanvasScreen(page, 200, 200 + i * 50);
-            await page.waitForTimeout(200);
+            await settle(page);
             await clickCanvasScreen(page, 400, 200 + i * 50);
-            await page.waitForTimeout(300);
+            await settle(page);
             await pressKey(page, 'Control+z');
-            await page.waitForTimeout(200);
             await pressKey(page, 'Control+y');
-            await page.waitForTimeout(200);
         }
         // After 3 create/undo/redo cycles, we should have 3 lines (all re-done)
         expect(await primitiveCount(page)).toBe(3);
@@ -215,7 +207,7 @@ test.describe('Edge Cases — Text', () => {
     test('text primitive created via tool contains default string', async ({ page }) => {
         await pressKey(page, 't');
         await clickCanvasScreen(page, 300, 300);
-        await page.waitForTimeout(300);
+        await settle(page);
 
         const count = await primitiveCount(page);
         expect(count).toBe(1);
@@ -239,12 +231,12 @@ LI 10 10 90 10 0
         await loadCircuit(page, fcd);
 
         await page.setViewportSize({ width: 800, height: 600 });
-        await page.waitForTimeout(300);
+        await settle(page);
 
         expect(await primitiveCount(page)).toBe(1);
 
         await page.setViewportSize({ width: 1280, height: 900 });
-        await page.waitForTimeout(300);
+        await settle(page);
 
         expect(await primitiveCount(page)).toBe(1);
     });
@@ -275,11 +267,8 @@ LI 10 30 90 30 2
         await pressKey(page, 'l');
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
 
-        // Right-click to cancel
+        // Right-click to cancel — should fall back to SELECTION
         await clickCanvasScreen(page, 300, 300, 'right');
-        await page.waitForTimeout(300);
-
-        // Should be back to SELECTION
-        expect(await getCurrentTool(page)).toBe(Tools.SELECTION);
+        await expect.poll(() => getCurrentTool(page)).toBe(Tools.SELECTION);
     });
 });

@@ -419,6 +419,7 @@ export class InputHandler {
                 this.moveStartLogX = lx;
                 this.moveStartLogY = ly;
                 this.model.setChanged(true);
+                this.model.setModified(true);
                 this.cb.render();
             }
             return;
@@ -460,6 +461,7 @@ export class InputHandler {
                 this.moveAllDragLogX = lx;
                 this.moveAllDragLogY = ly;
                 this.model.setChanged(true);
+                this.model.setModified(true);
                 this.cb.render();
             }
             return;
@@ -482,6 +484,7 @@ export class InputHandler {
                 pt.y = ly;
                 this._dragHandlePrim.setChanged(true);
                 this.model.setChanged(true);
+                this.model.setModified(true);
                 this.cb.render();
             }
             return;
@@ -680,8 +683,7 @@ export class InputHandler {
         let minDist = Number.MAX_VALUE;
         let closest: GraphicPrimitive | null = null;
         for (const prim of this.model.getPrimitiveVector()) {
-            const layer = prim.getLayer();
-            if (layer < layerV.length && !layerV[layer].isVisible()) continue;
+            if (!isVisibleForSelection(prim, layerV)) continue;
             const dist = prim.getDistanceToPoint(px, py);
             if (dist < tolerance && dist < minDist) {
                 minDist = dist;
@@ -707,6 +709,18 @@ export class InputHandler {
         this.cb.render();
         this.cb.onZoomChange?.();
     }
+}
+
+function isVisibleForSelection(
+    prim: GraphicPrimitive,
+    layerV: ReturnType<DrawingModel['getLayers']>,
+): boolean {
+    const layer = prim.getLayer();
+    if (layer >= 0 && layer < layerV.length) return layerV[layer]!.isVisible();
+    for (let i = 0; i < layerV.length; i++) {
+        if (prim.containsLayer(i)) return layerV[i]!.isVisible();
+    }
+    return layer >= layerV.length;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

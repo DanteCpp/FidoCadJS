@@ -33,6 +33,10 @@ export class ImageAsCanvas {
     private naturalHeight: number = 0;
     /** Whether an image is currently attached. */
     private hasImage: boolean = false;
+    private readyPromise: Promise<void> | null = null;
+    /** Set by the parser when an FJC IMG line is read; the UI consumes it to
+     *  re-attach the image bytes (kept locally, not stored in the .fcd). */
+    private pendingRestore: boolean = false;
 
     // ── Getters / Setters ───────────────────────────────────────────────
 
@@ -85,7 +89,7 @@ export class ImageAsCanvas {
      * Returns a promise that resolves when the image metadata is known.
      */
     attachImage(src: string): Promise<void> {
-        return new Promise((resolve, reject) => {
+        const loadPromise = new Promise<void>((resolve, reject) => {
             const img = new Image();
             img.onload = () => {
                 this.imageElement = img;
@@ -97,6 +101,11 @@ export class ImageAsCanvas {
             img.onerror = () => reject(new Error('Failed to load image'));
             img.src = src;
         });
+        this.readyPromise = loadPromise;
+        void loadPromise.finally(() => {
+            if (this.readyPromise === loadPromise) this.readyPromise = null;
+        });
+        return loadPromise;
     }
 
     /**
@@ -121,6 +130,8 @@ export class ImageAsCanvas {
     detach(): void {
         this.imageElement = null;
         this.hasImage = false;
+        this.readyPromise = null;
+        this.pendingRestore = false;
         this.x = 0;
         this.y = 0;
         this.scale = 1.0;
@@ -152,6 +163,36 @@ export class ImageAsCanvas {
         this.y = state.y;
         this.scale = state.scale;
         this.alpha = state.alpha;
+    }
+
+    /** Start an async restore from a synchronous parser path. */
+    startRestore(state: ImageAttachState): void {
+        const restorePromise = this.restoreState(state).catch((err) => {
+            console.error('ImageAsCanvas.restoreState failed:', err);
+            this.detach();
+        });
+        this.readyPromise = restorePromise;
+        void restorePromise.finally(() => {
+            if (this.readyPromise === restorePromise) this.readyPromise = null;
+        });
+    }
+
+    /** Promise that resolves once any parser-started image load has completed. */
+    whenReady(): Promise<void> {
+        return this.readyPromise ?? Promise.resolve();
+    }
+
+    /** Flag that a parsed file referenced a background image whose bytes must
+     *  be re-attached by the UI from local storage. */
+    markPendingRestore(): void {
+        this.pendingRestore = true;
+    }
+
+    /** Consume the pending-restore flag, returning whether one was set. */
+    takePendingRestore(): boolean {
+        const pending = this.pendingRestore;
+        this.pendingRestore = false;
+        return pending;
     }
 
     // ── Rendering ──────────────────────────────────────────────────────

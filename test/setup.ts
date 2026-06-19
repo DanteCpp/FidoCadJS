@@ -80,7 +80,12 @@ beforeAll(() => {
         ...args: any[]
     ) {
         if (contextId === '2d') {
-            return createStub2DContext(this);
+            // Memoize per canvas, like real browsers: repeated getContext('2d')
+            // calls must return the same object so context state (transforms,
+            // imageSmoothingEnabled, …) set by code under test is observable.
+            const self = this as HTMLCanvasElement & { __stub2dCtx?: unknown };
+            self.__stub2dCtx ??= createStub2DContext(this);
+            return self.__stub2dCtx;
         }
         return origGetContext.call(this, contextId, ...args);
     };
@@ -150,7 +155,11 @@ function createStub2DContext(_canvas: HTMLCanvasElement): any {
             }
             return { data, width: w, height: h, colorSpace: 'srgb' };
         },
-        putImageData() {},
+        // Record calls so tests can assert that post-processing passes ran.
+        putImageDataCalls: [] as Array<{ data: Uint8ClampedArray }>,
+        putImageData(imageData: { data: Uint8ClampedArray }) {
+            this.putImageDataCalls.push(imageData);
+        },
         createImageData() {
             return { data: new Uint8ClampedArray() };
         },

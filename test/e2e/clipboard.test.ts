@@ -7,7 +7,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { gotoApp } from './utils';
+import { gotoApp, grantClipboardPermissions, canvasBox, pressKey, primitiveCount } from './utils';
 
 test.describe('Clipboard Operations', () => {
     test.beforeEach(async ({ page }) => {
@@ -17,7 +17,38 @@ test.describe('Clipboard Operations', () => {
             panel.clearCircuit();
             panel.loadCircuit('FJC A 1\nFJC B 1\nLI 50 50 150 50 0\nLI 100 100 200 100 1\n');
         });
-        await page.waitForTimeout(200);
+    });
+
+    // The one full UI-path flow: real Ctrl+C / Ctrl+V keystrokes through the
+    // system clipboard, committed by clicking the placement position. The
+    // API-driven tests below pin down the controller logic; this one proves
+    // the keyboard wiring and browser clipboard integration end to end.
+    test('Ctrl+C / Ctrl+V via keyboard inserts a copy on click', async ({
+        page,
+        context,
+        browserName,
+    }) => {
+        test.skip(
+            browserName !== 'chromium',
+            'clipboard-read/write permission grants are Chromium-only',
+        );
+        await grantClipboardPermissions(context);
+
+        await page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.selectAll());
+        await pressKey(page, 'Control+c');
+        await pressKey(page, 'Control+v');
+
+        // The async clipboard read arms interactive placement mode.
+        await expect
+            .poll(() =>
+                page.evaluate(() => (window as any).__FidoCadJS__.circuitPanel.isPastePlacing()),
+            )
+            .toBe(true);
+
+        // Clicking confirms the placement position and inserts the copy.
+        const box = await canvasBox(page);
+        await page.mouse.click(box!.x + 400, box!.y + 300);
+        await expect.poll(() => primitiveCount(page)).toBe(4);
     });
 
     test('copySelected preserves primitives', async ({ page }) => {

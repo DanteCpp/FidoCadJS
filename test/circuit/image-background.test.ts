@@ -9,6 +9,9 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ImageAsCanvas } from '../../src/circuit/ImageAsCanvas.js';
+import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
+import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
+import { StandardLayers } from '../../src/layers/StandardLayers.js';
 
 /**
  * Stub the global Image constructor so image loading works synchronously
@@ -171,6 +174,48 @@ describe('ImageAsCanvas', () => {
             expect(ic.getY()).toBe(15);
             expect(ic.getScale()).toBe(3);
             expect(ic.getAlpha()).toBe(0.8);
+        });
+
+        it('serializes only the image geometry into FCD, not the bytes', async () => {
+            const png =
+                'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+            const sourceModel = new DrawingModel();
+            sourceModel.setLayers(StandardLayers.createStandardLayers());
+            const sourceParser = new ParserActions(sourceModel);
+            await sourceModel.getImgCanvas().restoreState({
+                dataUrl: png,
+                x: 12,
+                y: 34,
+                scale: 2,
+                alpha: 0.4,
+                naturalWidth: 1,
+                naturalHeight: 1,
+            });
+
+            // The .fcd stays pure text: geometry only, no embedded data URL.
+            const text = sourceParser.getText(true);
+            expect(text).toContain('FJC IMG 12 34 2 0.4');
+            expect(text).not.toContain(png);
+            expect(text).not.toContain('data:image');
+        });
+
+        it('restores image geometry on parse and flags a pending restore for the UI', () => {
+            const restoredModel = new DrawingModel();
+            restoredModel.setLayers(StandardLayers.createStandardLayers());
+            const restoredParser = new ParserActions(restoredModel);
+            restoredParser.parseString('[FIDOCAD]\nFJC IMG 12 34 2 0.4\n');
+
+            const ic = restoredModel.getImgCanvas();
+            // The parser sets geometry but cannot load bytes (kept locally), so
+            // no image is attached yet — the UI re-attaches from localStorage.
+            expect(ic.isAttached()).toBe(false);
+            expect(ic.getX()).toBe(12);
+            expect(ic.getY()).toBe(34);
+            expect(ic.getScale()).toBe(2);
+            expect(ic.getAlpha()).toBe(0.4);
+            expect(ic.takePendingRestore()).toBe(true);
+            // The flag is consumed once.
+            expect(ic.takePendingRestore()).toBe(false);
         });
     });
 

@@ -1,20 +1,18 @@
 <!--
 File: TESTS.md
-Author: Dante Loi
-Date: 2026-05-10
-Description: Human-readable index of the FidoCadJS test suite — every
-             `it()` case (Vitest) and `test()` case (Playwright) with
-             a plain-English description, grouped by source file and
-             `describe()` block.
-Copyright: (c) 2026 Dante Loi
+Description: Index of the FidoCadJS test suite, GENERATED from test discovery.
+             Do NOT edit by hand — run `npm run docs:tests` to regenerate.
+Generated: 2026-06-11
 -->
 
 # FidoCadJS — Test Suite Reference
 
-This document indexes every test case in `FidoCadJS/test/`. The suite
-comprises **345 unit tests** ([Vitest](https://vitest.dev) + jsdom) spread
-across 17 files, and **134 browser E2E tests** ([Playwright](https://playwright.dev)
-+ Chromium) across 13 files, for a total of **479 tests**.
+This document indexes every statically discoverable test case in
+`FidoCadJS/test/`: **644 unit cases** ([Vitest](https://vitest.dev) + jsdom)
+across 52 files and **185 E2E cases**
+([Playwright](https://playwright.dev), run on Chromium, Firefox, and WebKit)
+across 18 files. Parametrized tests are counted once, so
+runtime totals can be higher.
 
 ## How to run
 
@@ -22,752 +20,1301 @@ across 17 files, and **134 browser E2E tests** ([Playwright](https://playwright.
 |---------|--------------|
 | `npm run test` | Vitest in watch mode |
 | `npm run test:run` | Run unit tests once (used by CI) |
-| `npm run test:e2e` | Run Playwright E2E tests (headless) |
-| `npm run test:e2e:ui` | Run Playwright E2E tests (interactive UI) |
+| `npm run test:coverage` | Unit tests + coverage gate |
+| `npm run test:e2e` | Playwright E2E tests against the existing `dist/` build |
+| `npm run test:e2e:prod` | Build first, then run Playwright E2E tests |
+| `npm run test:e2e:ui` | Playwright E2E tests (interactive UI) |
+| `npm run docs:tests` | Regenerate this file |
 
-The `npm run test:run` command is executed
-automatically by GitHub Actions
-(`FidoCadJS/.github/workflows/deploy.yml`) on every push and pull request
-to `main`.
+## Unit suite at a glance
 
-## Unit Suite at a glance
+| File | Cases |
+|------|-------|
+| `circuit/align-distribute.test.ts` | 6 |
+| `circuit/controllers/add-elements.test.ts` | 8 |
+| `circuit/controllers/editor-actions.test.ts` | 19 |
+| `circuit/controllers/library-loader.test.ts` | 5 |
+| `circuit/controllers/selection-actions.test.ts` | 8 |
+| `circuit/copy-all-as-primitives.test.ts` | 3 |
+| `circuit/image-background.test.ts` | 13 |
+| `circuit/keyboard-shortcuts.test.ts` | 51 |
+| `circuit/listener-leaks.test.ts` | 2 |
+| `circuit/macro-rotation.test.ts` | 2 |
+| `circuit/model/drawing-model.test.ts` | 8 |
+| `circuit/placement.test.ts` | 18 |
+| `circuit/ruler.test.ts` | 4 |
+| `circuit/views/export.test.ts` | 9 |
+| `export/export-adversarial.test.ts` | 13 |
+| `export/export-bitmap.test.ts` | 13 |
+| `export/export-dialog.test.ts` | 13 |
+| `export/export-math.test.ts` | 4 |
+| `export/export-pdf.test.ts` | 22 |
+| `export/export-pgf.fixtures.test.ts` | 1 |
+| `export/export-pgf.test.ts` | 34 |
+| `export/export-svg.fixtures.test.ts` | 1 |
+| `export/export-svg.java-parity.test.ts` | 1 |
+| `export/export-svg.test.ts` | 30 |
+| `export/export-tikz.fixtures.test.ts` | 1 |
+| `export/export-tikz.test.ts` | 30 |
+| `export/latex-escape.test.ts` | 10 |
+| `geom/drawing-size.test.ts` | 9 |
+| `geom/geometric-distances.test.ts` | 21 |
+| `geom/map-coordinates.test.ts` | 27 |
+| `globals/globals.test.ts` | 21 |
+| `graphic/color-canvas.test.ts` | 8 |
+| `graphic/dash-scaling.test.ts` | 8 |
+| `graphic/math-layout.test.ts` | 12 |
+| `i18n/routing.test.ts` | 14 |
+| `layers/layer-desc.test.ts` | 9 |
+| `librarymodel/library-model.test.ts` | 10 |
+| `macropicker/macro-picker.test.ts` | 6 |
+| `macropicker/preview-connection.test.ts` | 2 |
+| `parser/parser-adversarial.test.ts` | 23 |
+| `parser/parser-global-state.test.ts` | 3 |
+| `parser/primitive-round-trip.test.ts` | 65 |
+| `primitives/complex-curve-fixes.test.ts` | 5 |
+| `primitives/primitive-edge-cases.test.ts` | 27 |
+| `settings/settings-manager.test.ts` | 9 |
+| `ui/confirm-dialog.test.ts` | 6 |
+| `ui/menubar-open-libraries.test.ts` | 1 |
+| `ui/prompt-dialog.test.ts` | 5 |
+| `ui/properties-batch.test.ts` | 3 |
+| `ui/toolbar-controller.test.ts` | 9 |
+| `undo/undo-actions.test.ts` | 10 |
+| `undo/undo-state.test.ts` | 2 |
+| **Total** | **644** |
 
-| File | Area under test | `it()` cases |
-|------|-----------------|--------------|
-| `circuit/controllers/add-elements.test.ts` | `AddElements` — primitive creation per drawing tool | 8 |
-| `circuit/controllers/selection-actions.test.ts` | `SelectionActions` — selection queries | 8 |
-| `circuit/keyboard-shortcuts.test.ts` | `CircuitPanel` — all keyboard shortcuts | 46 |
-| `circuit/model/drawing-model.test.ts` | `DrawingModel` — core data model | 8 |
-| `export/export-pgf.test.ts` | `ExportPGF` — PGF command generation for LaTeX | 39 |
-| `export/export-svg.test.ts` | `ExportSVG` — SVG element generation | 13 |
-| `export/export-tikz.test.ts` | `ExportTikZ` — TikZ command generation for LaTeX | 34 |
-| `geom/map-coordinates.test.ts` | `MapCoordinates` — coordinate mapping, snap, zoom, orientation | 24 |
-| `globals/globals.test.ts` | `Globals` — static utility functions | 13 |
-| `layers/layer-desc.test.ts` | `LayerDesc` and `StandardLayers` | 9 |
-| `librarymodel/library-model.test.ts` | `LibraryModel`, `Library`, `Category` | 10 |
-| `parser/primitive-round-trip.test.ts` | FCD parser/serializer round-trips for all 11 primitives | 65 |
-| `primitives/primitive-edge-cases.test.ts` | Per-primitive unit tests for toString/parseTokens edge cases | 20 |
-| `settings/settings-manager.test.ts` | `SettingsManager` validation, defaults, and persistence | 11 |
-| `undo/undo-actions.test.ts` | `UndoActions` — correctness, add/move/delete/rotate/mirror undo | 10 |
-| **Unit Subtotal** | | **345** |
+## E2E suite at a glance
 
-## E2E Suite at a glance
-
-| File | Area under test | `test()` cases |
-|------|-----------------|---------------|
-| `e2e/app-loads.test.ts` | App initialisation, canvas, toolbar, libraries | 10 |
-| `e2e/drawing-tools.test.ts` | Drawing tools (all 11 primitives) via keyboard + mouse | 22 |
-| `e2e/selection-and-transform.test.ts` | Selection, move, rotate, mirror, nudge, delete | 10 |
-| `e2e/undo-redo.test.ts` | Undo/redo state tracking and keyboard shortcuts | 6 |
-| `e2e/clipboard.test.ts` | Copy, cut, duplicate via API + internal clipboard | 6 |
-| `e2e/zoom-pan.test.ts` | Zoom in/out, wheel, fit, pan | 10 |
-| `e2e/grid-snap.test.ts` | Grid visibility and snap-to-grid toggles | 2 |
-| `e2e/file-operations.test.ts` | New (Ctrl+N), load, save, view code | 6 |
-| `e2e/export.test.ts` | SVG, PGF, TikZ export + determinism | 18 |
-| `e2e/menu-bar.test.ts` | Menu bar dropdowns and command actions | 8 |
-| `e2e/keyboard-e2e.test.ts` | Keyboard shortcuts through full browser stack | 16 |
-| `e2e/macro-library.test.ts` | Library panel, macro placement via API | 5 |
-| `e2e/edge-cases.test.ts` | Empty/degenerate, rapid ops, long docs, negative coords, resize | 15 |
-| **E2E Subtotal** | | **134** |
-
-**Grand total: 479 tests**
+| File | Cases |
+|------|-------|
+| `e2e/app-loads.test.ts` | 11 |
+| `e2e/clipboard.test.ts` | 12 |
+| `e2e/drawing-tools.test.ts` | 14 |
+| `e2e/edge-cases.test.ts` | 22 |
+| `e2e/export-bitmap-render.test.ts` | 4 |
+| `e2e/export-png.test.ts` | 6 |
+| `e2e/export-svg-pixel-parity.test.ts` | 1 |
+| `e2e/export.test.ts` | 22 |
+| `e2e/file-operations.test.ts` | 8 |
+| `e2e/grid-snap.test.ts` | 4 |
+| `e2e/keyboard-e2e.test.ts` | 20 |
+| `e2e/layer-dialog.test.ts` | 3 |
+| `e2e/macro-library.test.ts` | 7 |
+| `e2e/math-render.test.ts` | 4 |
+| `e2e/menu-bar.test.ts` | 11 |
+| `e2e/selection-and-transform.test.ts` | 12 |
+| `e2e/undo-redo.test.ts` | 7 |
+| `e2e/zoom-pan.test.ts` | 17 |
+| **Total** | **185** |
 
 ---
+
+## `circuit/align-distribute.test.ts`
+
+- **Align Center**
+  - alignHorizontalCenter aligns primitives to the horizontal center of selection
+  - alignVerticalCenter aligns primitives to the vertical center of selection
+  - no-op when nothing selected
+- **Distribute**
+  - distributeHorizontally spaces primitives evenly between extremes
+  - distributeVertically spaces primitives evenly between extremes
+  - no-op when fewer than 3 selected
 
 ## `circuit/controllers/add-elements.test.ts`
 
-Verifies that each drawing tool in `AddElements` produces the correct
-primitive type and that getter/setter pairs round-trip. Uses a fresh
-`DrawingModel` with standard layers per case; `UndoActions` is `null` so
-undo states are not pushed.
+- **AddElements**
+  - addConnection creates a PrimitiveConnection
+  - addPCBPad creates a PrimitivePCBPad
+  - addLine creates a PrimitiveLine after two clicks
+  - addRectangle creates a PrimitiveRectangle after two clicks
+  - addEllipse creates a PrimitiveOval after two clicks
+  - addBezier creates a PrimitiveBezier after four clicks
+  - addPCBLine creates a PrimitivePCBLine after two clicks
+  - pcb thickness getters/setters round-trip
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `addConnection creates a PrimitiveConnection` | A single click with the connection tool inserts exactly one `PrimitiveConnection` into the model. |
-| `addPCBPad creates a PrimitivePCBPad` | A single click with the PCB-pad tool inserts exactly one `PrimitivePCBPad`. |
-| `addLine creates a PrimitiveLine after two clicks` | Two successive clicks with the line tool produce one finished `PrimitiveLine`. |
-| `addRectangle creates a PrimitiveRectangle after two clicks` | Two clicks (opposite corners) produce one `PrimitiveRectangle`. |
-| `addEllipse creates a PrimitiveOval after two clicks` | Two clicks (bounding-box corners) produce one `PrimitiveOval`. |
-| `addBezier creates a PrimitiveBezier after four clicks` | Four clicks (two endpoints + two control points) produce one `PrimitiveBezier`. |
-| `addPCBLine creates a PrimitivePCBLine after two clicks` | Two clicks with a given thickness produce one `PrimitivePCBLine`. |
-| `pcb thickness getters/setters round-trip` | `setPcbThickness(8)` is read back unchanged by `getPcbThickness()`. |
+## `circuit/controllers/editor-actions.test.ts`
 
----
+- **EditorActions — alignment**
+  - **alignLeftSelected**
+    - no-op when nothing is selected
+    - moves selected primitives to the leftmost selected x
+    - leaves unselected primitives untouched
+    - pushes exactly one undo state
+  - **alignRightSelected**
+    - moves selected primitives to the rightmost selected x+width
+    - no-op when nothing selected
+  - **alignTopSelected**
+    - moves selected primitives to the topmost selected y
+    - no-op when nothing selected
+  - **alignBottomSelected**
+    - moves selected primitives to the bottommost selected y+height
+- **EditorActions — selectRect**
+  - selects primitives fully inside the rectangle
+  - returns false when no primitives are inside
+  - does not select a macro when all of its layers are hidden
+- **EditorActions — distancePrimitive**
+  - returns the minimum distance to the closest primitive
+  - returns MAX_SAFE_INTEGER (or similar very large) for empty model
+- **EditorActions — deleteAllSelected**
+  - removes selected primitives, leaves unselected ones
+  - saveState=true pushes an undo state
+  - saveState=false does NOT push an undo state
+- **EditorActions — setLayerForSelectedPrimitives**
+  - changes the layer for selected primitives only
+  - returns false when no primitives are selected
+
+## `circuit/controllers/library-loader.test.ts`
+
+- **loadStandardLibraries**
+  - fetches all five standard libraries and parses them with their prefixes
+  - uses localized bundles when the locale ships one, English otherwise
+  - passes each library body to readLibraryString
+  - a failing library does not prevent the others from loading
+  - a non-OK HTTP response is skipped with a warning
 
 ## `circuit/controllers/selection-actions.test.ts`
 
-Tests query and bulk-mutation helpers on `SelectionActions`. Lines are
-inserted directly into the primitive vector via a local `addLine` helper
-so the tests only exercise selection state, not creation.
+- **SelectionActions**
+  - getFirstSelectedPrimitive returns null when nothing selected
+  - getFirstSelectedPrimitive returns selected primitive
+  - setSelectionAll(true) selects everything
+  - setSelectionAll(false) deselects everything
+  - getSelectedPrimitives returns only selected primitives
+  - isUniquePrimitiveSelected is false for 0 selected
+  - isUniquePrimitiveSelected is true for 1 selected
+  - isUniquePrimitiveSelected is false for 2+ selected
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `getFirstSelectedPrimitive returns null when nothing selected` | With no selection, the helper returns `null` rather than throwing. |
-| `getFirstSelectedPrimitive returns selected primitive` | When one primitive has its selected flag set, the helper returns that primitive. |
-| `setSelectionAll(true) selects everything` | After calling with `true`, every primitive in the model has `isSelected() === true`. |
-| `setSelectionAll(false) deselects everything` | After calling with `false`, every primitive has `isSelected() === false`, even ones previously selected. |
-| `getSelectedPrimitives returns only selected primitives` | The returned array contains only the primitive(s) whose flag is set, not all primitives. |
-| `isUniquePrimitiveSelected is false for 0 selected` | With nothing selected, the helper reports `false`. |
-| `isUniquePrimitiveSelected is true for 1 selected` | With exactly one primitive selected, it reports `true`. |
-| `isUniquePrimitiveSelected is false for 2+ selected` | With two or more primitives selected, it reports `false`. |
+## `circuit/copy-all-as-primitives.test.ts`
 
----
+- **MacroVectorizer.vectorizeAllToString**
+  - flattens a flat macro and keeps plain primitives
+  - recursively flattens nested macros
+  - round-trips a macro-free drawing unchanged in primitive count
+
+## `circuit/image-background.test.ts`
+
+- **ImageAsCanvas**
+  - **initial state**
+    - starts with no image attached
+    - has default position and alpha
+  - **position / scale / alpha**
+    - setX and getX work
+    - setY and getY work
+    - setScale clamps to [0.01, 100]
+    - setAlpha clamps to [0, 1]
+  - **attachImage**
+    - attaches a data URL and sets natural dimensions
+    - getState returns the current state when image is attached
+  - **detach**
+    - removes the image and resets state
+  - **restoreState**
+    - restores image and position from state
+    - serializes image data into FCD and restores it on parse
+  - **trackExtremePoints**
+    - tracks nothing when no image is attached
+    - tracks image bounds when attached
 
 ## `circuit/keyboard-shortcuts.test.ts`
 
-Validates every keyboard shortcut wired in `CircuitPanel.onKeyDown()` by
-creating a live `CircuitPanel` instance in jsdom, focusing its canvas, and
-dispatching `KeyboardEvent`s. A stub 2D context and `ResizeObserver` shim
-are installed so the panel can construct without a real browser canvas.
+- **Keyboard Shortcuts**
+  - **Tool selection shortcuts**
+    - A selects the Selection tool
+    - L selects the Line tool
+    - T selects the Text tool
+    - B selects the Bezier tool
+    - P selects the Polygon tool
+    - O selects the Complex curve tool
+    - E selects the Ellipse tool
+    - G selects the Rectangle tool
+    - C selects the Connection tool
+    - I selects the PCB track tool
+    - Z selects the PCB pad tool
+    - uppercase letters also work for tool selection
+  - **Special keys**
+    - Space selects the Selection tool (FidoCadJ binding)
+    - Home triggers fit-to-view
+    - Escape clears selection and switches to Selection tool
+    - + zooms in
+    - = also zooms in (same key without Shift)
+    - - zooms out
+    - Ctrl+Z undoes the last edit
+    - Ctrl+Y redoes an undone edit
+    - Ctrl+Shift+Z also redoes
+  - **Select all**
+    - Ctrl+A selects every primitive when focus is on the canvas
+    - Cmd+A (metaKey) also selects all
+    - Ctrl+A does not select primitives when focus is on a text input
+    - plain A (no modifier) still switches to the Selection tool
+  - **Transform shortcuts (with selection)**
+    - R rotates selected primitives
+    - R does nothing when nothing is selected
+    - S mirrors selected primitives horizontally
+    - M starts move mode for selected elements
+    - M does nothing when nothing is selected
+    - Delete removes selected primitives
+    - Backspace removes selected primitives
+    - Delete does nothing when nothing is selected
+  - **Nudge with Alt + arrow keys**
+    - Alt+ArrowLeft nudges selected left by 1 unit
+    - Alt+ArrowRight nudges selected right by 1 unit
+    - Alt+ArrowUp nudges selected up by 1 unit
+    - Alt+ArrowDown nudges selected down by 1 unit
+    - Alt+arrow does nothing when nothing is selected
+  - **Clipboard shortcuts**
+    - Ctrl+C copies selected primitives to clipboard
+    - Ctrl+X cuts selected primitives
+    - Ctrl+D duplicates selected primitives
+  - **Input element does not steal shortcuts**
+    - tool shortcut keys are blocked when focus is on an input element
+    - tool shortcut keys are blocked when focus is on a textarea
+    - tool shortcut keys are blocked when focus is on a select element
+    - global Ctrl shortcuts still work when focus is on an input
+  - **Edge cases**
+    - Ctrl+Shift+S triggers save-as without triggering mirror
+    - Ctrl+E does not switch to Ellipse tool
+    - Ctrl+P does not switch to Polygon tool
+    - Ctrl+O does not switch to Complex curve tool
+    - Ctrl+Z does not switch to PCB pad tool
+    - unknown keys do not crash or change state
 
-The file is organised into seven `describe` blocks:
+## `circuit/listener-leaks.test.ts`
 
-- **Tool selection shortcuts** — single-letter keys switch the active tool.
-- **Special keys** — Space (fit-to-view), Escape (deselect+select tool),
-  zoom (`+`/`=`/`-`), undo/redo (`Ctrl+Z`, `Ctrl+Y`, `Ctrl+Shift+Z`).
-- **Transform shortcuts** — `R` (rotate), `S` (mirror), `M` (move mode),
-  `Delete`/`Backspace` (delete), all tested with and without a selection.
-- **Nudge with Alt + arrow keys** — all four directions, with an explicit
-  guard that nudge does nothing when nothing is selected.
-- **Clipboard shortcuts** — `Ctrl+C` (copy), `Ctrl+X` (cut, verifies
-  deletion), `Ctrl+D` (duplicate — dispatch without crash).
-- **Input element blocking** — when focus is on an `<input>`,
-  `<textarea>`, or `<select>`, tool shortcuts are suppressed; global
-  `Ctrl` shortcuts are still forwarded.
-- **Edge cases** — `Ctrl+E`/`Ctrl+P`/`Ctrl+O`/`Ctrl+Z` do not trigger
-  their unmodified tool counterparts; `Ctrl+Shift+S` does not mirror;
-  unknown keys (`q`, `1`, `F1`) do not crash.
+- **CircuitPanel listener leak prevention**
+  - CircuitPanel.destroy() calls lifecycle.abort()
+  - ExportDialog uses AbortController to clean up document listeners
 
-### Tool selection shortcuts
+## `circuit/macro-rotation.test.ts`
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `A selects the Selection tool` | `pressKey('a')` sets `getTool() === SELECTION`. |
-| `L selects the Line tool` | `pressKey('l')` → `LINE`. |
-| `T selects the Text tool` | `pressKey('t')` → `TEXT`. |
-| `B selects the Bezier tool` | `pressKey('b')` → `BEZIER`. |
-| `P selects the Polygon tool` | `pressKey('p')` → `POLYGON`. |
-| `O selects the Complex curve tool` | `pressKey('o')` → `COMPLEXCURVE`. |
-| `E selects the Ellipse tool` | `pressKey('e')` → `ELLIPSE`. |
-| `G selects the Rectangle tool` | `pressKey('g')` → `RECTANGLE`. |
-| `C selects the Connection tool` | `pressKey('c')` → `CONNECTION`. |
-| `I selects the PCB track tool` | `pressKey('i')` → `PCB_LINE`. |
-| `Z selects the PCB pad tool` | `pressKey('z')` → `PCB_PAD`. |
-| `uppercase letters also work for tool selection` | `pressKey('L')` and `pressKey('G')` work because `e.key` is lowercased internally. |
-
-### Special keys
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `Space triggers fit-to-view` | After adding content and forcing a low zoom, `pressKey(' ')` changes the zoom level via `zoomToFit()`. |
-| `Escape clears selection and switches to Selection tool` | All primitives are deselected, tool switches to `SELECTION`. |
-| `+ zooms in` | Zoom percentage increases after `pressKey('+')`. |
-| `= also zooms in (same key without Shift)` | The `=` key (same physical key as `+` without Shift) also increases zoom. |
-| `- zooms out` | Zoom percentage decreases after `pressKey('-')`. |
-| `Ctrl+Z triggers undo` | The undo shortcut dispatches without errors (the undo stack pre-exists). |
-| `Ctrl+Y triggers redo` | The redo shortcut dispatches without errors. |
-| `Ctrl+Shift+Z also triggers redo` | `Ctrl+Shift+Z` is an alias for redo. |
-
-### Transform shortcuts (with selection)
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `R rotates selected primitives` | A line's control-point coordinates change after a 90° clockwise rotation. |
-| `R does nothing when nothing is selected` | Without selection, `R` does not switch tools (it's a transform, not a tool shortcut). |
-| `S mirrors selected primitives horizontally` | A line from `(10,10)` to `(40,10)` becomes `(10,10)` to `(-20,10)` — the second point mirrors across `x=10`. |
-| `M starts move mode for selected elements` | Canvas cursor changes to `'move'` after `pressKey('m')` with a selection. |
-| `M does nothing when nothing is selected` | Without selection, `M` is a no-op that preserves the current tool. |
-| `Delete removes selected primitives` | Two selected primitives disappear from the model after `pressKey('Delete')`. |
-| `Backspace removes selected primitives` | A selected primitive is removed by `pressKey('Backspace')`. |
-| `Delete does nothing when nothing is selected` | With no selection, primitives are left untouched. |
-
-### Nudge with Alt + arrow keys
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `Alt+ArrowLeft nudges selected left by 1 unit` | All control points shift `-1` in X. |
-| `Alt+ArrowRight nudges selected right by 1 unit` | Control points shift `+1` in X. |
-| `Alt+ArrowUp nudges selected up by 1 unit` | Control points shift `+1` in Y. |
-| `Alt+ArrowDown nudges selected down by 1 unit` | Control points shift `-1` in Y. |
-| `Alt+arrow does nothing when nothing is selected` | Without selection, coordinates remain unchanged. |
-
-### Clipboard shortcuts
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `Ctrl+C copies selected primitives to clipboard` | The copy shortcut dispatches without throwing. |
-| `Ctrl+X cuts selected primitives` | After cut, the selected primitive is removed from the model. |
-| `Ctrl+D duplicates selected primitives` | The duplicate shortcut (copy + paste) dispatches without errors. |
-
-### Input element does not steal shortcuts
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `tool shortcut keys are blocked when focus is on an input element` | Pressing `'l'` while an `<input type="text">` has focus does NOT switch to the Line tool. |
-| `tool shortcut keys are blocked when focus is on a textarea` | Same guard for `<textarea>` elements. |
-| `tool shortcut keys are blocked when focus is on a select element` | Same guard for `<select>` elements. |
-| `global Ctrl shortcuts still work when focus is on an input` | `Ctrl+S` is forwarded to `onKeyDown` even when an input is focused (menu bar may be null, but no crash). |
-
-### Edge cases
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `Ctrl+Shift+S triggers save-as without triggering mirror` | `Ctrl+Shift+S` does not execute the `S` mirror transform. |
-| `Ctrl+E does not switch to Ellipse tool` | `Ctrl+E` is export, not ellipse — tool stays unchanged. |
-| `Ctrl+P does not switch to Polygon tool` | `Ctrl+P` is print, not polygon. |
-| `Ctrl+O does not switch to Complex curve tool` | `Ctrl+O` is open file, not complex curve. |
-| `Ctrl+Z does not switch to PCB pad tool` | `Ctrl+Z` is undo, not PCB pad. |
-| `unknown keys do not crash or change state` | `q`, `1`, and `F1` are harmless no-ops. |
-
----
+- **macro rotation preserves shape**
+  - flat macro is rigid across all orientation/mirror combinations
+  - nested macro with mirrored sub-macro is rigid across all orientations
 
 ## `circuit/model/drawing-model.test.ts`
 
-Covers the basic API of `DrawingModel`: the primitive vector, the changed
-flag, the layer list, and the macro library map.
+- **DrawingModel**
+  - new model is empty
+  - addPrimitive appends a primitive to the vector
+  - getPrimitiveVector returns mutable internal vector
+  - setPrimitiveVector replaces all primitives
+  - setChanged / getChanged flag works
+  - getLayers returns layers set by setLayers
+  - setLibrary / getLibrary round-trip
+  - resetLibrary creates empty map
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `new model is empty` | A freshly constructed `DrawingModel` has zero primitives. |
-| `addPrimitive appends a primitive to the vector` | `addPrimitive(p, true, null)` puts the primitive at the end of the vector. |
-| `getPrimitiveVector returns mutable internal vector` | The returned array is the same instance held by the model — `push` on it is observed by subsequent reads. |
-| `setPrimitiveVector replaces all primitives` | Replacing the vector wholesale leaves only the new contents. |
-| `setChanged / getChanged flag works` | The changed flag round-trips `true`/`false` reliably. |
-| `getLayers returns layers set by setLayers` | After loading the standard layer set, `getLayers()` returns at least 2 entries. |
-| `setLibrary / getLibrary round-trip` | A user-supplied `Map<string, MacroDesc>` is stored by reference and entries can be read back. |
-| `resetLibrary creates empty map` | `resetLibrary()` discards previous entries and leaves a zero-size map. |
+## `circuit/placement.test.ts`
 
----
+- **Primitive placement via tools**
+  - **line tool**
+    - places a line after two clicks (mousedown + mouseup each)
+    - resets between lines when switching away and back
+  - **rectangle tool**
+    - places a rectangle after two clicks
+  - **ellipse tool**
+    - places an ellipse after two clicks
+  - **bezier tool**
+    - places a bezier after four clicks
+  - **polygon tool**
+    - polygon tool is selectable and clickable without crash
+  - **connection tool**
+    - places a connection after one click
+  - **PCB line tool**
+    - places a PCB line after two clicks
+  - **PCB pad tool**
+    - places a PCB pad after one click
+  - **text tool**
+    - places text after one click (properties panel opens for editing)
+  - **tool state consistency**
+    - getTool returns the correct tool after setTool
+    - switching tools does not place primitives
+    - selection tool does not place primitives on click
+  - **rapid placement stress test**
+    - places 20 connection dots in rapid succession
+    - renders primitives at widely spread coordinates without clipping
+- **Macro placement**
+  - places a macro after one click
+  - places multiple macros sequentially
+  - macro is placed at correct position
 
-## `export/export-svg.test.ts`
+## `circuit/ruler.test.ts`
 
-Confirms that each `ExportSVG` method emits the right SVG element with
-correct attributes. Each test starts a fresh export with a 200×200 page,
-calls one method, ends the export, and inspects the resulting string.
+- **Ruler**
+  - is inactive and draws nothing by default
+  - reports the length in logical units and millimetres
+  - measures a diagonal with Pythagoras
+  - exposes its start point
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `exportStart / exportEnd produce valid SVG wrapper` | The output begins with an XML declaration and contains a balanced `<svg>` root. |
-| `exportLine produces line element` | A line emits `<line>` with the expected `x1`/`y1`/`x2`/`y2` attributes. |
-| `exportRectangle produces rect element` | A rectangle emits `<rect>` with `x`, `y`, `width`, `height` attributes. |
-| `exportOval produces ellipse element` | An oval emits `<ellipse>` with the centre and radii computed from the bounding box. |
-| `exportConnection produces circle element` | A connection dot emits `<circle>` at the right centre with radius equal to half the requested diameter. |
-| `exportPolygon produces polygon element` | A 3-point polygon emits `<polygon>` with a `points=` attribute. |
-| `exportBezier produces path element` | A cubic Bézier emits `<path>` with a `C` command in the `d=` attribute. |
-| `exportPCBLine produces line with stroke-width` | A PCB line emits `<line>` with an explicit `stroke-width` attribute. |
-| `exportPCBPad with oval style produces ellipse` | Pad style `0` (oval) renders as `<ellipse>`. |
-| `exportPCBPad with rect style produces rect` | Pad style `1` (rectangle) renders as `<rect>`. |
-| `exportAdvText produces text element` | An advanced-text call emits `<text>` containing the literal string and a `font-family` attribute. |
-| `dash style produces stroke-dasharray attribute` | A non-zero dash style adds a `stroke-dasharray` attribute to the line. |
-| `layer alpha < 1 produces opacity attribute` | Drawing on layer 12 (alpha 0.95) adds an `opacity` attribute. |
+## `circuit/views/export.test.ts`
 
----
+- **Export view — call ordering**
+  - a single line emits exactly one exportLine call
+  - per-layer pass: layer 0 primitives emitted before layer 1
+  - PCB pads emit one exportPCBPad in the layer pass and one in the hole pass
+  - hidden layer skips emission when exportInvisible=false
+  - hidden layer still emits when exportInvisible=true
+  - multiple primitive types are all emitted
+- **Export view — exportHeader**
+  - exportStart receives a dimension >= the drawing bounds + EXPORT_BORDER
+  - exportStart receives the layer list
+  - setDashUnit is called before exportStart
 
-## `geom/map-coordinates.test.ts`
+## `export/export-adversarial.test.ts`
 
-The largest unit-test file: it exercises `MapCoordinates`, the heart of
-the screen↔logical-coordinate transform. Covers defaults, mapping
-round-trips, orientation/mirror in macro mode, snap behaviour,
-magnitude clamping, the `push`/`pop` state stack, bounds tracking, and
-debug formatting.
+- **ExportSVG adversarial input**
+  - **extreme numeric values**
+    - MAX_SAFE_INTEGER coordinates do not throw
+    - -MAX_SAFE_INTEGER coordinates do not throw
+    - Infinity is emitted (and the file is still valid XML)
+    - NaN coordinates do not throw
+    - sub-pixel positive value rounds to its cLe form
+  - **text fields**
+    - long text (10000 chars) does not throw
+    - empty text is emitted as an empty <text> element
+    - XML metacharacters are escaped
+    - embedded </svg> cannot break out of the document
+    - font name with XML metacharacters is escaped
+    - surrogate-pair emoji survives without breaking output
+  - **many primitives**
+    - 1000 lines do not throw or blow the buffer
+  - **PCB pad style range**
+    - unknown pad style falls back to the oval (style 0) branch
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `default construction has zero center, magnitude 1, orientation 0, snap active` | The default state has all six getters returning the documented defaults. |
-| `mapX / unmapXnosnap round-trips correctly` | `unmapXnosnap(mapX(x))` returns `x` to within 5 decimal places. |
-| `mapY / unmapYnosnap round-trips correctly` | Same round-trip for the Y axis. |
-| `mapX / mapY with non-zero center offsets` | Mapping `(0, 0)` with centre `(200, 200)` returns `(200, 200)` on screen. |
-| `orientation affects mapping when isMacro=true` | In macro mode, orientation 1 rotates the local frame so a point at `(10, 0)` ends up at screen `(0, 10)`. |
-| `mirror in macro mode flips X mapping` | With macro+mirror enabled, the X coordinate is negated before centring. |
-| `snap mode rounds to grid step when active` | With snap enabled and grid step 10, `unmapXsnap` always returns a multiple of 10. |
-| `inactive snap returns raw value` | With snap disabled, `unmapXsnap` returns the unrounded logical X. |
-| `setXMagnitude clamps to MIN_MAGNITUDE` | Setting magnitude below the minimum clamps it to `MIN_MAGNITUDE`. |
-| `setXMagnitude clamps to MAX_MAGNITUDE` | Setting magnitude above the maximum clamps it to `MAX_MAGNITUDE`. |
-| `setOrientation accepts values 0-3` | Orientations 0 and 3 are accepted unchanged. |
-| `setOrientation clamps out of range values` | Orientation 5 clamps to 3, -1 clamps to 0. |
-| `setXCenter / setYCenter accepts negative values` | Negative centre coordinates are stored as-is. |
-| `getXGridStep returns default of 5` | The default X grid step is 5. |
-| `setXGridStep updates grid step` | Updating the grid step is observable from the getter. |
-| `setMagnitudes sets both X and Y magnitudes (clamped)` | `setMagnitudes(15, 25)` sets X=15 and Y=25 (within clamp range). |
-| `push / pop saves and restores full state` | After `push`, mutating and then `pop` restores centre, magnitudes, orientation and snap. |
-| `pop from empty stack does not throw` | Calling `pop()` with no pushed state is a no-op, not an exception. |
-| `trackPoint extends min/max bounds` | Each tracked point widens the recorded `min`/`max` bounds. |
-| `resetMinMax resets to extremes` | After reset, mins are `MAX_SAFE_INTEGER` and maxes are `MIN_SAFE_INTEGER`. |
-| `unmapXsnap with active snap rounds to grid step` | Mapping then unmapping a non-grid value with snap on lands on the grid. |
-| `toString describes the state` | The debug string contains `xCenter`, `yMagnitude` and `orientation`. |
-| `setMagnitudesNoCheck sets without clamping` | The `NoCheck` variant accepts values that the clamping setter would reject (e.g. 200, 300). |
-| `mirror and isMacro flags toggle correctly` | Both flags read back the value just assigned. |
+## `export/export-bitmap.test.ts`
 
----
+- **ExportBitmap**
+  - **renderToOffscreen**
+    - produces a canvas with valid dimensions at 150 DPI
+    - scales proportionally with DPI
+    - respects pixel mode dimensions (fits within bounds)
+    - applies the antiAlias option to the offscreen context
+    - blackAndWhite option triggers the pixel post-processing pass
+  - **renderLayerToOffscreen**
+    - renders a single layer and restores drawOnlyLayer to -1
+  - **canvasToPNGBlob**
+    - converts canvas to PNG blob via stubbed toBlob
+  - **canvasToJPEGBlob**
+    - converts canvas to JPEG blob via stubbed toBlob
+  - **exportBitmapBlobs**
+    - exports single PNG blob when splitLayers is false
+    - exports multiple blobs when splitLayers is true
+    - exports JPG blob
+  - **DPI presets**
+    - matches FidoCadJ standard presets
+  - **defaultBitmapOptions**
+    - returns sensible defaults
 
-## `globals/globals.test.ts`
+## `export/export-dialog.test.ts`
 
-Static utility helpers used across the codebase: file-name handling,
-extension manipulation, path prettifying, and numeric rounding.
+- **ExportDialog.executeExport**
+  - **format dispatch**
+    - format=svg calls exportSVG() and downloads .svg
+    - format=pgf calls exportPGF() and downloads .pgf
+    - format=tikz calls exportTikZ() and downloads .tex
+    - format=png calls getModel() and downloads .png (async)
+    - format=jpg calls getModel() and downloads .jpg (async)
+  - **filename extension handling**
+    - appends .svg when missing
+    - does not double-append .svg when already present
+    - appends .tex (not .tikz) for TikZ
+  - **blob lifecycle**
+    - SVG blob has the right MIME type
+    - PGF blob is text/plain
+    - TikZ blob is text/plain
+    - SVG blob size matches the exported string length
+    - text-format downloads revoke their object URLs immediately
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `DEFAULT_EXTENSION is fcd` | `Globals.DEFAULT_EXTENSION` is the string `"fcd"`. |
-| `prettifyPath truncates long path with ellipsis` | A long path is shortened below the requested length and contains `...`. |
-| `prettifyPath leaves short paths unchanged` | A path already shorter than the limit is returned untouched. |
-| `adjustExtension replaces existing extension` | `test.txt` → `test.svg` when the new extension is `svg`. |
-| `adjustExtension appends extension when none exists` | `test` becomes `test.fcd`. |
-| `checkExtension returns true for matching extension` | `file.fcd` matches `fcd`. |
-| `checkExtension returns false for different extension` | `file.svg` does not match `fcd`. |
-| `roundTo rounds to specified decimal places using trunc` | `roundTo(3.14159, 2)` yields a value close to `3.14`. |
-| `roundTo without ch rounds to 2 decimal places using round` | The single-arg form defaults to 2 decimals. |
-| `getFileNameOnly strips path and extension` | `/path/to/file.fcd` becomes `file`. |
-| `getFileNameOnly works with just a filename` | `file.fcd` becomes `file`. |
-| `getFileNameOnly works without extension` | `/path/to/file` becomes `file`. |
-| `adjustExtension handles quoted paths` | A path wrapped in double quotes is unwrapped before the extension is swapped. |
+## `export/export-math.test.ts`
 
----
+- **Math export — SVG**
+  - emits glyph paths for math, not literal $ source
+  - leaves plain text as a <text> element (no stray paths from text)
+  - falls back to literal text for malformed math
+- **Math export — PDF**
+  - produces a valid PDF that draws math as path fills
 
-## `layers/layer-desc.test.ts`
+## `export/export-pdf.test.ts`
 
-Covers the `LayerDesc` model and the `StandardLayers` factory.
+- **ExportPDF**
+  - **document structure**
+    - emits a valid PDF 1.4 header and EOF
+    - includes catalog, pages, page, and font objects
+    - emits a cross-reference table with 15 entries (objects 0..14)
+    - declares MediaBox sized for the drawing plus border
+    - initializes content stream with origin transform and line-cap
+  - **primitives**
+    - exportLine emits an m/l/S sequence
+    - exportRectangle filled emits four edges + f
+    - exportRectangle stroke-only emits s
+    - exportBezier emits m + c S cubic-curve operator
+    - exportPolygon emits move + line vertices + f* (fill)
+    - exportPolygon stroke-only emits s
+    - exportConnection draws a filled disc via ellipse + f
+    - exportPCBLine emits stroke-width and m/l/S
+    - exportPCBPad style 1 (square) draws filled square + hole
+  - **color and dash state**
+    - emits rg/RG color operators for the active layer
+    - does not repeat color operators when layer stays the same
+    - emits [] 0 d to reset dashing when a solid stroke follows a dashed one
+  - **text**
+    - exportAdvText emits BT/ET text block
+    - escapes PDF special characters in text
+    - routes Times and Courier font names to dedicated font slots
+  - **arrows**
+    - filled arrow ends with f*
+    - limiter arrow draws an extra perpendicular line
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `default constructor creates visible layer` | A no-arg `LayerDesc` is visible, has empty description, alpha 1.0. |
-| `constructor with parameters sets values` | The (color, visible, description, alpha) overload stores all four. |
-| `isVisible / setVisible toggles visibility` | The visibility flag round-trips correctly. |
-| `getDescription / setDescription round-trip` | The description string is preserved across set/get. |
-| `setColor / getColor round-trip` | A default-constructed `LayerDesc` has `null` colour. |
-| `isModified / setModified flag` | The modified flag starts `false` and tracks updates. |
-| `setAlpha / getAlpha round-trip` | Alpha (0.5) is stored and read back. |
-| `StandardLayers creates visible layers` | `createStandardLayers()` returns a non-empty list whose first layer is visible. |
-| `StandardLayers layers have descriptions` | At least one standard layer carries a non-empty description. |
+## `export/export-pgf.fixtures.test.ts`
 
----
-
-## `librarymodel/library-model.test.ts`
-
-Tests how the flat `Map<string, MacroDesc>` held by `DrawingModel` is
-rebuilt into the `Library` → `Category` → `MacroDesc` hierarchy used by
-the macro picker. Library content comes from a small inline `SAMPLE_FCL`
-string parsed by `ParserActions`.
-
-### `LibraryModel`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `builds Library/Category hierarchy from flat MacroDesc map` | After parsing the sample library, `getAllLibraries()` contains a library with filename `"testlib"`. |
-| `getAllMacros returns the same map as drawingModel.getLibrary` | The reference returned is identical (`===`) to the model's library map — no copy. |
-| `groups macros into correct categories` | The library exposes an `Active` category (defined by `{Active}` in the sample). |
-| `category contains correct macros` | The `u001` macro key is present somewhere in the library's categories. |
-| `forceUpdate fires libraryLoaded on all listeners` | Registered listeners receive exactly one `libraryLoaded` callback per `forceUpdate`. |
-| `removeLibraryListener stops receiving events` | After removal, the listener no longer receives `libraryLoaded`. |
-
-### `LibraryModel static helpers`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `getPlainMacroKey strips library prefix` | `testlib.r001` → `r001`. |
-| `getPlainMacroKey works for unprefixed keys` | `000` is returned untouched (no prefix to strip). |
-| `createMacroKey produces lowercase prefixed key` | `("PCB", "R00")` → `pcb.r00`. |
-
-### `Library`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `containsMacroKey finds macro in any category` | `testLib.containsMacroKey("u001")` is `true`; an unknown key returns `false`. |
-
----
-
-## `parser/primitive-round-trip.test.ts`
-
-The largest test file by case count. It validates `ParserActions`
-parser/serializer for all 11 FCD primitives plus FCJ extension tokens,
-FJC global config tokens, incremental parsing, and library reading.
-
-The pattern used throughout is the **stability check** `assertStable`:
-parse the input once, serialise with `getText(false)` to produce `T1`,
-parse `T1`, serialise again to produce `T2`, and assert `T1 === T2`.
-This proves the textual form is a fixed point of the parse/serialise
-round-trip — without comparing against any external (Java) reference
-output. The suite saves and restores `Globals.diameterConnection`,
-`Globals.lineWidth`, and `Globals.lineWidthCircles` between cases so
-FJC tokens in one test cannot leak into another.
-
-### `PrimitiveLine (LI)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses and re-serializes a basic line` | `LI 10 20 30 40 0` round-trips byte-for-byte. |
-| `preserves non-zero layer` | A line on layer 3 keeps that layer through the round-trip. |
-| `produces empty output for zero-length line (no name/value)` | A degenerate line where both endpoints coincide is dropped on serialisation. |
-| `is stable from test size file` | An LI prefixed with `FJC C 1.5`/`FJC B 0.25` is stable. |
-| `round-trips multiple lines` | A document with three `LI` rows survives the round-trip. |
-
-### `PrimitiveBezier (BE)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses and re-serializes a bezier curve` | `BE 50 5 20 60 70 35 50 70 0` round-trips byte-for-byte. |
-| `preserves layer on bezier` | A BE on layer 2 keeps its layer. |
-| `is stable from test size file` | A BE preceded by FJC config tokens is stable. |
-
-### `PrimitiveRectangle (RV/RP)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses empty rectangle RV` | `RV 25 20 95 75 0` round-trips. |
-| `parses filled rectangle RP` | `RP 10 10 50 40 0` round-trips. |
-| `preserves layer` | Layer 5 is preserved. |
-| `is stable from test size file` | RV with FJC config is stable. |
-
-### `PrimitiveOval (EV/EP)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses empty oval EV` | `EV 45 15 95 65 0` round-trips. |
-| `parses filled oval EP` | `EP 10 10 40 40 0` round-trips. |
-| `is stable from test size file` | EV with FJC config is stable. |
-
-### `PrimitivePolygon (PV/PP)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses open polygon PV` | A 5-point `PV` round-trips and contains the expected `PV `, point list and trailing layer. |
-| `parses filled polygon PP` | A 3-point `PP` round-trips. |
-| `is stable from test size file` | PV with FJC config is stable. |
-
-### `PrimitiveComplexCurve (CV/CP)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses closed filled curve CP` | An 8-point closed filled curve round-trips. |
-| `parses open unfilled curve CV` | An 8-point open curve round-trips. |
-| `is stable from test size file (open curve)` | A curve with FJC `C`/`A`/`B` config is stable. |
-| `roundtrips a short CV` | A 4-point `CV` round-trips byte-for-byte. |
-
-### `PrimitivePCBPad (PA)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses a PCB pad with oval style` | `PA … 0 0` (style 0 = oval) round-trips. |
-| `parses a PCB pad with rect style` | `PA … 1 0` (style 1 = rect) round-trips. |
-| `parses a PCB pad with rounded rect style` | `PA … 2 0` (style 2 = rounded rect) round-trips. |
-| `is stable from test size file` | A PA with FJC config is stable. |
-| `preserves layer` | A PA on layer 3 keeps its layer. |
-
-### `PrimitivePCBLine (PL)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses a PCB line with integer width` | `PL 10 110 90 110 5 0` round-trips. |
-| `parses a PCB line with different widths` | Two PLs with widths 3 and 4 round-trip. |
-| `preserves layer` | A PL on layer 2 with width 2 round-trips and the width is serialised as an integer. |
-| `is stable from test size file` | A PL with FJC config is stable. |
-
-### `PrimitiveConnection (SA)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses a connection dot` | `SA 70 60 0` round-trips. |
-| `parses multiple connections` | Three SA tokens round-trip. |
-| `preserves layer` | A SA on layer 3 keeps its layer. |
-| `is stable from test size file` | An SA with FJC config is stable. |
-
-### `PrimitiveAdvText (TY/TE)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses TY with default font (*)` | `TY 85 25 5 3 0 0 0 * A` round-trips with the `*` font marker preserved. |
-| `parses TY with named font` | A TY with `Helvetica` and a multi-word string round-trips. |
-| `converts TE to TY on output` | The legacy `TE` form is normalised to `TY` on first serialisation, with default sizes/style. |
-| `TY output is stable (TY → TY, not TE)` | Once converted, subsequent round-trips stay as `TY`. |
-| `preserves orientation` | A TY with rotation 20 keeps it. |
-| `preserves style flags` | A TY with style flag 4 (bold) keeps it. |
-| `handles multi-word text` | Text containing several spaces is preserved. |
-| `is stable from test size file` | A named-font TY with FJC config is stable. |
-
-### `PrimitiveMacro (MC)`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `parses a macro and re-serializes its key` | `MC 100 100 0 0 testmacro` round-trips when the macro is registered in the model's library. |
-| `preserves orientation` | An MC with orientation 2 keeps it. |
-| `preserves mirror flag` | An MC with the mirror bit set keeps it. |
-| `is stable (parse → getText → parse → getText)` | An MC is stable when re-parsed against a freshly built model that holds the same macro definition. |
-| `silently skips unknown macros (no library entry)` | Parsing an MC whose key is not in the library does not throw — the unknown reference is silently dropped. |
-
-### `Full document stability`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `is stable for individual line primitives` | Single-`LI` document is stable. |
-| `is stable for individual bezier` | Single-`BE` document is stable. |
-| `is stable for a document with mixed primitives (no FCJ)` | A 15-primitive document covering every base primitive type is stable. |
-| `is stable for test_pattern.fcd (strips FCJ, all base primitives present)` | A large reference document modelled on `test_pattern.fcd` (without FCJ extensions) is stable. |
-| `primitive count is correct after parsing` | Parsing a 3-line document leaves exactly 3 entries in `getPrimitiveVector()`. |
-
-### `FJC configuration parsing`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `FJC C changes diameterConnection` | `FJC C 2.5` updates `Globals.diameterConnection`. |
-| `FJC A changes lineWidth` | `FJC A 0.5` updates `Globals.lineWidth`. |
-| `FJC B changes lineWidthCircles` | `FJC B 0.25` updates `Globals.lineWidthCircles`. |
-
-### `FCJ extension tokens`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `line with FCJ arrow+dash parses without error` | `LI` followed by `FCJ 0 0 3 2 4 0` parses; with extensions disabled the FCJ payload is dropped on output. |
-| `bezier with FCJ dash parses without error` | `BE` + `FCJ 0 0 0 0 2 0` parses without throwing. |
-| `rectangle with FCJ fill type parses without error` | `RV` + `FCJ 2 0` parses. |
-| `oval with FCJ fill type parses without error` | `EV` + `FCJ 2 0` parses. |
-| `polygon with FCJ fill type parses without error` | `PV` + `FCJ 2 0` parses. |
-| `complex curve with FCJ parses without error` | `CV` + `FCJ 3 0 3 2 0 0` parses. |
-
-### `ParserActions.addString`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `addString appends to existing primitives` | After parsing one primitive, `addString` adds another rather than replacing. |
-| `parseString clears previous primitives` | Calling `parseString` again replaces the primitive vector entirely. |
-
-### `readLibraryString`
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `loads a simple library and makes macro parseable` | A library defining `RLED` is parsed, and the resulting key (lowercased and prefixed) appears in `model.getLibrary()`. |
-
----
+- **ExportPGF — fixture corpus**
+    - ${name} matches committed TS snapshot
 
 ## `export/export-pgf.test.ts`
 
-Confirms that each `ExportPGF` method emits correct PGF commands for
-LaTeX embedding. Each test starts a fresh export with a 200×200 page,
-calls one or more draw methods, ends the export, and inspects the
-resulting PGF string.
+- **ExportPGF**
+  - exportStart / exportEnd produce valid PGF wrapper
+  - exportStart emits layer color definitions
+  - exportLine produces pgfline command
+  - exportLine emits color switch for different layers
+  - exportLine does not re-emit color for same layer
+  - exportLine with arrows emits arrow polygon
+  - exportLine with empty arrow style emits qstroke
+  - exportRectangle produces pgfmoveto/pgflineto chain
+  - exportRectangle filled emits pgffill
+  - exportRectangle unfilled emits pgfqstroke
+  - exportOval produces pgfellipse command
+  - exportOval filled emits fillstroke
+  - exportOval unfilled emits stroke
+  - exportConnection produces pgfcircle command
+  - exportPolygon produces pgfmoveto/pgflineto chain
+  - exportPolygon filled emits pgffill
+  - exportBezier produces pgfcurveto and pgfstroke
+  - exportPCBLine produces pgfline with correct width
+  - exportPCBLine always uses solid dash (dash style 0)
+  - exportPCBPad with oval style produces pgfellipse
+  - exportPCBPad with rect style produces pgfrect
+  - exportPCBPad with rounded style produces pgfrect
+  - exportPCBPad onlyHole emits white ellipse
+  - exportAdvText produces pgfputat with escaped text
+  - exportAdvText escapes LaTeX special chars
+  - dash styles emit pgfsetdash commands
+  - dash style 0 emits solid pattern
+  - dash phase is emitted correctly
+  - exportMacro returns false (expansion signal)
+  - exportCurve returns false (expansion signal)
+  - line width change emits pgfsetlinewidth
+  - same line width on same layer does not re-emit
+  - integer coordinates are emitted without decimal point
+  - setDashUnit formats PGF-style dash with pt separators
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `exportStart / exportEnd produce valid PGF wrapper` | Output wraps with `\\begin{pgfpicture}` … `\\end{pgfpicture}` and includes `\\pgfsetxvec`/`\\pgfsetyvec`. |
-| `exportLine produces PGF line command` | A line emits `\\pgfpathmoveto`/`\\pgfpathlineto` with correct coords. |
-| `exportRectangle produces PGF rect command` | A rect emits `\\pgfpathrectanglecorners`. |
-| `exportOval produces PGF ellipse commands` | An oval emits sequential `\\pgfpathmoveto` + `\\pgfpatharc` commands. |
-| `exportConnection produces PGF circle` | A connection dot emits `\\pgfpathcircle`. |
-| `exportPolygon produces PGF polygon` | A 3-point polygon emits `\\pgfpathmoveto` + two `\\pgfpathlineto` + `\\pgfpathclose`. |
-| `exportBezier produces PGF curve` | A cubic Bézier emits `\\pgfpathmoveto` + `\\pgfpathcurveto`. |
-| `exportPCBLine produces PGF line with line width` | A PCB line emits `\\pgfsetlinewidth` before the path. |
-| `exportPCBPad with oval style` | Pad style 0 (oval) emits `\\pgfpathcircle` + `\\pgfusepathqfillstroke`. |
-| `exportPCBPad with rect style` | Pad style 1 (rect) emits `\\pgfpathrectanglecorners`. |
-| `exportPCBPad with rounded rect style` | Pad style 2 (rounded rect) emits rect with rounded corners. |
-| `exportAdvText produces PGF text command` | Text emits `\\pgftext` with font and position. |
-| `dash style produces dash pattern` | Non-zero dash style adds a `\\pgfsetdash` command. |
-| `layer alpha < 1 produces transparency` | Layer with alpha 0.95 emits `\\pgfsetfillopacity`/`\\pgfsetstrokeopacity`. |
-| `default layer alpha 1 produces no opacity commands` | Fully opaque layer does not emit opacity commands. |
-| `connection on layer with alpha produces PGF circle with opacity` | Connection on transparent layer includes opacity commands. |
-| `complex curve produces PGF arc sequences` | Complex curve with multiple points emits proper arc path. |
-| `empty circuit produces minimal PGF` | Empty model emits only the wrapper without any drawing commands. |
-| `empty circuit produces consistent empty output` | Empty model output is stable across multiple calls. |
-| `multiple line segments produce correct PGF` | Multiple lines emit multiple path pairs. |
-| `behaves correctly with multiple primitives` | Mixed-primitive model emits correct commands in order. |
-| `exportPCBLine with dash produces linewidth + dash` | PCB line with dash has both \\pgfsetlinewidth and \\pgfsetdash. |
-| `exportPCBLine with layer alpha produces linewidth + opacity` | PCB line on transparent layer has both \\pgfsetlinewidth and opacity. |
-| `filled rectangle uses pgfpathrectanglecorners and usepathqfillstroke` | Filled rect emits proper fill command. |
-| `filled oval uses pgfpathmoveto+pgfpatharc and usepathqfillstroke` | Filled oval emits proper fill command. |
-| `filled polygon uses pgfpathclose and usepathqfillstroke` | Filled polygon emits close + fill. |
-| `arrows on line produce pgfsetarrowsstart/end` | Arrow-start and arrow-end flags emit arrow commands. |
-| `arrow style empty produces pgfsetarrowsend with o` | Empty arrow style emits `o` shape. |
-| `arrow style limiter produces pgfsetarrowsend with bar` | Limiter arrow style emits `|` shape. |
-| `arrow style empty+limiter produces composite arrows` | Combined style emits both `o` and `|`. |
-| `arrow length/width produce pgfsetarrowsend with size` | Arrow length and half-width affect emitted arrow size. |
-| `complex curve with arrows produces arrow commands` | Complex curve with arrow flags emits arrow commands. |
-| `bezier with arrows produces arrow commands` | Bézier with arrow start/end emits arrow commands. |
-| `bezier with dash produces pgfsetdash` | Bézier with dash emits dash pattern command. |
-| `bezier with layer alpha produces opacity` | Bézier on transparent layer emits opacity commands. |
-| `text produces pgftext with escaped content` | Text content is placed inside `\\pgftext` and special chars are escaped. |
-| `text with different font family renders correctly` | Font family name is passed to `\\pgftext`. |
-| `text with bold/italic style flags` | Bold and italic flags produce correct font commands. |
-| `text on layer with alpha produces opacity` | Text on transparent layer has opacity. |
+## `export/export-svg.fixtures.test.ts`
 
----
+- **ExportSVG — fixture corpus**
+    - ${name} matches committed TS snapshot
+
+## `export/export-svg.java-parity.test.ts`
+
+- **ExportSVG — Java parity (semantic)**
+    - ${name}: TS drawing elements match Java reference
+
+## `export/export-svg.test.ts`
+
+- **ExportSVG**
+  - exportStart / exportEnd produce valid SVG wrapper
+  - exportLine produces line element
+  - exportRectangle produces rect element
+  - exportOval produces ellipse element
+  - exportConnection produces circle element
+  - exportPolygon produces polygon element
+  - exportBezier produces path element
+  - exportPCBLine produces line with stroke-width
+  - exportPCBPad with oval style produces ellipse
+  - exportPCBPad with rect style produces rect
+  - exportAdvText produces text element
+  - dash style produces stroke-dasharray attribute
+  - layer alpha < 1 produces opacity attribute
+  - **exportAdvText mirror + rotation**
+    - not-mirrored, rotated 90° emits rotate(-90)
+    - mirrored, rotated 90° emits rotate(90) — Java convention
+    - mirrored, not rotated emits no rotate (and negative xscale)
+    - not-mirrored, rotated 180° emits rotate(-180)
+  - **PCB elements honour layer alpha**
+    - exportConnection on layer 12 (alpha 0.95) emits opacity
+    - exportConnection on layer 0 (alpha 1.0) does not emit opacity
+    - exportPCBLine on layer 12 emits opacity
+    - exportPCBLine on layer 0 does not emit opacity
+    - exportPCBPad oval style on layer 12 emits opacity
+    - exportPCBPad rect style on layer 12 emits opacity
+    - exportPCBPad rounded style on layer 12 emits opacity
+    - exportPCBPad onlyHole does NOT emit opacity (hole is always white)
+    - exportPCBPad oval style on layer 0 does not emit opacity
+  - **exportArrow honours flag bits**
+    - style=0 (neither flag) emits filled polygon
+    - style=1 (limiter only) emits filled polygon AND limiter line
+    - style=2 (empty only) emits no-fill polygon and no extra line
+    - style=3 (empty + limiter) emits no-fill polygon AND limiter line
+
+## `export/export-tikz.fixtures.test.ts`
+
+- **ExportTikZ — fixture corpus**
+    - ${name} matches committed TS snapshot
 
 ## `export/export-tikz.test.ts`
 
-Confirms that each `ExportTikZ` method emits correct TikZ commands for
-LaTeX embedding. Structure mirrors `export-pgf.test.ts`.
+- **ExportTikZ**
+  - exportStart / exportEnd produce valid TikZ wrapper
+  - exportStart emits layer color definitions
+  - exportLine produces draw command with correct coords
+  - exportLine emits correct layer color
+  - exportLine with arrows emits arrow polygons
+  - exportLine with empty arrow emits draw (not filldraw)
+  - exportRectangle uses rectangle syntax
+  - exportRectangle filled uses filldraw
+  - exportRectangle unfilled uses draw
+  - exportOval produces ellipse syntax
+  - exportOval filled uses filldraw
+  - exportConnection produces circle syntax
+  - exportPolygon produces point chain with cycle
+  - exportPolygon filled uses filldraw
+  - exportBezier produces controls syntax
+  - exportPCBLine emits correct line width
+  - exportPCBLine has no dash pattern (always solid)
+  - exportPCBPad oval produces ellipse
+  - exportPCBPad square produces rectangle ++
+  - exportPCBPad rounded produces rectangle ++
+  - exportPCBPad onlyHole emits white filldraw
+  - exportAdvText produces node with anchor
+  - exportAdvText escapes LaTeX special chars
+  - dash style emits dash pattern option
+  - solid dash (style 0) has no dash pattern
+  - dash phase emits dash phase option
+  - arrow with limiter emits limiter line
+  - exportMacro returns false
+  - exportCurve returns false
+  - integer coords emitted without decimals
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `exportStart / exportEnd produce valid TikZ wrapper` | Output wraps with `\\begin{tikzpicture}` … `\\end{tikzpicture}` and includes `yscale=-1`, `x=1pt`. |
-| `exportLine produces TikZ draw command` | Line emits `\\draw` with coordinate pairs. |
-| `exportRectangle produces TikZ draw command` | Rectangle emits `\\draw` with rectangle notation. |
-| `exportOval produces TikZ draw command` | Oval emits `\\draw` with ellipse notation. |
-| `exportConnection produces TikZ fill command` | Connection dot emits `\\fill` with circle notation. |
-| `exportPolygon produces TikZ draw command` | Polygon emits `\\draw` with `-- cycle`. |
-| `exportBezier produces TikZ draw command` | Bézier emits `\\draw` with `.. controls ..` syntax. |
-| `exportPCBLine produces TikZ draw with line width` | PCB line emits `\\draw[line width=...]`. |
-| `exportPCBPad with oval style` | Pad oval style emits `\\draw` with `rounded corners`. |
-| `exportPCBPad with rect style` | Pad rect style emits `\\draw` with rectangle notation. |
-| `exportPCBPad with rounded rect style` | Pad style 2 emits with `rounded corners` option. |
-| `exportAdvText produces TikZ node command` | Text emits `\\node` with font and position. |
-| `dash style produces dash pattern option` | Dash style adds `dash pattern=` to draw options. |
-| `layer alpha < 1 produces opacity option` | Layer with alpha adds `opacity=` to draw options. |
-| `default layer alpha 1 produces no opacity option` | Fully opaque layer omits opacity. |
-| `connection on layer with alpha produces fill with opacity` | Connection on transparent layer includes opacity. |
-| `complex curve produces multi-segment draw` | Complex curve with multiple points emits proper path. |
-| `empty circuit produces minimal TikZ` | Empty model emits wrapper only. |
-| `empty circuit produces consistent empty output` | Empty model output is stable. |
-| `multiple line segments produce correct TikZ` | Multiple lines emit multiple draw commands. |
-| `behaves correctly with multiple primitives` | Mixed primitive types are rendered correctly. |
-| `filled rectangle uses filldraw` | Filled rect emits `\\filldraw` instead of `\\draw`. |
-| `filled oval uses filldraw` | Filled oval emits `\\filldraw`. |
-| `filled polygon uses filldraw` | Filled polygon emits `\\filldraw`. |
-| `arrows on line produce arrow options` | Arrow start/end add arrow tip options. |
-| `arrow style empty produces o-o option` | Empty arrow style emits `o-`/`-o` tips. |
-| `arrow style limiter produces bar option` | Limiter style emits `|-`/`-|` tips. |
-| `complex curve with arrows` | Complex curve with arrows emits arrow tips. |
-| `bezier with arrows` | Bézier with arrows emits proper arrow options. |
-| `bezier with dash produces dash pattern` | Bézier with dash emits dash pattern option. |
-| `bezier with layer alpha produces opacity` | Bézier on transparent layer includes opacity. |
-| `text produces node with content` | Text is placed in a TikZ `\\node`. |
-| `text with different font family` | Font family name is passed to the node options. |
-| `text with style flags` | Bold/italic flags produce correct font options. |
+## `export/latex-escape.test.ts`
 
----
+- **escapeLatex**
+  - escapes backslash
+  - escapes curly braces
+  - escapes hash, dollar, percent, ampersand
+  - escapes underscore
+  - escapes caret
+  - escapes tilde
+  - does not escape non-special characters
+  - handles empty string
+  - handles complex LaTeX-like input
+  - handles multiple special chars in sequence
+
+## `geom/drawing-size.test.ts`
+
+- **DrawingSize.getImageSize**
+  - empty model returns a unit dimension and zero origin
+  - single horizontal line: width is the line length, origin at top-left
+  - negative coordinates are clamped to 0 on read
+  - mutates the model.changed flag
+  - countMin=false uses absolute max instead of width=max-min
+  - clamps min dimensions to 1 (never returns zero)
+- **DrawingSize.getImageOrigin**
+  - empty model returns (0, 0)
+  - returns the bounding-box top-left for a non-empty model
+- **DrawingSize.calculateZoomToFit**
+  - returns a MapCoordinates instance fitting the drawing into the target box
+
+## `geom/geometric-distances.test.ts`
+
+- **GeometricDistances.pointToSegment**
+  - returns 0 for a point on the segment
+  - returns the perpendicular distance for a point off the segment
+  - returns distance to endpoint when the projection falls outside
+  - handles zero-length segments (point-to-point fallback)
+  - handles vertical segments
+  - returns MIN_DISTANCE for a point far away
+- **GeometricDistances.pointInPolygon**
+  - returns true for a point clearly inside a triangle
+  - returns false for a point clearly outside a triangle
+  - handles a square
+- **GeometricDistances.pointInEllipse**
+  - returns true for the centre of the bounding box
+  - returns false for a point just outside the bounding box
+  - returns false for a corner of the bounding box (outside the ellipse)
+- **GeometricDistances.pointInRectangle**
+  - returns true for points strictly inside
+  - returns true on the boundary
+  - returns false outside
+- **GeometricDistances.pointToRectangle**
+  - returns 0 for a point on the rectangle edge
+  - returns the distance to the nearest edge
+- **GeometricDistances.pointToBezier**
+  - returns 0 for a point on a flat horizontal bezier
+  - returns a moderate distance for a point off the curve
+- **GeometricDistances.pointToPoint**
+  - returns the Euclidean distance for nearby points
+  - returns MIN_DISTANCE for far-apart points
+
+## `geom/map-coordinates.test.ts`
+
+- **MapCoordinates**
+  - default construction has zero center, magnitude 1, orientation 0, snap active
+  - mapX / unmapXnosnap round-trips correctly
+  - mapY / unmapYnosnap round-trips correctly
+  - mapX / mapY with non-zero center offsets
+  - orientation affects mapping when isMacro=true
+  - mirror in macro mode flips X mapping
+  - snap mode rounds to grid step when active
+  - inactive snap returns raw value
+  - setXMagnitude clamps to MIN_MAGNITUDE
+  - setXMagnitude clamps to MAX_MAGNITUDE
+  - setOrientation accepts values 0-3
+  - setOrientation clamps out of range values
+  - setXCenter / setYCenter accepts negative values
+  - getXGridStep returns default of 5
+  - setXGridStep updates grid step
+  - setMagnitudes sets both X and Y magnitudes (clamped)
+  - push / pop saves and restores full state
+  - pop from empty stack does not throw
+  - trackPoint extends min/max bounds
+  - resetMinMax resets to extremes
+  - unmapXsnap with active snap rounds to grid step
+  - toString describes the state
+  - setMagnitudesNoCheck sets without clamping
+  - mirror and isMacro flags toggle correctly
+  - center stays pinned after canvas resize (no DPR change)
+  - logical-to-screen mapping is consistent after magnitude-only change
+  - center preservation ensures origin maps consistently across DPR changes
+
+## `globals/globals.test.ts`
+
+- **Globals**
+  - DEFAULT_EXTENSION is fcd
+  - prettifyPath truncates long path with ellipsis
+  - prettifyPath leaves short paths unchanged
+  - adjustExtension replaces existing extension
+  - adjustExtension appends extension when none exists
+  - checkExtension returns true for matching extension
+  - checkExtension returns false for different extension
+  - roundTo rounds to specified decimal places using trunc
+  - roundTo without ch rounds to 2 decimal places using round
+  - getFileNameOnly strips path and extension
+  - getFileNameOnly works with just a filename
+  - getFileNameOnly works without extension
+  - adjustExtension handles quoted paths
+  - parseCoord returns the value for valid non-negative integers
+  - parseCoord clamps negative coordinates to 0
+  - parseCoord clamps values above MAX_COORD
+  - parseCoord returns null for non-numeric tokens
+  - parseCoord preserves fractional input
+  - coord returns 0 for non-numeric tokens
+  - formatCoord writes up to 3 decimals, trimming trailing zeros
+  - round-trips a fractional coordinate through parse and format
+
+## `graphic/color-canvas.test.ts`
+
+- **ColorCanvas.getRGB**
+  - returns a non-negative integer
+  - round-trips through setRGB
+  - toString(16) produces valid 6-digit hex
+  - red (255,0,0) produces #ff0000
+  - white (255,255,255) produces #ffffff
+  - navy (0,0,128) produces #000080
+  - all standard layer colors produce valid 6-digit hex
+  - fromRGB + getRGB is idempotent
+
+## `graphic/dash-scaling.test.ts`
+
+- **GraphicsCanvas.applyStroke — dash scaling**
+  - solid stroke (dashStyle 0) passes an empty array
+  - dashed stroke (dashStyle 1) passes a non-empty array
+  - scales dash pattern proportionally to line width
+  - doubling line width doubles the dash pattern
+  - dashStyle 4 (multi-segment) scales all segments
+  - handles minimum line width (D_MIN clamping)
+  - handles high zoom (large line width)
+  - all 5 dash styles produce valid output
+
+## `graphic/math-layout.test.ts`
+
+- **splitMathSegments**
+  - returns empty array for empty string
+  - plain text is a single text segment
+  - splits inline math
+  - splits display math
+  - mixes inline and display
+  - treats an unclosed $ as literal text
+  - handles consecutive inline blocks
+- **layoutMath**
+  - renders pure inline math to a single positioned math segment
+  - lays out mixed text and math left to right with monotonic x
+  - falls back to literal text on malformed LaTeX
+  - all-plain-text has no math
+  - display math produces taller geometry than inline for the same source
+
+## `i18n/routing.test.ts`
+
+- **i18n routing**
+  - **SUPPORTED_LOCALES**
+    - contains the 11 FidoCadJ languages
+    - has a native-language label for every locale
+  - **isSupportedLocale**
+    - returns true for supported locales
+    - returns false for unknown locales
+  - **loadLocale**
+    - loads the requested locale bundle
+    - falls back to English for an unknown locale code
+    - keeps the English bundle loaded for missing-key fallback
+  - **setLocale**
+    - persists the choice in localStorage
+    - notifies subscribers when the locale actually changes
+    - falls back to English for unknown locales
+  - **getPreferredLocale**
+    - returns a saved locale from localStorage if valid
+    - ignores an unsupported saved locale
+  - **getString**
+    - returns the active-locale value when present
+    - falls back to English when the active bundle lacks a key
+
+## `layers/layer-desc.test.ts`
+
+- **LayerDesc**
+  - default constructor creates visible layer
+  - constructor with parameters sets values
+  - isVisible / setVisible toggles visibility
+  - getDescription / setDescription round-trip
+  - setColor / getColor round-trip
+  - isModified / setModified flag
+  - setAlpha / getAlpha round-trip
+  - StandardLayers creates visible layers
+  - StandardLayers layers have descriptions
+
+## `librarymodel/library-model.test.ts`
+
+- **LibraryModel**
+  - builds Library/Category hierarchy from flat MacroDesc map
+  - getAllMacros returns the same map as drawingModel.getLibrary
+  - groups macros into correct categories
+  - category contains correct macros
+  - forceUpdate fires libraryLoaded on all listeners
+  - removeLibraryListener stops receiving events
+- **LibraryModel static helpers**
+  - getPlainMacroKey strips library prefix
+  - getPlainMacroKey works for unprefixed keys
+  - createMacroKey produces lowercase prefixed key
+- **Library**
+  - containsMacroKey finds macro in any category
+
+## `macropicker/macro-picker.test.ts`
+
+- **MacroPicker**
+  - builds one row per macro, all collapsed initially
+  - expanding a library then a category reveals its macros only
+  - clicking a macro row fires onMacroSelected with key and name
+  - setFilter reveals matching macros across collapsed sections
+  - filter matches category and library names too
+  - refresh rebuilds the tree without duplicating rows
+
+## `macropicker/preview-connection.test.ts`
+
+- **macro preview connection visibility**
+  - fills the connection dot with the layer colour (not the background) when cleared via the graphics API
+  - demonstrates the original bug: a raw-context clear leaves the dot painted white
+
+## `parser/parser-adversarial.test.ts`
+
+- **ParserActions adversarial input**
+  - **malformed structure**
+    - empty string yields an empty model
+    - only the [FIDOCAD] header yields an empty model
+    - truncated final line does not throw
+    - mixed line endings (\\r\\n + \\n) parse
+    - lone CRs do not crash
+    - garbage tokens are skipped; valid primitives still parse
+  - **boundary values**
+    - very large positive integer coordinates parse
+    - very negative integer coordinates parse
+    - zero-length line is silently dropped (per round-trip tests)
+    - out-of-range layer index does not crash
+    - NaN-like tokens degrade gracefully
+  - **long input**
+    - 1000-line document parses every line into a primitive
+    - long polygon (1000 vertices) parses to a single primitive
+  - **Unicode in text fields**
+    - BMP characters round-trip
+    - surrogate-pair emoji round-trips
+    - multi-word text is preserved with internal spaces
+  - **adversarial text content**
+    - embedded </svg> does not crash and is preserved through round-trip
+    - LaTeX special characters are preserved through round-trip
+  - **FCJ extension robustness**
+    - FCJ without preceding primitive does not crash
+    - FCJ with too few tokens does not crash
+    - FCJ with too many tokens does not crash
+  - **macro robustness**
+    - reference to non-existent macro is dropped without throwing
+    - cyclic macro expansion stops at the configured depth limit
+
+## `parser/parser-global-state.test.ts`
+
+- **ParserActions — macro expansion isolation**
+  - multiple instances do not share a global macroExpansionDepth
+  - reset via constructor creates clean depth counter
+  - deeply nested macro expansion is still guarded
+
+## `parser/primitive-round-trip.test.ts`
+
+- **PrimitiveLine (LI)**
+  - parses and re-serializes a basic line
+  - preserves non-zero layer
+  - produces empty output for zero-length line (no name/value)
+  - is stable from test size file
+  - round-trips multiple lines
+- **PrimitiveBezier (BE)**
+  - parses and re-serializes a bezier curve
+  - preserves layer on bezier
+  - is stable from test size file
+- **PrimitiveRectangle (RV/RP)**
+  - parses empty rectangle RV
+  - parses filled rectangle RP
+  - preserves layer
+  - is stable from test size file
+- **PrimitiveOval (EV/EP)**
+  - parses empty oval EV
+  - parses filled oval EP
+  - is stable from test size file
+- **PrimitivePolygon (PV/PP)**
+  - parses open polygon PV
+  - parses filled polygon PP
+  - is stable from test size file
+- **PrimitiveComplexCurve (CV/CP)**
+  - parses closed filled curve CP
+  - parses open unfilled curve CV
+  - is stable from test size file (open curve)
+  - roundtrips a short CV
+- **PrimitivePCBPad (PA)**
+  - parses a PCB pad with oval style
+  - parses a PCB pad with rect style
+  - parses a PCB pad with rounded rect style
+  - is stable from test size file
+  - preserves layer
+- **PrimitivePCBLine (PL)**
+  - parses a PCB line with integer width
+  - parses a PCB line with different widths
+  - preserves layer
+  - is stable from test size file
+- **PrimitiveConnection (SA)**
+  - parses a connection dot
+  - parses multiple connections
+  - preserves layer
+  - is stable from test size file
+- **PrimitiveAdvText (TY/TE)**
+  - parses TY with default font (*)
+  - parses TY with named font
+  - converts TE to TY on output
+  - TY output is stable (TY → TY, not TE)
+  - preserves orientation
+  - preserves style flags
+  - handles multi-word text
+  - is stable from test size file
+- **PrimitiveMacro (MC)**
+  - parses a macro and re-serializes its key
+  - preserves orientation
+  - preserves mirror flag
+  - is stable (parse → getText → parse → getText)
+  - silently skips unknown macros (no library entry)
+- **Full document stability**
+  - is stable for individual line primitives
+  - is stable for individual bezier
+  - is stable for a document with mixed primitives (no FCJ)
+  - is stable for test_pattern.fcd (strips FCJ, all base primitives present)
+  - primitive count is correct after parsing
+- **FJC configuration parsing**
+  - FJC C changes diameterConnection
+  - FJC A changes lineWidth
+  - FJC B changes lineWidthCircles
+- **FCJ extension tokens**
+  - line with FCJ arrow+dash parses without error
+  - bezier with FCJ dash parses without error
+  - rectangle with FCJ fill type parses without error
+  - oval with FCJ fill type parses without error
+  - polygon with FCJ fill type parses without error
+  - complex curve with FCJ parses without error
+- **ParserActions.addString**
+  - addString appends to existing primitives
+  - parseString clears previous primitives
+- **readLibraryString**
+  - loads a simple library and makes macro parseable
+
+## `primitives/complex-curve-fixes.test.ts`
+
+- **PrimitiveComplexCurve Phase 1 fixes**
+  - **1.3 — Off-by-one in addPointClosest (boundary insertion)**
+    - inserts vertex before point 0 when closest segment is before first point
+    - inserts vertex at end when point is beyond last segment
+    - wraps around on negative minv (no crash)
+  - **1.4 — Stale-reference in getDistanceToPoint after mutation**
+    - recomputes logical polygon when primitive changed after last draw
+    - does not crash when getDistanceToPoint is called before first draw
 
 ## `primitives/primitive-edge-cases.test.ts`
 
-Per-primitive unit tests covering toString/parseTokens for each primitive
-type, including edge cases like zero-length lines, negative coordinates,
-filled/empty variants, and multi-word text.
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `PrimitiveLine > toString produces LI token format` | Line serialisation includes `LI` and all coordinate values. |
-| `PrimitiveLine > parseTokens round-trips basic line` | Parsed tokens→toString produces identical output. |
-| `PrimitiveLine > handles zero-length line gracefully` | Degenerate (zero-length) line returns empty string. |
-| `PrimitiveLine > handles negative coordinates` | Negative coords are faithfully represented. |
-| `PrimitiveBezier > toString produces BE token format` | Bézier serialisation includes `BE` and all 8 coords. |
-| `PrimitiveBezier > parseTokens round-trips` | Parsed tokens→toString matches input format. |
-| `PrimitiveRectangle > empty rectangle uses RV token` | Unfilled rect uses `RV`. |
-| `PrimitiveRectangle > filled rectangle uses RP token` | Filled rect uses `RP`. |
-| `PrimitiveRectangle > parseTokens handles RV token` | Parsing `RV` sets filled to false. |
-| `PrimitiveRectangle > parseTokens handles RP token` | Parsing `RP` sets filled to true. |
-| `PrimitiveOval > empty oval uses EV token` | Unfilled oval uses `EV`. |
-| `PrimitiveOval > filled oval uses EP token` | Filled oval uses `EP`. |
-| `PrimitivePolygon > open polygon uses PV token` | Open polygon uses `PV` prefix. |
-| `PrimitivePolygon > filled polygon uses PP token` | Filled polygon uses `PP` prefix. |
-| `PrimitivePolygon > addPointClosest inserts at correct segment` | Interpolation inserts a point between the two nearest vertices. |
-| `PrimitiveComplexCurve > open curve uses CV token` | Open curve uses `CV` prefix. |
-| `PrimitiveComplexCurve > closed filled curve uses CP token` | Closed filled curve uses `CP` prefix. |
-| `PrimitiveConnection > toString produces SA token format` | Connection dot serialises as `SA`. |
-| `PrimitiveConnection > parseTokens round-trips` | Parse/serialise round-trip is stable. |
-| `PrimitivePCBLine > toString produces PL token with width` | PCB line includes thickness value. |
-| `PrimitivePCBLine > round-trips width correctly` | Thickness survives parse/serialise cycle. |
-| `PrimitivePCBPad > oval style (0) round-trips` | Style 0 preserves correctly. |
-| `PrimitivePCBPad > rect style (1) round-trips` | Style 1 preserves correctly. |
-| `PrimitivePCBPad > rounded rect style (2) round-trips` | Style 2 preserves correctly. |
-| `PrimitiveAdvText > toString produces TY token` | Text serialises as `TY`. |
-| `PrimitiveAdvText > handles multi-word text` | Spaces in text content are preserved. |
-| `PrimitiveAdvText > handles empty text gracefully` | Empty text string produces valid (defined) output. |
-
----
+- **PrimitiveLine**
+  - toString produces LI token format
+  - parseTokens round-trips basic line
+  - handles zero-length line gracefully
+  - handles negative coordinates
+- **PrimitiveBezier**
+  - toString produces BE token format
+  - parseTokens round-trips
+- **PrimitiveRectangle**
+  - empty rectangle uses RV token
+  - filled rectangle uses RP token
+  - parseTokens handles RV token
+  - parseTokens handles RP token
+- **PrimitiveOval**
+  - empty oval uses EV token
+  - filled oval uses EP token
+- **PrimitivePolygon**
+  - open polygon uses PV token
+  - filled polygon uses PP token
+  - addPointClosest inserts at correct segment
+- **PrimitiveComplexCurve**
+  - open curve uses CV token
+  - closed filled curve uses CP token
+- **PrimitiveConnection**
+  - toString produces SA token format
+  - parseTokens round-trips
+- **PrimitivePCBLine**
+  - toString produces PL token with width
+  - round-trips width correctly
+- **PrimitivePCBPad**
+  - oval style (0) round-trips
+  - rect style (1) round-trips
+  - rounded rect style (2) round-trips
+- **PrimitiveAdvText**
+  - toString produces TY token
+  - handles multi-word text
+  - handles empty text gracefully
 
 ## `settings/settings-manager.test.ts`
 
-Validates `SettingsManager` defaults, merge logic, localStorage
-persistence, and error handling for corrupted or malformed stored data.
+- **SettingsManager**
+  - **defaults**
+    - returns sensible defaults when no stored settings
+    - returns a copy, not a reference to internal state
+  - **updateSettings**
+    - merges partial updates
+    - persists to localStorage
+  - **storage error handling**
+    - handles corrupted JSON gracefully
+    - ignores invalid field types
+    - clamps numeric values to valid ranges
+    - accepts valid settings from storage
+  - **singleton behavior**
+    - getInstance returns the same instance
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `defaults > returns sensible defaults when no stored settings` | All 15 settings match their documented default values. |
-| `defaults > returns a copy, not a reference to internal state` | `getSettings()` returns a new object each call; mutations don't leak. |
-| `updateSettings > merges partial updates` | Partial `updateSettings` only changes specified fields, leaving others unchanged. |
-| `updateSettings > persists to localStorage` | After update, the stored JSON reflects the change. |
-| `storage error handling > handles corrupted JSON gracefully` | Unparseable JSON is silently ignored; defaults are used. |
-| `storage error handling > ignores invalid field types` | String instead of number, non-boolean, invalid color → rejected. |
-| `storage error handling > clamps numeric values to valid ranges` | Values outside min/max range are rejected; defaults used. |
-| `storage error handling > accepts valid settings from storage` | All 15 settings loaded from valid JSON are applied correctly. |
-| `singleton behavior > getInstance returns the same instance` | Repeated calls return identical object reference. |
+## `ui/confirm-dialog.test.ts`
 
----
+- **ConfirmDialog**
+  - renders title, message, and both buttons
+  - OK resolves true and removes the overlay
+  - Cancel resolves false and removes the overlay
+  - the ✕ close button resolves false
+  - Escape resolves false, Enter resolves true
+  - escapes HTML in title and message (no element injection)
+
+## `ui/menubar-open-libraries.test.ts`
+
+- **File → Open waits for libraries before parsing**
+  - does not call loadCircuit until librariesReady resolves
+
+## `ui/prompt-dialog.test.ts`
+
+- **PromptDialog**
+  - prefills the default value and resolves the edited text on OK
+  - Cancel and ✕ resolve null
+  - Escape resolves null, Enter resolves the current value
+  - validator failure shows the error, disables OK, and blocks Enter
+  - escapes HTML in the default value
+
+## `ui/properties-batch.test.ts`
+
+- **Batch layer editing**
+  - applies a layer change to every selected primitive
+  - shows the multi-selection header with the element count
+  - falls back to the single-element panel when only one is passed
+
+## `ui/toolbar-controller.test.ts`
+
+- **ToolbarController**
+  - builds 13 tool buttons and arms the Selection tool
+  - clicking a tool button selects that tool and highlights only it
+  - tool tooltips lead with the canonical shortcut letter
+  - changing the zoom dropdown sets the panel zoom
+  - onZoomChange snaps the dropdown to the preset nearest the real zoom
+  - the Fit button fits the view and re-syncs the dropdown
+  - grid and snap buttons toggle panel state on each click
+  - the Libs button invokes the library toggle callback
+  - updates the coordinates display through onCoordinatesChange
 
 ## `undo/undo-actions.test.ts`
 
-Validates that the production `UndoActions` class correctly saves and
-restores state for every action type, including add, move, delete, rotate,
-and mirror. These tests query the model after undo/redo (rather than using
-stale references) since `undo()` re-parses the model from text snapshots.
+- **UndoActions**
+  - **stack management**
+    - new manager cannot undo or redo
+    - saving state enables undo
+    - undoing pushes to redo stack
+    - redo after undo restores redoability
+    - reset clears everything
+    - new mutation clears redo stack
+  - **add primitive**
+    - addPrimitive pushes undo state
+    - multiple adds create multiple undo entries
+  - **modified flag**
+    - starts unmodified
+    - setModified toggles flag
 
-### add primitive
+## `undo/undo-state.test.ts`
 
-| Test name | What it verifies |
-|-----------|------------------|
-| `undo restores state before primitive was added` | After adding a line and undoing, the primitive count returns to the original value. |
-| `redo restores the primitive after undo` | Undo then redo brings the added primitive back. |
-| `undo removes the correct primitive when multiple exist` | Undoing the last add of two removes only the second primitive; the first remains with correct coordinates. |
-
-### move
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `undo restores original position after move` | After `moveAllSelected(5,10)`, undo restores the primitive's first point to `(x0, y0)`. |
-| `redo re-applies the move` | Undo then redo places the primitive back at the moved position. |
-
-### delete
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `undo restores deleted primitives` | After delete+undo, the primitive count goes from 0 back to 1. |
-
-### rotate
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `undo restores original orientation after rotate` | After `rotateAllSelected()`, undo restores all control point coordinates to their pre-rotation values. |
-
-### mirror
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `undo restores original state after mirror` | After `mirrorAllSelected()`, undo restores the second point's X to its pre-mirror value. |
-
-### reset
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `clearCircuit does not leave stale undo references` | After `reset()`, both `canUndo()` and `canRedo()` return false. |
-
-### multiple undo
-
-| Test name | What it verifies |
-|-----------|------------------|
-| `can undo multiple actions in reverse order` | Two undos in sequence remove primitives in reverse creation order (LIFO). |
+- **UndoState**
+  - starts as an empty, unmodified snapshot
+  - toString reports text, file name, and library fields
 
 ---
 
-## Conventions worth knowing
+## `e2e/app-loads.test.ts`
 
-- **Stability pattern.** The parser tests use the `assertStable(s)` helper:
-  parse `s` → `getText(false)` → parse → `getText(false)`, and require
-  the two serialisations to be identical. This catches both lossy parsing
-  and non-deterministic serialisation without depending on a Java
-  reference output (Java and TypeScript may format floats differently).
-- **Globals leakage is explicitly prevented.** `primitive-round-trip.test.ts`
-  saves `Globals.diameterConnection`, `Globals.lineWidth`, and
-  `Globals.lineWidthCircles` in `beforeEach` and restores them in
-  `afterEach`, so FJC tokens in one case do not leak into the next.
-- **`AddElements` with a `null` UndoActions.** `add-elements.test.ts`
-  passes `null` for the undo handle so creation calls do not push
-  states. The test isolates primitive creation from the undo pipeline.
-- **No DOM/disk needed for libraries.** The library tests build a
-  `DrawingModel` and hand `ParserActions.readLibraryString` an inline
-  FCL string (`SAMPLE_FCL`). Nothing reads from disk.
-- **jsdom environment.** Unit tests run under `jsdom`, configured in
-  `vite.config.ts`.
-- **Real Chromium.** E2E tests use Playwright to drive headless Chromium.
-  The `__circuitPanel` escape hatch on the canvas element gives tests
-  direct access to the `CircuitPanel` API. Tests that verify undo state
-  run in a single `page.evaluate()` call to avoid race conditions with
-  the browser event loop.
-- **Async clipboard in E2E.** The `duplicateSelected` call triggers an
-  async `paste()` operation. E2E tests that exercise it poll the model
-  inside `page.evaluate()` with `await new Promise(r => setTimeout(r, 50))`
-  loops until the expected primitive count is reached.
+- App Initialisation
+  - page title shows the untitled drawing name
+  - canvas element renders in the DOM
+  - toolbar container exists
+  - zoom select dropdown exists
+  - coordinates display shows initial value
+  - toolbar contains expected buttons
+  - library panel is rendered
+  - no page errors on load
+  - circuit starts empty
+  - window.__FidoCadJS__ exposes circuitPanel for E2E
+
+## `e2e/clipboard.test.ts`
+
+- Clipboard Operations
+  - Ctrl+C / Ctrl+V via keyboard inserts a copy on click
+  - copySelected preserves primitives
+  - cutSelected removes primitives
+  - duplicateSelected doubles count
+  - cut then duplicate works via internal clipboard
+  - duplicate is undoable
+  - cut then undo restores
+  - paste enters placement mode then commit inserts
+  - paste placement cancel inserts nothing
+  - copy all as primitives fills a pasteable clipboard
+  - paste placement commit is undoable
+
+## `e2e/drawing-tools.test.ts`
+
+- Drawing Tools — Keyboard Selection
+    - ${key} selects the ${label} tool
+- Drawing Primitives
+  - draw a line with two clicks
+  - draw a rectangle with two clicks
+  - draw an ellipse with two clicks
+  - draw a bezier with four clicks
+  - draw a polygon and finish with double-click
+  - draw a connection dot with one click
+  - draw a PCB line with two clicks
+  - draw a PCB pad with one click
+  - draw a text with one click (text primitive created)
+  - draw a complex curve and finish with double-click
+  - multiple primitives of different types coexist
+
+## `e2e/edge-cases.test.ts`
+
+- Edge Cases — Empty/Degenerate
+  - empty circuit exports valid formats without crashing
+  - empty circuit renders without errors
+  - empty circuit zoom in/out still adjusts zoom
+  - empty circuit Ctrl+Z does nothing
+  - zero-length line (same start/end point) produces empty output
+- Edge Cases — Rapid Operations
+  - rapid tool switching does not crash
+  - rapid draw/undo/redo cycle
+  - draw, select all, delete — undo entry created
+- Edge Cases — Long FCD Documents
+  - loads and exports a circuit with many primitives
+  - circuit with all primitive types round-trips via getCircuitText
+- Edge Cases — Negative Coordinates
+  - clamps negative coordinates to zero on read
+- Edge Cases — Text
+  - text primitive created via tool contains default string
+- Edge Cases — Canvas Resize
+  - resizing viewport does not crash app
+- Edge Cases — Layer Switching
+  - primitives on different layers are preserved
+  - right-click cancels active drawing tool
+
+## `e2e/export-bitmap-render.test.ts`
+
+- Bitmap export rendering
+  - exported PNG contains the (black) text — not white-on-white
+  - exported PNG contains typeset math ink
+  - exporting does not corrupt the on-screen render
+
+## `e2e/export-png.test.ts`
+
+- Export — PNG
+  - exportPNG produces a valid PNG (magic number check)
+  - empty circuit produces a valid PNG (small but valid)
+  - non-empty circuit exceeds empty-circuit blob size
+  - exportPNG is reproducible (same FCD → same PNG)
+  - canvas size matches the visible drawing area
+
+## `e2e/export-svg-pixel-parity.test.ts`
+
+- SVG pixel parity vs Java reference
+
+## `e2e/export.test.ts`
+
+- Export — SVG
+  - exportSVG produces valid XML wrapper
+  - exportSVG contains line element
+  - exportSVG contains rect element
+  - exportSVG contains ellipse element
+  - exportSVG contains circle for connection
+  - empty circuit exports valid SVG wrapper only
+- Export — PGF
+  - exportPGF produces valid PGF wrapper
+  - exportPGF contains line command
+  - exportPGF contains rect command
+  - exportPGF contains ellipse command
+  - empty circuit exports valid PGF wrapper only
+- Export — TikZ
+  - exportTikZ produces valid TikZ wrapper
+  - exportTikZ contains draw command for line
+  - exportTikZ contains fill command for connection
+  - empty circuit exports valid TikZ wrapper only
+- Export — Round-trip consistency
+  - exportSVG is deterministic (same FCD → same SVG)
+  - exportPGF is deterministic
+  - exportTikZ is deterministic
+
+## `e2e/file-operations.test.ts`
+
+- File Operations
+  - New circuit clears all primitives
+  - Ctrl+N shortcut triggers new circuit
+  - loadCircuit via API loads FCD text
+  - getCircuitText produces valid FCD with FCJ config
+  - Save via picker writes circuit text and reuses the handle
+  - Save As prompts for a filename when the picker is unavailable
+  - View code shows the FCD text and OK reloads edits
+
+## `e2e/grid-snap.test.ts`
+
+- Grid Toggle
+  - Show Grid button toggles grid
+- Snap Toggle
+  - Snap button toggles snap-to-grid
+
+## `e2e/keyboard-e2e.test.ts`
+
+- Keyboard Shortcuts — Tool Selection
+  - uppercase L also selects Line tool
+  - uppercase G also selects Rectangle tool
+  - Ctrl+E does NOT switch to Ellipse tool
+  - Ctrl+P does NOT switch to Polygon tool
+  - Ctrl+O does NOT switch to Complex curve tool
+  - Ctrl+Z does NOT switch to PCB pad tool
+  - Ctrl+S does NOT trigger mirror (S)
+  - Ctrl+Shift+S does NOT trigger mirror
+  - unknown keys do not crash (q, 1, F1)
+- Keyboard Shortcuts — Undo/Redo
+  - Ctrl+Z undoes, Ctrl+Y redoes
+- Keyboard Shortcuts — Input Blocking
+  - tool shortcuts blocked when input element is focused
+  - global Ctrl shortcuts still work when input is focused
+- Keyboard Shortcuts — Nudge
+  - Alt+ArrowLeft nudges selected left
+  - Alt+ArrowRight nudges selected right
+  - Alt+ArrowUp nudges selected up
+  - Alt+ArrowDown nudges selected down
+
+## `e2e/layer-dialog.test.ts`
+
+- Layer dialog — header serialization
+  - changing one layer writes only that layer to the header
+  - confirming with no changes writes no layer lines
+
+## `e2e/macro-library.test.ts`
+
+- Macro Library
+  - library panel is visible and contains macro entries
+  - Libs button toggles library panel visibility
+  - searching and clicking a macro arms the macro tool
+- Macro — Load and Place via API
+  - can load a simple macro library and place it
+  - placing unknown macro key silently drops
+
+## `e2e/math-render.test.ts`
+
+- LaTeX math rendering
+  - canvas paints typeset math differently from literal source
+  - SVG export embeds math as glyph paths, not literal $
+  - no leftover KaTeX overlay DOM is present
+
+## `e2e/menu-bar.test.ts`
+
+- Menu Bar — File Menu
+  - File menu opens and shows items
+  - Edit menu shows Undo/Redo/Cut/Copy/Paste
+  - View menu shows Zoom and Options
+  - Circuit menu shows View code
+  - menu items show shortcut text
+  - Options dialog has a Libraries tab with a folder picker
+- Menu Bar — Actions via API
+  - Ctrl+N clears circuit (new)
+  - Ctrl+S triggers save (does not modify circuit)
+  - Ctrl+E opens the export dialog without modifying the circuit
+
+## `e2e/selection-and-transform.test.ts`
+
+- Selection
+  - click on a primitive selects exactly that one
+  - Escape deselects all and switches to Selection tool
+  - rubber-band selection selects primitives in rect
+- Transform Operations
+  - rotate selected primitives with R key
+  - mirror selected primitives with S key
+  - Delete key removes selected primitives
+  - Backspace also removes selected primitives
+  - nudge selected with Alt+Arrow keys
+  - R does nothing when nothing is selected
+  - move mode via M key changes cursor when selection exists
+
+## `e2e/undo-redo.test.ts`
+
+- Undo / Redo
+  - rotate creates undo entry (canUndo becomes true)
+  - Ctrl+Shift+Z redo shortcut works
+  - delete creates undo entry
+  - mirror creates undo entry
+  - multiple operations stack undo entries
+  - clearCircuit resets undo stack
+
+## `e2e/zoom-pan.test.ts`
+
+- Zoom Operations
+  - initial zoom is 100%
+  - + key zooms in
+  - = key also zooms in
+  - - key zooms out
+  - zoom in, then zoom out returns to original
+  - Home triggers fit-to-view
+  - mouse wheel zooms toward cursor
+  - Fit button zooms out a zoomed-in drawing
+  - zoom select dropdown updates on keyboard zoom
+  - zoom select dropdown updates on mouse-wheel zoom
+- Pan Operations
+  - middle mouse button pans the view
+- Resize behavior
+  - viewport resize keeps a non-degenerate canvas
+  - viewport resize preserves rendering without offset
+  - multiple consecutive resizes do not crash

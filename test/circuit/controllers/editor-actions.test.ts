@@ -200,6 +200,21 @@ describe('EditorActions — selectRect', () => {
         const ok = editor.selectRect(10, 10, 50, 50);
         expect(ok).toBe(false);
     });
+
+    it('does not select a macro when all of its layers are hidden', () => {
+        const { model, parser, editor } = makeWorld();
+        parser.readLibraryString(
+            ['[FIDOLIB Test]', '{Symbols}', '[m Hidden macro]', 'LI 0 0 10 10 0'].join('\n'),
+            'lib',
+        );
+        parser.parseString('[FIDOCAD]\nMC 100 100 0 0 lib.m\n');
+        model.getLayers()[0]!.setVisible(false);
+
+        const ok = editor.selectRect(90, 90, 40, 40);
+
+        expect(ok).toBe(false);
+        expect(model.getPrimitiveVector()[0]!.isSelected()).toBe(false);
+    });
 });
 
 describe('EditorActions — distancePrimitive', () => {

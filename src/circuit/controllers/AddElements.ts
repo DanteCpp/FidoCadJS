@@ -41,8 +41,11 @@ export class AddElements {
     /** Add a connection primitive at the given point */
     addConnection(x: number, y: number, currentLayer: number): void {
         const conn = new PrimitiveConnection(
-            x, y, currentLayer,
-            this.model.getTextFont(), this.model.getTextFontSize()
+            x,
+            y,
+            currentLayer,
+            this.model.getTextFont(),
+            this.model.getTextFontSize(),
         );
         conn.setMacroFont(this.model.getTextFont(), this.model.getTextFontSize());
         this.model.addPrimitive(conn, true, this.undoActions);
@@ -51,11 +54,15 @@ export class AddElements {
     /** Add a PCB pad at the given point */
     addPCBPad(x: number, y: number, currentLayer: number): void {
         const pad = new PrimitivePCBPad(
-            x, y,
-            this.pcbPadSizeX, this.pcbPadSizeY,
-            this.pcbPadDrill, this.pcbPadStyle,
+            x,
+            y,
+            this.pcbPadSizeX,
+            this.pcbPadSizeY,
+            this.pcbPadDrill,
+            this.pcbPadStyle,
             currentLayer,
-            this.model.getTextFont(), this.model.getTextFontSize()
+            this.model.getTextFont(),
+            this.model.getTextFontSize(),
         );
         this.model.addPrimitive(pad, true, this.undoActions);
     }
@@ -72,11 +79,13 @@ export class AddElements {
      * @returns new clickNumber (0 = stop, 1 = continue from last point)
      */
     addLine(
-        x: number, y: number,
-        xpoly: number[], ypoly: number[],
+        x: number,
+        y: number,
+        xpoly: number[],
+        ypoly: number[],
         currentLayer: number,
         clickNumber: number,
-        altButton: boolean
+        altButton: boolean,
     ): number {
         let cn = clickNumber;
         xpoly[clickNumber] = x;
@@ -84,12 +93,19 @@ export class AddElements {
 
         if (clickNumber === 2 || altButton) {
             const line = new PrimitiveLine(
-                xpoly[1], ypoly[1],
-                xpoly[2], ypoly[2],
+                xpoly[1],
+                ypoly[1],
+                xpoly[2],
+                ypoly[2],
                 currentLayer,
-                false, false, 0, 3, 2, 0,
+                false,
+                false,
+                0,
+                3,
+                2,
+                0,
                 this.model.getTextFont(),
-                this.model.getTextFontSize()
+                this.model.getTextFontSize(),
             );
             this.model.addPrimitive(line, true, this.undoActions);
 
@@ -116,11 +132,13 @@ export class AddElements {
      * @returns new clickNumber (0 = finished)
      */
     addEllipse(
-        x: number, y: number,
-        xpoly: number[], ypoly: number[],
+        x: number,
+        y: number,
+        xpoly: number[],
+        ypoly: number[],
         currentLayer: number,
         clickNumber: number,
-        isCircle: boolean
+        isCircle: boolean,
     ): number {
         let cn = clickNumber;
         let adjustedY = y;
@@ -134,12 +152,15 @@ export class AddElements {
 
         if (cn === 2) {
             const oval = new PrimitiveOval(
-                xpoly[1], ypoly[1],
-                xpoly[2], ypoly[2],
+                xpoly[1],
+                ypoly[1],
+                xpoly[2],
+                ypoly[2],
                 false,
-                currentLayer, 0,
+                currentLayer,
+                0,
                 this.model.getTextFont(),
-                this.model.getTextFontSize()
+                this.model.getTextFontSize(),
             );
             this.model.addPrimitive(oval, true, this.undoActions);
             cn = 0;
@@ -159,11 +180,13 @@ export class AddElements {
      * @returns new clickNumber (0 = finished)
      */
     addRectangle(
-        x: number, y: number,
-        xpoly: number[], ypoly: number[],
+        x: number,
+        y: number,
+        xpoly: number[],
+        ypoly: number[],
         currentLayer: number,
         clickNumber: number,
-        isSquare: boolean
+        isSquare: boolean,
     ): number {
         let cn = clickNumber;
         let adjustedY = y;
@@ -177,12 +200,15 @@ export class AddElements {
 
         if (cn === 2) {
             const rect = new PrimitiveRectangle(
-                xpoly[1], ypoly[1],
-                xpoly[2], ypoly[2],
+                xpoly[1],
+                ypoly[1],
+                xpoly[2],
+                ypoly[2],
                 false,
-                currentLayer, 0,
+                currentLayer,
+                0,
                 this.model.getTextFont(),
-                this.model.getTextFontSize()
+                this.model.getTextFontSize(),
             );
             this.model.addPrimitive(rect, true, this.undoActions);
             cn = 0;
@@ -202,10 +228,12 @@ export class AddElements {
      * @returns new clickNumber (0 = finished)
      */
     addBezier(
-        x: number, y: number,
-        xpoly: number[], ypoly: number[],
+        x: number,
+        y: number,
+        xpoly: number[],
+        ypoly: number[],
         currentLayer: number,
-        clickNumber: number
+        clickNumber: number,
     ): number {
         let cn = clickNumber;
         xpoly[clickNumber] = x;
@@ -213,14 +241,23 @@ export class AddElements {
 
         if (clickNumber === 4) {
             const bezier = new PrimitiveBezier(
-                xpoly[1], ypoly[1],
-                xpoly[2], ypoly[2],
-                xpoly[3], ypoly[3],
-                xpoly[4], ypoly[4],
+                xpoly[1],
+                ypoly[1],
+                xpoly[2],
+                ypoly[2],
+                xpoly[3],
+                ypoly[3],
+                xpoly[4],
+                ypoly[4],
                 currentLayer,
-                false, false, 0, 3, 2, 0,
+                false,
+                false,
+                0,
+                3,
+                2,
+                0,
                 this.model.getTextFont(),
-                this.model.getTextFontSize()
+                this.model.getTextFontSize(),
             );
             this.model.addPrimitive(bezier, true, this.undoActions);
             cn = 0;
@@ -241,12 +278,14 @@ export class AddElements {
      * @returns new clickNumber (0 = stop, 1 = continue from last point)
      */
     addPCBLine(
-        x: number, y: number,
-        xpoly: number[], ypoly: number[],
+        x: number,
+        y: number,
+        xpoly: number[],
+        ypoly: number[],
         currentLayer: number,
         clickNumber: number,
         altButton: boolean,
-        thickness: number
+        thickness: number,
     ): number {
         let cn = clickNumber;
         xpoly[cn] = x;
@@ -254,12 +293,14 @@ export class AddElements {
 
         if (cn === 2 || altButton) {
             const pcbLine = new PrimitivePCBLine(
-                xpoly[1], ypoly[1],
-                xpoly[2], ypoly[2],
+                xpoly[1],
+                ypoly[1],
+                xpoly[2],
+                ypoly[2],
                 thickness,
                 currentLayer,
                 this.model.getTextFont(),
-                this.model.getTextFontSize()
+                this.model.getTextFontSize(),
             );
             this.model.addPrimitive(pcbLine, true, this.undoActions);
 
@@ -284,12 +325,20 @@ export class AddElements {
      * @returns the new primitive being edited, or null if finished
      */
     addMacro(
-        x: number, y: number,
+        x: number,
+        y: number,
         sa: SelectionActions,
         primEdit: GraphicPrimitive | null,
-        macroKey: string
+        macroKey: string,
     ): GraphicPrimitive | null {
         try {
+            // Unknown keys must not leave an empty placeholder primitive in
+            // the drawing (FidoCadJ drops them with an error instead).
+            if (!this.model.getLibrary().get(macroKey.toLowerCase())) {
+                console.error(`Unrecognized macro key: ${macroKey}`);
+                return primEdit;
+            }
+
             sa.setSelectionAll(false);
 
             let orientation = 0;
@@ -303,7 +352,7 @@ export class AddElements {
                 this.model.getLibrary(),
                 this.model.getLayers(),
                 this.model.getTextFont(),
-                this.model.getTextFontSize()
+                this.model.getTextFontSize(),
             );
             macro.virtualPoint[0]!.x = x;
             macro.virtualPoint[0]!.y = y;
@@ -323,14 +372,34 @@ export class AddElements {
     }
 
     // Getters and setters for PCB defaults
-    setPcbPadSizeX(s: number): void { this.pcbPadSizeX = s; }
-    getPcbPadSizeX(): number { return this.pcbPadSizeX; }
-    setPcbPadSizeY(s: number): void { this.pcbPadSizeY = s; }
-    getPcbPadSizeY(): number { return this.pcbPadSizeY; }
-    setPcbPadStyle(s: number): void { this.pcbPadStyle = s; }
-    getPcbPadStyle(): number { return this.pcbPadStyle; }
-    setPcbPadDrill(s: number): void { this.pcbPadDrill = s; }
-    getPcbPadDrill(): number { return this.pcbPadDrill; }
-    setPcbThickness(s: number): void { this.pcbThickness = s; }
-    getPcbThickness(): number { return this.pcbThickness; }
+    setPcbPadSizeX(s: number): void {
+        this.pcbPadSizeX = s;
+    }
+    getPcbPadSizeX(): number {
+        return this.pcbPadSizeX;
+    }
+    setPcbPadSizeY(s: number): void {
+        this.pcbPadSizeY = s;
+    }
+    getPcbPadSizeY(): number {
+        return this.pcbPadSizeY;
+    }
+    setPcbPadStyle(s: number): void {
+        this.pcbPadStyle = s;
+    }
+    getPcbPadStyle(): number {
+        return this.pcbPadStyle;
+    }
+    setPcbPadDrill(s: number): void {
+        this.pcbPadDrill = s;
+    }
+    getPcbPadDrill(): number {
+        return this.pcbPadDrill;
+    }
+    setPcbThickness(s: number): void {
+        this.pcbThickness = s;
+    }
+    getPcbThickness(): number {
+        return this.pcbThickness;
+    }
 }

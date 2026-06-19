@@ -9,7 +9,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { gotoApp, loadCircuit, exportSVG } from './utils';
+import { gotoApp, loadCircuit, exportSVG, settle } from './utils';
 
 // A text primitive with inline math: TY x y siy six o sty layer font text...
 const MATH_FCD = '[FIDOCAD]\nTY 30 30 4 2 0 0 0 * $\\frac{a}{b}$';
@@ -39,7 +39,7 @@ async function setRenderTeX(page: import('@playwright/test').Page, on: boolean):
     await page.evaluate((enabled) => {
         (window as any).__FidoCadJS__.circuitPanel.setRenderTeX(enabled);
     }, on);
-    await page.waitForTimeout(200);
+    await settle(page);
 }
 
 test.describe('LaTeX math rendering', () => {
@@ -54,11 +54,12 @@ test.describe('LaTeX math rendering', () => {
         const literal = await exportPngBase64(page);
 
         await setRenderTeX(page, true);
-        const typeset = await exportPngBase64(page);
 
         // Typesetting $\frac{a}{b}$ produces a fraction bar + stacked glyphs,
         // which must differ from drawing the raw "$\frac{a}{b}$" string.
-        expect(typeset).not.toBe(literal);
+        // MathJax typesets asynchronously, so poll until the repaint lands.
+        await expect.poll(() => exportPngBase64(page), { timeout: 10_000 }).not.toBe(literal);
+        const typeset = await exportPngBase64(page);
         expect(Buffer.from(typeset, 'base64').length).toBeGreaterThan(100);
     });
 
