@@ -29,7 +29,6 @@ where that helps preserve FCL behavior.
 - CI runs on every pull request to `main` and on every push to `main`;
   keep a PR green before merging.
 - A green `main` build auto-deploys to GitHub Pages (`deploy.yml`).
-- `audit.yml` runs nightly to track dependency vulnerabilities.
 
 ## Layout
 
