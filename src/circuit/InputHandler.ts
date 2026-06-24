@@ -293,8 +293,29 @@ export class InputHandler {
         const tool = this.cb.getTool();
 
         if (tool === Tool.ZOOM) {
-            this.zoomAtCursor(sx, sy, e.button === 2 ? 1 / 1.3 : 1.3);
-            return;
+            if (e.button === 0) {
+                // Left button starts a rubber-band region. The release either
+                // zooms into the dragged rectangle or, for a plain click,
+                // zooms in centred on the point. Reuses the selection-rect
+                // fields so the live dashed overlay is drawn automatically.
+                this._selStartScreenX = sx;
+                this._selStartScreenY = sy;
+                this._selRectActive = true;
+                this.selRectLogX1 = lx;
+                this.selRectLogY1 = ly;
+                this.selRectLogX2 = lx;
+                this.selRectLogY2 = ly;
+                this._selRectLtoR = true;
+                this._selRectSx2 = sx;
+                this._selRectSy2 = sy;
+                return;
+            }
+            if (e.button === 2) {
+                // Right button zooms out, centred on the cursor.
+                this.zoomAtCursor(sx, sy, 1 / 1.3);
+                return;
+            }
+            // Middle button falls through to panning below.
         }
 
         if (e.button === 1 || (e.button === 0 && tool === Tool.HAND)) {
@@ -556,6 +577,20 @@ export class InputHandler {
             const isClick =
                 Math.abs(upSx - this._selStartScreenX) <= InputHandler.DRAG_THRESHOLD_PX &&
                 Math.abs(upSy - this._selStartScreenY) <= InputHandler.DRAG_THRESHOLD_PX;
+
+            // Zoom tool: a drag zooms into the dragged region, a plain click
+            // zooms in centred on the point.
+            if (tool === Tool.ZOOM) {
+                this._selRectActive = false;
+                if (isClick) {
+                    this.zoomAtCursor(upSx, upSy, 1.3);
+                } else {
+                    this.zoomToRect(this._selStartScreenX, this._selStartScreenY, upSx, upSy);
+                }
+                this.cb.render();
+                return;
+            }
+
             if (isClick) {
                 this.editorActions.handleSelection(
                     this.mapCoords,
@@ -684,6 +719,39 @@ export class InputHandler {
         this.cb.clampCenter();
         this.mapCoords.setXMagnitudeNoCheck(newZ);
         this.mapCoords.setYMagnitudeNoCheck(newZ);
+        this.cb.render();
+        this.cb.onZoomChange?.();
+    }
+
+    /**
+     * Zoom so the screen-space rectangle (device pixels) fills the viewport.
+     * The new magnitude is the largest that keeps the whole region visible
+     * (clamped to the allowed range), and the new centre re-anchors the
+     * region's midpoint to the viewport's midpoint.
+     */
+    private zoomToRect(sx1: number, sy1: number, sx2: number, sy2: number): void {
+        const rectW = Math.abs(sx2 - sx1);
+        const rectH = Math.abs(sy2 - sy1);
+        const viewW = this.canvas.width;
+        const viewH = this.canvas.height;
+        if (rectW < 1 || rectH < 1 || viewW < 1 || viewH < 1) return;
+
+        // Document coordinate at the centre of the dragged region.
+        const docCx = this.mapCoords.unmapXnosnap((sx1 + sx2) / 2);
+        const docCy = this.mapCoords.unmapYnosnap((sy1 + sy2) / 2);
+
+        const oldZ = this.mapCoords.getXMagnitude();
+        const fit = oldZ * Math.min(viewW / rectW, viewH / rectH);
+        const newZ = Math.max(
+            MapCoordinates.MIN_MAGNITUDE,
+            Math.min(MapCoordinates.MAX_MAGNITUDE, fit),
+        );
+
+        this.mapCoords.setXMagnitudeNoCheck(newZ);
+        this.mapCoords.setYMagnitudeNoCheck(newZ);
+        this.mapCoords.setXCenter(viewW / 2 - docCx * newZ);
+        this.mapCoords.setYCenter(viewH / 2 - docCy * newZ);
+        this.cb.clampCenter();
         this.cb.render();
         this.cb.onZoomChange?.();
     }
