@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { ToolbarController } from '../../src/ui/ToolbarController.js';
 import { ElementsEdtActions } from '../../src/circuit/controllers/ElementsEdtActions.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import type { EditorFacade } from '../../src/circuit/EditorFacade.js';
 
 /** Minimal stateful EditorFacade fake covering what the toolbar touches. */

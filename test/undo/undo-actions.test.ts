@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
 import { UndoActions } from '../../src/circuit/controllers/UndoActions.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { PrimitiveLine } from '../../src/primitives/PrimitiveLine.js';
 
 function makeModel(): DrawingModel {

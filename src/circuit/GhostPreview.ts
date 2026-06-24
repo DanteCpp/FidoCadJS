@@ -11,7 +11,7 @@ import { PrimitiveComplexCurve } from '../primitives/PrimitiveComplexCurve.js';
 import { PrimitivePCBLine } from '../primitives/PrimitivePCBLine.js';
 import { PrimitivePCBPad } from '../primitives/PrimitivePCBPad.js';
 import { PrimitiveMacro } from '../primitives/PrimitiveMacro.js';
-import { StandardLayers } from '../layers/StandardLayers.js';
+import * as StandardLayers from '../layers/StandardLayers.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Per-tool ghost handlers (strategy implementations)

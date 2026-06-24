@@ -4,7 +4,7 @@ import { ParserActions } from '../../../src/circuit/controllers/ParserActions.js
 import { UndoActions } from '../../../src/circuit/controllers/UndoActions.js';
 import { EditorActions } from '../../../src/circuit/controllers/EditorActions.js';
 import { SelectionActions } from '../../../src/circuit/controllers/SelectionActions.js';
-import { StandardLayers } from '../../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../../src/layers/StandardLayers.js';
 import { PrimitiveLine } from '../../../src/primitives/PrimitiveLine.js';
 
 function makeWorld() {

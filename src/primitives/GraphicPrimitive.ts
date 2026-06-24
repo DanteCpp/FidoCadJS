@@ -5,7 +5,7 @@ import type { RenderCtx } from '../graphic/RenderCtx.js';
 import { PointG } from '../graphic/PointG.js';
 import { DimensionG } from '../graphic/DimensionG.js';
 import { RectangleG } from '../graphic/RectangleG.js';
-import { GeometricDistances } from '../geom/GeometricDistances.js';
+import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { Globals } from '../globals/Globals.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 

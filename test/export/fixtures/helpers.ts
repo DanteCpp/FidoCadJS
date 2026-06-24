@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../../src/circuit/controllers/ParserActions.js';
 import { ExportFacade } from '../../../src/export/ExportFacade.js';
-import { StandardLayers } from '../../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../../src/layers/StandardLayers.js';
 import { registerExportHooks } from '../../../src/circuit/views/Export.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

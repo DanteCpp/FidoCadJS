@@ -9,9 +9,9 @@ import { Drawing, registerDrawingHooks } from '../circuit/views/Drawing.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
 import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
 import { DrawingSize } from '../geom/DrawingSize.js';
-import { StandardLayers } from '../layers/StandardLayers.js';
+import * as StandardLayers from '../layers/StandardLayers.js';
 import { OperationPermissions } from './OperationPermissions.js';
-import { LibUtils } from '../librarymodel/LibUtils.js';
+import * as LibUtils from '../librarymodel/LibUtils.js';
 
 export type ContextMenuAction = 'rename' | 'remove' | 'copy' | 'paste' | 'changeKey';
 

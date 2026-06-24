@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DrawingSize } from '../../src/geom/DrawingSize.js';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { PointG } from '../../src/graphic/PointG.js';
 
 function makeModel(fcd: string): DrawingModel {

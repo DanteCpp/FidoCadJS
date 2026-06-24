@@ -5,7 +5,7 @@ import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { Arrow } from './Arrow.js';
 import { Globals } from '../globals/Globals.js';
-import { GeometricDistances } from '../geom/GeometricDistances.js';
+import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { RectangleG } from '../graphic/RectangleG.js';
 import { PointG } from '../graphic/PointG.js';
 

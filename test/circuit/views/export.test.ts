@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Export, registerExportHooks } from '../../../src/circuit/views/Export.js';
 import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../../src/circuit/controllers/ParserActions.js';
-import { StandardLayers } from '../../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../../src/layers/StandardLayers.js';
 import { MapCoordinates } from '../../../src/geom/MapCoordinates.js';
 import type { ExportInterface } from '../../../src/export/ExportInterface.js';
 import type { DimensionG } from '../../../src/graphic/DimensionG.js';

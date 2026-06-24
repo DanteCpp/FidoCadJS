@@ -1,6 +1,6 @@
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
-import { GeometricDistances } from '../geom/GeometricDistances.js';
+import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { PointG } from '../graphic/PointG.js';
 import { PointPr } from '../export/PointPr.js';
 

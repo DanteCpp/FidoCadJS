@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
 import { Drawing, registerDrawingHooks } from '../../src/circuit/views/Drawing.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { DrawingSize } from '../../src/geom/DrawingSize.js';
 import { GraphicsCanvas } from '../../src/graphic/canvas/GraphicsCanvas.js';
 import { ColorCanvas } from '../../src/graphic/canvas/ColorCanvas.js';

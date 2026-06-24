@@ -1,6 +1,6 @@
 import type { ParserActions } from '../circuit/controllers/ParserActions.js';
 import { MacroDesc } from '../primitives/MacroDesc.js';
-import { LibUtils } from './LibUtils.js';
+import * as LibUtils from './LibUtils.js';
 import { LibraryFolder } from './LibraryFolder.js';
 import { Toast } from '../ui/Toast.js';
 import { getString } from '../i18n/i18n.js';

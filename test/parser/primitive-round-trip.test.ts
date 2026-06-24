@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { Globals } from '../../src/globals/Globals.js';
 import { MacroDesc } from '../../src/primitives/MacroDesc.js';
 

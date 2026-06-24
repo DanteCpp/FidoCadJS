@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { PropertiesPanelController } from '../../src/ui/PropertiesPanelController.js';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { PrimitiveLine } from '../../src/primitives/PrimitiveLine.js';
 import type { EditorFacade } from '../../src/circuit/EditorFacade.js';
 

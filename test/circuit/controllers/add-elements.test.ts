@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';
 import { AddElements } from '../../../src/circuit/controllers/AddElements.js';
-import { StandardLayers } from '../../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../../src/layers/StandardLayers.js';
 import { PrimitiveLine } from '../../../src/primitives/PrimitiveLine.js';
 import { PrimitiveRectangle } from '../../../src/primitives/PrimitiveRectangle.js';
 import { PrimitiveOval } from '../../../src/primitives/PrimitiveOval.js';

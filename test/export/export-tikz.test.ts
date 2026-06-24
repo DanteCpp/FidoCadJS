@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExportTikZ } from '../../src/export/ExportTikZ.js';
 import { DimensionG } from '../../src/graphic/DimensionG.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { PointDouble } from '../../src/graphic/PointDouble.js';
 
 describe('ExportTikZ', () => {

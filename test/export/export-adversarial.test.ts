@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExportSVG } from '../../src/export/ExportSVG.js';
 import { DimensionG } from '../../src/graphic/DimensionG.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 
 describe('ExportSVG adversarial input', () => {
     let svg: ExportSVG;

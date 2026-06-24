@@ -1,5 +1,5 @@
 import { DrawingModel } from './model/DrawingModel.js';
-import { StandardLayers } from '../layers/StandardLayers.js';
+import * as StandardLayers from '../layers/StandardLayers.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { ParserActions } from './controllers/ParserActions.js';
 import { SelectionActions } from './controllers/SelectionActions.js';

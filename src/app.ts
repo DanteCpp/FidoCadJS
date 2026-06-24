@@ -14,7 +14,7 @@ import { ConfirmDialog } from './ui/ConfirmDialog.js';
 import { DialogSymbolize } from './ui/DialogSymbolize.js';
 import { showOptionsDialog } from './ui/OptionsDialog.js';
 import { PromptDialog } from './ui/PromptDialog.js';
-import { LibUtils } from './librarymodel/LibUtils.js';
+import * as LibUtils from './librarymodel/LibUtils.js';
 import { Library } from './librarymodel/Library.js';
 import { Category } from './librarymodel/Category.js';
 import { MacroDesc } from './primitives/MacroDesc.js';

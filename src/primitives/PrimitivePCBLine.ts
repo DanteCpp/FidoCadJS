@@ -4,7 +4,7 @@ import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { Globals } from '../globals/Globals.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
-import { GeometricDistances } from '../geom/GeometricDistances.js';
+import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { RectangleG } from '../graphic/RectangleG.js';
 
 export class PrimitivePCBLine extends GraphicPrimitive {
