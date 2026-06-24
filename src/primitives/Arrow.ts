@@ -1,4 +1,4 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { PointG } from '../graphic/PointG.js';
@@ -95,7 +95,7 @@ export class Arrow {
     }
 
     drawArrowPixels(
-        g: GraphicsInterface,
+        g: Graphics,
         x: number,
         y: number,
         xc: number,
@@ -155,7 +155,7 @@ export class Arrow {
         return alpha;
     }
 
-    drawArrow(g: GraphicsInterface, x: number, y: number, xc: number, yc: number): PointG {
+    drawArrow(g: Graphics, x: number, y: number, xc: number, yc: number): PointG {
         const p = this._calcPoints(x, y, xc, yc);
         const pp = g.createPolygon();
         pp.addPoint(x, y);

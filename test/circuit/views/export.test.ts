@@ -4,7 +4,7 @@ import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../../src/circuit/controllers/ParserActions.js';
 import * as StandardLayers from '../../../src/layers/StandardLayers.js';
 import { MapCoordinates } from '../../../src/geom/MapCoordinates.js';
-import type { ExportInterface } from '../../../src/export/ExportInterface.js';
+import type { Exporter } from '../../../src/export/Exporter.js';
 import type { DimensionG } from '../../../src/graphic/DimensionG.js';
 import type { LayerDesc } from '../../../src/layers/LayerDesc.js';
 registerExportHooks();
@@ -15,11 +15,11 @@ interface Call {
 }
 
 /**
- * Recording ExportInterface — every call is pushed onto `calls`.
+ * Recording Exporter — every call is pushed onto `calls`.
  * exportMacro and exportCurve return false (matching the Java contract)
  * so the caller falls back to primitive emission.
  */
-function makeRecorder(): { calls: Call[]; exp: ExportInterface } {
+function makeRecorder(): { calls: Call[]; exp: Exporter } {
     const calls: Call[] = [];
     const log =
         (m: string) =>
@@ -27,7 +27,7 @@ function makeRecorder(): { calls: Call[]; exp: ExportInterface } {
             calls.push({ method: m, args });
             return false; // for exportMacro / exportCurve
         };
-    const exp: ExportInterface = {
+    const exp: Exporter = {
         exportStart: log('exportStart'),
         exportEnd: log('exportEnd'),
         setDashUnit: log('setDashUnit'),

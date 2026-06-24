@@ -1,7 +1,7 @@
 import type { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
 import type { MacroDesc } from '../../primitives/MacroDesc.js';
-import type { ProcessElementsInterface } from './ProcessElementsInterface.js';
+import type { ElementProcessor } from './ElementProcessor.js';
 import { ImageAsCanvas } from '../ImageAsCanvas.js';
 
 export class DrawingModel {
@@ -19,7 +19,7 @@ export class DrawingModel {
     private layerV: LayerDesc[] = [];
     private library: Map<string, MacroDesc> = new Map();
 
-    applyToAllElements(tt: ProcessElementsInterface): void {
+    applyToAllElements(tt: ElementProcessor): void {
         for (const g of this.primitiveVector) tt.doAction(g);
     }
 

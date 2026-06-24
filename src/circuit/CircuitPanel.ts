@@ -3,7 +3,7 @@ import { ParserActions } from './controllers/ParserActions.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
 import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
-import type { ColorInterface } from '../graphic/ColorInterface.js';
+import type { Color } from '../graphic/Color.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
 import { registerExportHooks } from './views/Export.js';
 import { TeXMode } from '../graphic/TeXMode.js';
@@ -337,7 +337,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.render();
     }
 
-    setSelectedColor(c: ColorInterface): void {
+    setSelectedColor(c: Color): void {
         this.ctx.setSelectedColor(c);
     }
 

@@ -1,6 +1,6 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
-import type { ShapeInterface } from '../graphic/ShapeInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
+import type { Exporter } from '../export/Exporter.js';
+import type { Shape } from '../graphic/Shape.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
@@ -14,7 +14,7 @@ export class PrimitiveBezier extends GraphicPrimitive {
     private static readonly N_POINTS = 6;
     private readonly arrowData: Arrow;
     private dashStyle: number = 0;
-    private shape1: ShapeInterface | null = null;
+    private shape1: Shape | null = null;
     private w: number = 0;
     private xmin = 0;
     private ymin = 0;
@@ -123,7 +123,7 @@ export class PrimitiveBezier extends GraphicPrimitive {
     }
 
     private drawArrow(
-        g: GraphicsInterface,
+        g: Graphics,
         coordSys: MapCoordinates,
         aa: number,
         bb: number,
@@ -158,7 +158,7 @@ export class PrimitiveBezier extends GraphicPrimitive {
         );
     }
 
-    draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
+    draw(g: Graphics, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         let h = 0;
         let p0 = new PointG(
@@ -311,7 +311,7 @@ export class PrimitiveBezier extends GraphicPrimitive {
         return s;
     }
 
-    export(exp: ExportInterface, cs: MapCoordinates): void {
+    export(exp: Exporter, cs: MapCoordinates): void {
         this.exportText(exp, cs, -1);
         exp.exportBezier(
             cs.mapX(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),

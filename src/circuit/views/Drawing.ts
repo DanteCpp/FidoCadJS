@@ -1,4 +1,4 @@
-import type { GraphicsInterface } from '../../graphic/GraphicsInterface.js';
+import type { Graphics } from '../../graphic/Graphics.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import { DrawingModel } from '../model/DrawingModel.js';
 import { LayerDesc } from '../../layers/LayerDesc.js';
@@ -14,7 +14,7 @@ export class Drawing {
 
     constructor(private readonly drawingModel: DrawingModel) {}
 
-    drawSelectedHandles(gi: GraphicsInterface, cs: MapCoordinates): void {
+    drawSelectedHandles(gi: Graphics, cs: MapCoordinates): void {
         for (const gp of this.drawingModel.getPrimitiveVector()) {
             if (gp.isSelected()) {
                 gp.drawHandles(gi, cs);
@@ -22,7 +22,7 @@ export class Drawing {
         }
     }
 
-    draw(gG: GraphicsInterface, cs: MapCoordinates): void {
+    draw(gG: Graphics, cs: MapCoordinates): void {
         if (cs === null) {
             console.error('Drawing.draw: ouch... cs not initialized :-(');
             return;
@@ -87,7 +87,7 @@ export class Drawing {
         }
     }
 
-    private drawPrimitives(jIndex: number, graphic: GraphicsInterface, cs: MapCoordinates): void {
+    private drawPrimitives(jIndex: number, graphic: Graphics, cs: MapCoordinates): void {
         for (const gg of this.drawingModel.getPrimitiveVector()) {
             if (jIndex > 0 && gg.getLayer() > jIndex) {
                 break;
@@ -106,11 +106,7 @@ export class Drawing {
 }
 
 export function registerDrawingHooks(): void {
-    PrimitiveMacro.drawFn = (
-        model: DrawingModel,
-        g: GraphicsInterface,
-        cs: MapCoordinates,
-    ): void => {
+    PrimitiveMacro.drawFn = (model: DrawingModel, g: Graphics, cs: MapCoordinates): void => {
         const d = new Drawing(model);
         d.draw(g, cs);
     };

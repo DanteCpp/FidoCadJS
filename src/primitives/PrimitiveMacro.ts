@@ -1,5 +1,5 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
+import type { Exporter } from '../export/Exporter.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { Globals } from '../globals/Globals.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
@@ -15,29 +15,20 @@ import { RectangleG } from '../graphic/RectangleG.js';
  */
 export interface MacroBackend {
     parse(model: DrawingModel, description: string): void;
-    draw(model: DrawingModel, g: GraphicsInterface, coordSys: MapCoordinates): void;
-    export(
-        model: DrawingModel,
-        exp: ExportInterface,
-        exportInvisible: boolean,
-        cs: MapCoordinates,
-    ): void;
+    draw(model: DrawingModel, g: Graphics, coordSys: MapCoordinates): void;
+    export(model: DrawingModel, exp: Exporter, exportInvisible: boolean, cs: MapCoordinates): void;
 }
 
 /** Injected by ParserActions to break the circular dependency. */
 export type MacroParserFn = (model: DrawingModel, description: string) => void;
 
 /** Injected by Drawing (Phase 2) to render the inner macro model. */
-export type MacroDrawFn = (
-    model: DrawingModel,
-    g: GraphicsInterface,
-    coordSys: MapCoordinates,
-) => void;
+export type MacroDrawFn = (model: DrawingModel, g: Graphics, coordSys: MapCoordinates) => void;
 
 /** Injected by Export (Phase 2) to export the inner macro model. */
 export type MacroExportFn = (
     model: DrawingModel,
-    exp: ExportInterface,
+    exp: Exporter,
     exportInvisible: boolean,
     cs: MapCoordinates,
 ) => void;
@@ -227,7 +218,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
         return ((o % 4) + 4) % 4;
     }
 
-    private drawMacroContents(g: GraphicsInterface, coordSys: MapCoordinates): void {
+    private drawMacroContents(g: Graphics, coordSys: MapCoordinates): void {
         if (this.changed) {
             this.changed = false;
             this.x1 = this.virtualPoint[0]!.x;
@@ -276,7 +267,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
         }
     }
 
-    draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
+    draw(g: Graphics, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (this.selectLayer(g, layerV)) {
             this.drawText(g, coordSys, layerV, this.drawOnlyLayer);
         }
@@ -447,7 +438,7 @@ export class PrimitiveMacro extends GraphicPrimitive {
         return s;
     }
 
-    export(exp: ExportInterface, cs: MapCoordinates): void {
+    export(exp: Exporter, cs: MapCoordinates): void {
         if (this.alreadyExported) return;
 
         if (

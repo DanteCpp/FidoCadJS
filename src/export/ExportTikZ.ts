@@ -1,4 +1,4 @@
-import type { ExportInterface } from './ExportInterface.js';
+import type { Exporter } from './Exporter.js';
 import type { DimensionG } from '../graphic/DimensionG.js';
 import type { PointDouble } from '../graphic/PointDouble.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
@@ -7,7 +7,7 @@ import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
 import { escapeLatex } from './LatexEscape.js';
 
-export class ExportTikZ implements ExportInterface {
+export class ExportTikZ implements Exporter {
     private buffer: string[] = [];
     private layerV: LayerDesc[] = [];
     private sDash: string[] = [];

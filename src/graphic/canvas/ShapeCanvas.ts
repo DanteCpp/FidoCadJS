@@ -1,7 +1,7 @@
-import type { ShapeInterface } from '../ShapeInterface.js';
+import type { Shape } from '../Shape.js';
 import { RectangleG } from '../RectangleG.js';
 
-export class ShapeCanvas implements ShapeInterface {
+export class ShapeCanvas implements Shape {
     private path: Path2D;
     private bounds: RectangleG | null = null;
 

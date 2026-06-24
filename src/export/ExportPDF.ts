@@ -1,4 +1,4 @@
-import type { ExportInterface } from './ExportInterface.js';
+import type { Exporter } from './Exporter.js';
 import type { DimensionG } from '../graphic/DimensionG.js';
 import type { PointDouble } from '../graphic/PointDouble.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
@@ -11,7 +11,7 @@ import { svgPathToPdfOps } from './SvgPathToPdf.js';
 const RES_MULT = 200.0 / 72.0;
 const BORDER = 5;
 
-export class ExportPDF implements ExportInterface {
+export class ExportPDF implements Exporter {
     private layerV: LayerDesc[] = [];
     private content: string[] = [];
     private pageWidthPdf = 0;

@@ -4,7 +4,7 @@ import type { LayerDesc } from '../layers/LayerDesc.js';
 import type { MacroDesc } from '../primitives/MacroDesc.js';
 import type { PointPr } from './PointPr.js';
 
-export interface ExportInterface {
+export interface Exporter {
     exportStart(totalSize: DimensionG, la: LayerDesc[], grid: number): void;
     exportEnd(): void;
     setDashUnit(u: number): void;

@@ -1,5 +1,5 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
+import type { Exporter } from '../export/Exporter.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
@@ -85,7 +85,7 @@ export class PrimitiveOval extends GraphicPrimitive {
         this.setChanged(true);
     }
 
-    draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
+    draw(g: Graphics, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);
 
@@ -167,7 +167,7 @@ export class PrimitiveOval extends GraphicPrimitive {
         return s;
     }
 
-    export(exp: ExportInterface, cs: MapCoordinates): void {
+    export(exp: Exporter, cs: MapCoordinates): void {
         this.exportText(exp, cs, -1);
         exp.exportOval(
             cs.mapX(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),

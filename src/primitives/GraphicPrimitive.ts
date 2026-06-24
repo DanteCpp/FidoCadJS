@@ -1,6 +1,6 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
+import type { Exporter } from '../export/Exporter.js';
 import type { RenderCtx } from '../graphic/RenderCtx.js';
 import { PointG } from '../graphic/PointG.js';
 import { DimensionG } from '../graphic/DimensionG.js';
@@ -96,7 +96,7 @@ export abstract class GraphicPrimitive {
     }
 
     protected drawText(
-        g: GraphicsInterface,
+        g: Graphics,
         coordSys: MapCoordinates,
         _layerV: LayerDesc[],
         drawOnlyLayer: number,
@@ -200,7 +200,7 @@ export abstract class GraphicPrimitive {
         return s.join('');
     }
 
-    exportText(exp: ExportInterface, cs: MapCoordinates, drawOnlyLayer: number): void {
+    exportText(exp: Exporter, cs: MapCoordinates, drawOnlyLayer: number): void {
         const size = Math.abs(cs.mapXr(this.macroFontSize, this.macroFontSize) - cs.mapXr(0, 0));
         if (drawOnlyLayer >= 0 && drawOnlyLayer !== this.getLayer()) return;
 
@@ -370,11 +370,7 @@ export abstract class GraphicPrimitive {
         this.changed = true;
     }
 
-    protected selectLayer(
-        g: GraphicsInterface,
-        layerV: LayerDesc[],
-        renderCtx?: RenderCtx,
-    ): boolean {
+    protected selectLayer(g: Graphics, layerV: LayerDesc[], renderCtx?: RenderCtx): boolean {
         if (this.old_layer !== this.layer || this.changed) {
             if (this.layer >= layerV.length) this.layer = layerV.length - 1;
             this.currentLayer = layerV[this.layer]!;
@@ -412,7 +408,7 @@ export abstract class GraphicPrimitive {
         return true;
     }
 
-    drawHandles(g: GraphicsInterface, cs: MapCoordinates): void {
+    drawHandles(g: Graphics, cs: MapCoordinates): void {
         g.setColor(g.getColor().red());
         g.applyStroke(2.0, 0);
         this.mult = g.getScreenDensity() / GraphicPrimitive.BASE_RESOLUTION;
@@ -553,12 +549,12 @@ export abstract class GraphicPrimitive {
         return false;
     }
 
-    abstract draw(g: GraphicsInterface, coordSys: MapCoordinates, layerDesc: LayerDesc[]): void;
+    abstract draw(g: Graphics, coordSys: MapCoordinates, layerDesc: LayerDesc[]): void;
     abstract parseTokens(tokens: string[], nn: number): void;
     abstract getDistanceToPoint(px: number, py: number): number;
     abstract getControlPointNumber(): number;
     abstract toString(extensions: boolean): string;
-    abstract export(exp: ExportInterface, cs: MapCoordinates): void;
+    abstract export(exp: Exporter, cs: MapCoordinates): void;
     abstract getNameVirtualPointNumber(): number;
     abstract getValueVirtualPointNumber(): number;
 }

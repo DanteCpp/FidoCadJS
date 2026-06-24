@@ -1,7 +1,7 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
-import type { PolygonInterface } from '../graphic/PolygonInterface.js';
-import type { ShapeInterface } from '../graphic/ShapeInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
+import type { Exporter } from '../export/Exporter.js';
+import type { Polygon } from '../graphic/Polygon.js';
+import type { Shape } from '../graphic/Shape.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
@@ -46,9 +46,9 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
     private dashStyle: number = 0;
     private storageSize: number = 5;
 
-    private p: PolygonInterface | null = null;
-    private q: PolygonInterface | null = null;
-    private gp: ShapeInterface | null = null;
+    private p: Polygon | null = null;
+    private q: Polygon | null = null;
+    private gp: Shape | null = null;
 
     private xmin: number = 0;
     private ymin: number = 0;
@@ -299,10 +299,7 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
         return c;
     }
 
-    createComplexCurvePoly(
-        coordSys: MapCoordinates,
-        poly: PolygonInterface,
-    ): PolygonInterface | null {
+    createComplexCurvePoly(coordSys: MapCoordinates, poly: Polygon): Polygon | null {
         this.xmin = Number.MAX_SAFE_INTEGER;
         this.ymin = Number.MAX_SAFE_INTEGER;
         let xmax = -Number.MAX_SAFE_INTEGER,
@@ -412,7 +409,7 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
         return cc;
     }
 
-    draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
+    draw(g: Graphics, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);
 
@@ -643,7 +640,7 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
         return s;
     }
 
-    export(exp: ExportInterface, cs: MapCoordinates): void {
+    export(exp: Exporter, cs: MapCoordinates): void {
         const xPoints: number[] = new Array(this.nPoints);
         const yPoints: number[] = new Array(this.nPoints);
         const vertices: PointDouble[] = new Array(this.nPoints * PrimitiveComplexCurve.STEPS + 1);
@@ -704,7 +701,7 @@ export class PrimitiveComplexCurve extends GraphicPrimitive {
         xPoints: number[],
         yPoints: number[],
         vertices: PointDouble[],
-        exp: ExportInterface,
+        exp: Exporter,
         cs: MapCoordinates,
     ): number {
         let xx: Cubic[], yy: Cubic[];
