@@ -1,20 +1,17 @@
 # Agent Notes
 
-FidoCadJS is a TypeScript browser port of FidoCadJ, built with Vite, Vitest,
-and jsdom. Keep the project small, readable, and close to the Java reference
-where that helps preserve FCL behavior.
+FidoCadJS is a self-contained FidoCad parser and editor implemented in TypeScript, built with Vite, Vitest,
+and jsdom. It was originaly developed as a browser port of FidoCadJ.
 
 ## Goals
 
 - Preserve compatibility with the FidoCadJ file format and drawing semantics.
 - Prefer clear TypeScript over broad abstractions.
 - Keep browser behavior deterministic and covered by focused tests.
-- Use `~/FidoCadJ` only as read-only reference material.
 - Keep dependencies minimal; ask before adding any new package.
 
 ## Quality Rules
 
-- Read `AGENTS.md` before meaningful work. 
 - Write tests alongside new modules and meaningful behavior changes.
 - Run the relevant build or test command after non-trivial edits.
 - Comment only where code intent is not obvious from local context.
@@ -44,4 +41,4 @@ where that helps preserve FCL behavior.
 - Use `npm test` for the main Vitest suite.
 - Use `npm run build` for production build validation.
 - Use Playwright or browser tests only when changing interactive UI behavior.
-
+- Prefer e2e tests to unit tests. 
