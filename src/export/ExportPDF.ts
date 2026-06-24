@@ -700,13 +700,13 @@ export class ExportPDF implements Exporter {
     /** Escape PDF literal-string special characters: ( ) and \\. */
     private escapePdfString(s: string): string {
         let out = '';
-        for (let i = 0; i < s.length; ++i) {
-            const ch = s.charCodeAt(i);
+        for (const c of s) {
+            const ch = c.charCodeAt(0);
             if (ch === 0x28) out += '\\(';
             else if (ch === 0x29) out += '\\)';
             else if (ch === 0x5c) out += '\\\\';
             else if (ch < 0x20 || ch > 0x7e) out += '?';
-            else out += s[i];
+            else out += c;
         }
         return out;
     }
