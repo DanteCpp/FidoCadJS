@@ -302,44 +302,46 @@ export class GraphicsCanvas implements Graphics {
         xmax: number,
         ymax: number,
         colorDots: Color,
-        colorLines: Color,
+        _colorLines: Color,
     ): void {
-        const xStep = cs.getXGridStep() * cs.getXMagnitude();
-        const yStep = cs.getYGridStep() * cs.getYMagnitude();
+        // Raw on-screen spacing of a single document grid cell.
+        const baseXStep = cs.getXGridStep() * cs.getXMagnitude();
+        const baseYStep = cs.getYGridStep() * cs.getYMagnitude();
 
-        const xStart = ((cs.getXCenter() % xStep) + xStep) % xStep;
-        const yStart = ((cs.getYCenter() % yStep) + yStep) % yStep;
+        // A non-positive step (zero grid step or magnitude) would make the
+        // loops below never terminate, so bail out early.
+        if (baseXStep <= 0 || baseYStep <= 0) {
+            return;
+        }
 
-        if (xStep < 5 || yStep < 5) {
-            // Draw dots
-            this.setColor(colorDots);
-            const dotSize = 1;
-            for (let x = xStart; x < xmax; x += xStep) {
-                for (let y = yStart; y < ymax; y += yStep) {
-                    if (x >= xmin && y >= ymin) {
-                        this.ctx.fillRect(x, y, dotSize, dotSize);
-                    }
-                }
-            }
-        } else {
-            // Draw lines
-            this.setColor(colorLines);
-            this.ctx.lineWidth = 1;
-            this.ctx.setLineDash([]);
-            this.ctx.beginPath();
-            for (let x = xStart; x < xmax; x += xStep) {
-                if (x >= xmin) {
-                    this.ctx.moveTo(x, ymin);
-                    this.ctx.lineTo(x, ymax);
-                }
-            }
+        // Auto-scaling: when zoomed out the raw step can collapse to a fraction
+        // of a pixel, producing an unreadable grey wash and forcing millions of
+        // draw calls per frame. We grow the spacing by a clean 1-2-5 decade
+        // sequence until every cell is at least MIN_GRID_PX wide. This keeps the
+        // grid readable and the primitive count bounded at any zoom level.
+        const MIN_GRID_PX = 8;
+        const xStep = baseXStep * niceGridMultiplier(MIN_GRID_PX / baseXStep);
+        const yStep = baseYStep * niceGridMultiplier(MIN_GRID_PX / baseYStep);
+
+        // Align the grid to the document origin (xCenter/yCenter is the screen
+        // position of document coordinate 0), then clamp the first line into the
+        // visible band so we never iterate over off-screen cells.
+        const xOrigin = ((cs.getXCenter() % xStep) + xStep) % xStep;
+        const yOrigin = ((cs.getYCenter() % yStep) + yStep) % yStep;
+        const xStart = xOrigin + Math.ceil((xmin - xOrigin) / xStep) * xStep;
+        const yStart = yOrigin + Math.ceil((ymin - yOrigin) / yStep) * yStep;
+
+        // A dotted grid is drawn at every zoom level for a consistent look.
+        // Dots are 2px and centred on each grid point so they stay clearly
+        // visible (a single anti-aliased pixel reads as too faint), while still
+        // being far lighter than full grid lines.
+        this.setColor(colorDots);
+        const dotSize = 2;
+        const half = dotSize / 2;
+        for (let x = xStart; x < xmax; x += xStep) {
             for (let y = yStart; y < ymax; y += yStep) {
-                if (y >= ymin) {
-                    this.ctx.moveTo(xmin, y);
-                    this.ctx.lineTo(xmax, y);
-                }
+                this.ctx.fillRect(x - half, y - half, dotSize, dotSize);
             }
-            this.ctx.stroke();
         }
     }
 
@@ -366,4 +368,25 @@ export class GraphicsCanvas implements Graphics {
     clear(): void {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
+}
+
+/**
+ * Smallest multiplier from the 1-2-5 decade sequence (…, 0.5, 1, 2, 5, 10, 20,
+ * 50, …) that is greater than or equal to `minFactor`. Used to coarsen the grid
+ * so its on-screen spacing snaps to visually clean steps while never falling
+ * below the requested minimum. When `minFactor <= 1` the native step is already
+ * large enough, so no scaling is applied.
+ */
+function niceGridMultiplier(minFactor: number): number {
+    if (!(minFactor > 1)) {
+        return 1;
+    }
+    const decade = Math.pow(10, Math.floor(Math.log10(minFactor)));
+    for (const m of [1, 2, 5]) {
+        const candidate = m * decade;
+        if (candidate >= minFactor) {
+            return candidate;
+        }
+    }
+    return 10 * decade;
 }
