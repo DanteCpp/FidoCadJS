@@ -1,11 +1,3 @@
-/**
- * @file export-tikz.test.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Tests for ExportTikZ — TikZ command generation for LaTeX
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExportTikZ } from '../../src/export/ExportTikZ.js';
 import { DimensionG } from '../../src/graphic/DimensionG.js';

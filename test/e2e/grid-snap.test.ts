@@ -1,11 +1,3 @@
-/**
- * @file grid-snap.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Grid visibility and snap-to-grid toggles
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp } from './utils';
 

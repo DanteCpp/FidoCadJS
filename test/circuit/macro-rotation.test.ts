@@ -1,13 +1,3 @@
-/**
- * @file macro-rotate-repro.test.ts
- * @author Dante Loi
- * @date 2026-06-02
- * @brief Regression test: rotating macros must apply a rigid transform that
- *        preserves the macro's shape and proportions, including for nested
- *        (macro-in-macro) instances whose sub-macro is mirrored.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';

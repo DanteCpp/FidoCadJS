@@ -1,11 +1,3 @@
-/**
- * @file LibraryLoader.ts
- * @author Dante Loi
- * @date 2026-04-23
- * @brief Fetches and loads standard FCL component libraries from public/lib/.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ParserActions } from './ParserActions.js';
 import { getCurrentLocale } from '../../i18n/i18n.js';
 

@@ -1,29 +1,3 @@
-/**
- * @file export-svg-pixel-parity.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Rasterised pixel comparison: TS SVG output vs Java PNG reference.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * For each .fcd fixture:
- *   1. The TS port exports SVG.
- *   2. Playwright (Chromium) renders the SVG at scale 2 (matches Java's
- *      `-c r2` PNG reference).
- *   3. The rendered PNG is pixel-diffed against test/export/fixtures/png-ref/.
- *   4. Failures dump the TS render, Java reference, and diff PNG to
- *      test-results/pixel-parity/ for triage.
- *
- * Tolerances are intentionally generous (default 5 %) — Chromium's text
- * metrics differ from AWT's, so text-heavy fixtures are not expected to
- * be sub-pixel identical. The point is to catch *categorical* drift
- * (missing element, wrong colour, wrong placement) — not the last
- * sub-pixel.
- *
- * Fixtures known to diverge significantly are listed in
- * `KNOWN_DIVERGENT` and skipped. As port-side bugs get fixed, fixtures
- * should be removed from that list one-by-one.
- */
-
 import { test, expect } from '@playwright/test';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';

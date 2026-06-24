@@ -1,11 +1,3 @@
-/**
- * @file app-loads.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — App initialisation, rendering, and basic smoke checks
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, getToolbarButtonLabels, getCoordsDisplay, primitiveCount } from './utils';
 

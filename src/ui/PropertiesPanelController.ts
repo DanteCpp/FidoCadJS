@@ -1,11 +1,3 @@
-/**
- * @file PropertiesPanelController.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Properties sidebar form builder extracted from app.ts
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { getString } from '../i18n/i18n.js';
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';

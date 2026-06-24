@@ -1,12 +1,3 @@
-/**
- * @file export-adversarial.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Adversarial inputs to the SVG exporter — extreme coords, infinite
- *        values, very long text, XML-injection-shaped strings.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExportSVG } from '../../src/export/ExportSVG.js';
 import { DimensionG } from '../../src/graphic/DimensionG.js';

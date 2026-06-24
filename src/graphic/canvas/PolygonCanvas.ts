@@ -1,11 +1,3 @@
-/**
- * @file PolygonCanvas.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief HTML Canvas polygon drawing implementation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { PolygonInterface } from '../PolygonInterface.js';
 import type { PointG } from '../PointG.js';
 import { RectangleG } from '../RectangleG.js';
@@ -28,17 +20,25 @@ export class PolygonCanvas implements PolygonInterface {
         this.ypoints = [];
     }
 
-    getNpoints(): number { return this.xpoints.length; }
-    getXpoints(): number[] { return this.xpoints; }
-    getYpoints(): number[] { return this.ypoints; }
+    getNpoints(): number {
+        return this.xpoints.length;
+    }
+    getXpoints(): number[] {
+        return this.xpoints;
+    }
+    getYpoints(): number[] {
+        return this.ypoints;
+    }
 
     contains(x: number, y: number): boolean {
         if (this.xpoints.length < 3) return false;
         let inside = false;
         for (let i = 0, j = this.xpoints.length - 1; i < this.xpoints.length; j = i++) {
-            const xi = this.xpoints[i]!, yi = this.ypoints[i]!;
-            const xj = this.xpoints[j]!, yj = this.ypoints[j]!;
-            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+            const xi = this.xpoints[i]!,
+                yi = this.ypoints[i]!;
+            const xj = this.xpoints[j]!,
+                yj = this.ypoints[j]!;
+            if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
                 inside = !inside;
             }
         }

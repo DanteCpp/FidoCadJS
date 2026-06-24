@@ -1,11 +1,3 @@
-/**
- * @file UndoActions.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Undo/redo action interface for editor controllers
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { ParserActions } from './ParserActions.js';
 
 /**
@@ -18,7 +10,6 @@ export class UndoActions {
     private redoStack: string[];
     private readonly maxUndoLevels: number = 100;
     private isModified: boolean = false;
-    private openFileName: string | null = null;
 
     constructor(parserActions: ParserActions) {
         this.parserActions = parserActions;
@@ -90,15 +81,5 @@ export class UndoActions {
     /** Set modified state */
     setModified(state: boolean): void {
         this.isModified = state;
-    }
-
-    /** Set open file name */
-    setOpenFileName(name: string | null): void {
-        this.openFileName = name;
-    }
-
-    /** Get open file name */
-    getOpenFileName(): string | null {
-        return this.openFileName;
     }
 }

@@ -1,13 +1,3 @@
-/**
- * @file math-render.test.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief E2E — LaTeX math renders through the real browser stack: typeset
- *        glyphs painted on the canvas (renderTeX) and embedded as paths in SVG
- *        export. Replaces the removed KaTeX-overlay behaviour.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, loadCircuit, exportSVG, settle } from './utils';
 

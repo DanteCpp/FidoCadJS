@@ -1,11 +1,3 @@
-/**
- * @file PromptDialog.ts
- * @author Dante Loi
- * @date 2026-04-27
- * @brief Reusable modal text-input dialog for rename and other single-value prompts.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { getString } from '../i18n/i18n.js';
 
 function escapeHtml(s: string): string {

@@ -1,13 +1,3 @@
-/**
- * @file ExportFacade.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Export methods (SVG, PGF, TikZ) extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Delegates to the export/ package. CircuitPanel used to own these
- *          methods even though they don't touch the canvas or DOM.
- */
-
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { Export } from '../circuit/views/Export.js';
 import { DrawingSize } from '../geom/DrawingSize.js';

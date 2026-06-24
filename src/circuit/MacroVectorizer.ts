@@ -1,13 +1,3 @@
-/**
- * @file MacroVectorizer.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Macro vectorization logic extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Converts a selected macro instance back into individual primitives.
- *          Extracted mechanically during agent-friendly refactoring (P2.7).
- */
-
 import { DrawingModel } from './model/DrawingModel.js';
 import { ParserActions } from './controllers/ParserActions.js';
 import { PrimitiveMacro } from '../primitives/PrimitiveMacro.js';

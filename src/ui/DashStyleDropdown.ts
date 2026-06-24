@@ -1,13 +1,3 @@
-/**
- * @file DashStyleDropdown.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Reusable dash style selector dropdown with SVG previews.
- *        Mirrors FidoCadJ's DashStyleComboBox which renders each option
- *        as a stroked line preview rather than a numeric index.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { Globals } from '../globals/Globals.js';
 
 export class DashStyleDropdown {

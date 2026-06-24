@@ -1,11 +1,3 @@
-/**
- * @file export-pgf.test.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Tests for ExportPGF — PGF command generation for LaTeX
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExportPGF } from '../../src/export/ExportPGF.js';
 import { DimensionG } from '../../src/graphic/DimensionG.js';

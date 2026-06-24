@@ -1,11 +1,3 @@
-/**
- * @file LayerDropdown.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Reusable layer selector dropdown with color swatches
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { getString } from '../i18n/i18n.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
 

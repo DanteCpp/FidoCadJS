@@ -1,19 +1,8 @@
-/**
- * @file LibUtils.ts
- * @author Dante Loi
- * @date 2026-04-27
- * @brief Static utility functions for library text processing and key validation.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Browser port of fidocadj.globals.LibUtils (phylum2, Davide Bucci, 2012-2023).
- */
-
 import { MacroDesc } from '../primitives/MacroDesc.js';
 
 const STD_FILENAMES = new Set(['', 'FCDstdlib', 'elettrotecnica', 'EY_Libraries', 'IHRAM']);
 
 export class LibUtils {
-
     private constructor() {}
 
     /** Serialize macros to FCL format text. */
@@ -61,8 +50,10 @@ export class LibUtils {
     /** Returns true if the key already exists or contains ']'. */
     static checkKey(libref: Map<string, MacroDesc>, tlib: string, key: string): boolean {
         for (const md of libref.values()) {
-            if (md.filename.toLowerCase() === tlib.toLowerCase() &&
-                md.key.toLowerCase() === key.trim().toLowerCase()) {
+            if (
+                md.filename.toLowerCase() === tlib.toLowerCase() &&
+                md.key.toLowerCase() === key.trim().toLowerCase()
+            ) {
                 return true;
             }
         }
@@ -70,10 +61,16 @@ export class LibUtils {
     }
 
     /** Returns true if the key is a duplicate in the library. */
-    static checkKeyDuplicate(libref: Map<string, MacroDesc>, tlib: string, fullKey: string): boolean {
+    static checkKeyDuplicate(
+        libref: Map<string, MacroDesc>,
+        tlib: string,
+        fullKey: string,
+    ): boolean {
         for (const md of libref.values()) {
-            if (md.filename.toLowerCase() === tlib.toLowerCase() &&
-                md.key.toLowerCase() === fullKey.trim().toLowerCase()) {
+            if (
+                md.filename.toLowerCase() === tlib.toLowerCase() &&
+                md.key.toLowerCase() === fullKey.trim().toLowerCase()
+            ) {
                 return true;
             }
         }
@@ -89,8 +86,10 @@ export class LibUtils {
     static enumGroups(libref: Map<string, MacroDesc>, prefix: string): string[] {
         const groups: string[] = [];
         for (const md of libref.values()) {
-            if (md.filename.trim().toLowerCase() === prefix.trim().toLowerCase() &&
-                !groups.includes(md.category)) {
+            if (
+                md.filename.trim().toLowerCase() === prefix.trim().toLowerCase() &&
+                !groups.includes(md.category)
+            ) {
                 groups.push(md.category);
             }
         }

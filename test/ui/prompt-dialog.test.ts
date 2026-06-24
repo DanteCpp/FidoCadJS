@@ -1,12 +1,3 @@
-/**
- * @file prompt-dialog.test.ts
- * @author Dante Loi
- * @date 2026-06-11
- * @brief Unit tests for PromptDialog — resolution paths, validation gating,
- *        and HTML escaping of the default value.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { PromptDialog } from '../../src/ui/PromptDialog.js';

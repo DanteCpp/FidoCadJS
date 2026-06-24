@@ -1,18 +1,3 @@
-/**
- * @file helpers.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Shared helpers for fixture-based exporter tests.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Each helper centralises one job:
- *   - listing the .fcd fixtures,
- *   - parsing a fixture into a DrawingModel,
- *   - exporting via ExportFacade,
- *   - reading committed Java/TS snapshots,
- *   - normalising whitespace and version banners for diff stability.
- */
-
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';

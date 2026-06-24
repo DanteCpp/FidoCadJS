@@ -1,11 +1,3 @@
-/**
- * @file ColorCanvas.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief HTML Canvas colour implementation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ColorInterface } from '../ColorInterface.js';
 
 export class ColorCanvas implements ColorInterface {

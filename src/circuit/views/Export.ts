@@ -1,11 +1,3 @@
-/**
- * @file Export.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Export view dispatching per-primitive export hooks
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ExportInterface } from '../../export/ExportInterface.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import { DrawingModel } from '../model/DrawingModel.js';
@@ -31,10 +23,7 @@ export class Export {
     }
 
     exportDrawing(exp: ExportInterface, exportInvisible: boolean, mp: MapCoordinates): void {
-        if (
-            this.drawingModel.getDrawOnlyLayer() >= 0 &&
-            !this.drawingModel.getDrawOnlyPads()
-        ) {
+        if (this.drawingModel.getDrawOnlyLayer() >= 0 && !this.drawingModel.getDrawOnlyPads()) {
             this.exportAllObjects(exp, exportInvisible, mp);
         } else if (!this.drawingModel.getDrawOnlyPads()) {
             for (let j = 0; j < this.drawingModel.getLayers().length; ++j) {
@@ -73,7 +62,7 @@ export class Export {
     private exportAllObjects(
         exp: ExportInterface,
         exportInvisible: boolean,
-        mp: MapCoordinates
+        mp: MapCoordinates,
     ): void {
         for (let i = 0; i < this.drawingModel.getPrimitiveVector().length; ++i) {
             const g = this.drawingModel.getPrimitiveVector()[i];
@@ -108,7 +97,7 @@ export function registerExportHooks(): void {
         model: DrawingModel,
         exp: ExportInterface,
         exportInvisible: boolean,
-        cs: MapCoordinates
+        cs: MapCoordinates,
     ): void => {
         const e = new Export(model);
         e.exportDrawing(exp, exportInvisible, cs);

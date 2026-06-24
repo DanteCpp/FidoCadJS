@@ -1,14 +1,3 @@
-/**
- * @file undo-actions.test.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Tests for UndoActions — stack management and basic correctness
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * UndoActions uses a PRE-SAVE approach: state is captured BEFORE each mutation
- * so that a single undo() restores the model to its state before that operation.
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
@@ -79,20 +68,59 @@ describe('UndoActions', () => {
         it('addPrimitive pushes undo state', () => {
             expect(undo.canUndo()).toBe(false);
 
-            const line = new PrimitiveLine(10, 20, 30, 40, 0, false, false, 0, 3, 2, 0,
-                model.getTextFont(), model.getTextFontSize());
+            const line = new PrimitiveLine(
+                10,
+                20,
+                30,
+                40,
+                0,
+                false,
+                false,
+                0,
+                3,
+                2,
+                0,
+                model.getTextFont(),
+                model.getTextFontSize(),
+            );
             model.addPrimitive(line, false, undo);
 
             expect(undo.canUndo()).toBe(true);
         });
 
         it('multiple adds create multiple undo entries', () => {
-            const line1 = new PrimitiveLine(0, 0, 10, 10, 0, false, false, 0, 3, 2, 0,
-                model.getTextFont(), model.getTextFontSize());
+            const line1 = new PrimitiveLine(
+                0,
+                0,
+                10,
+                10,
+                0,
+                false,
+                false,
+                0,
+                3,
+                2,
+                0,
+                model.getTextFont(),
+                model.getTextFontSize(),
+            );
             model.addPrimitive(line1, false, undo);
 
-            const line2 = new PrimitiveLine(20, 20, 30, 30, 0, false, false, 0, 3, 2, 0,
-                model.getTextFont(), model.getTextFontSize());
+            const line2 = new PrimitiveLine(
+                20,
+                20,
+                30,
+                30,
+                0,
+                false,
+                false,
+                0,
+                3,
+                2,
+                0,
+                model.getTextFont(),
+                model.getTextFontSize(),
+            );
             model.addPrimitive(line2, false, undo);
 
             expect(model.getPrimitiveVector().length).toBe(2);

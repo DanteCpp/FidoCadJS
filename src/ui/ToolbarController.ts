@@ -1,11 +1,3 @@
-/**
- * @file ToolbarController.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Toolbar UI builder extracted from app.ts
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { ElementsEdtActions } from '../circuit/controllers/ElementsEdtActions.js';
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { LayerDropdown } from './LayerDropdown.js';

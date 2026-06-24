@@ -1,15 +1,3 @@
-/**
- * @file EditorFacade.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Narrow interface that UI components consume instead of concrete CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Extracted during agent-friendly refactoring. This interface exposes only
- *          the methods and properties that UI classes (ToolbarController, MenuBar,
- *          PropertiesPanelController, ExportDialog, SettingsManager) actually call.
- *          CircuitPanel implements this interface so UI code can be mocked in tests.
- */
-
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { DrawingModel } from './model/DrawingModel.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
@@ -112,12 +100,4 @@ export interface EditorFacade {
     attachImage(file: File): Promise<void>;
     detachImage(): void;
     isImageAttached(): boolean;
-    getImageAlpha(): number;
-    setImageAlpha(a: number): void;
-    getImageScale(): number;
-    setImageScale(s: number): void;
-    getImageX(): number;
-    setImageX(x: number): void;
-    getImageY(): number;
-    setImageY(y: number): void;
 }

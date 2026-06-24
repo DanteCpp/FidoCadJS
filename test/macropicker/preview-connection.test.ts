@@ -1,17 +1,3 @@
-/**
- * @file preview-connection.test.ts
- * @author Dante Loi
- * @date 2026-05-20
- * @brief Regression test: connection dots must stay visible after a background clear
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Guards Bug 1 — the macro preview cleared its background by writing to the
- *          raw 2D context, desyncing GraphicsCanvas.currentColor. Because connection
- *          dots live on layer 0 (black) and selectLayer() skips setColor() when it
- *          believes the colour is already black, the dot was filled white-on-white.
- *          Clearing through the graphics API keeps the colour state in sync so the
- *          dot's fill uses the layer colour.
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';

@@ -1,11 +1,3 @@
-/**
- * @file drawing-tools.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Drawing tool operations for all primitive types
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import {
     gotoApp,

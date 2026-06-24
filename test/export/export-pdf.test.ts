@@ -1,11 +1,3 @@
-/**
- * @file export-pdf.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Tests for ExportPDF — content-stream and PDF document structure.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ExportPDF } from '../../src/export/ExportPDF.js';
 import { DimensionG } from '../../src/graphic/DimensionG.js';

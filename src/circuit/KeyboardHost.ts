@@ -1,13 +1,3 @@
-/**
- * @file KeyboardHost.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Interface that the host (CircuitPanel) must satisfy for KeyboardController
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Extracted from KeyboardController.ts during agent-friendly refactoring
- *          to provide a standalone, importable contract.
- */
-
 import type { MenuBar } from '../ui/MenuBar.js';
 
 /**

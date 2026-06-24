@@ -1,11 +1,3 @@
-/**
- * @file edge-cases.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Edge cases, regression guards, and stress tests
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import {
     gotoApp,

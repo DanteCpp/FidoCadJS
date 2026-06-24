@@ -1,16 +1,3 @@
-/**
- * @file Ruler.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief On-canvas measuring ruler, ported from FidoCadJ 0.24.9
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Draws a green ruler with tick marks between a start and an end point
- *          while the user drags with the right mouse button, and shows the
- *          measured length both in FidoCadJ logical units and in millimetres
- *          (one logical unit = 127 microns). The geometry mirrors FidoCadJ's
- *          fidocadj.circuit.Ruler so measurements match the desktop editor.
- */
-
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 
 /** One FidoCadJ logical unit expressed in millimetres (127 microns). */

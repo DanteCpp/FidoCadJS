@@ -1,11 +1,3 @@
-/**
- * @file globals.test.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Tests for Globals static utility functions
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { Globals } from '../../src/globals/Globals.js';
 

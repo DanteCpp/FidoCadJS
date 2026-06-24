@@ -1,11 +1,3 @@
-/**
- * @file file-operations.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — File new/open/save, circuit load, and code view
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import {
     gotoApp,

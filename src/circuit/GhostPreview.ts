@@ -1,14 +1,3 @@
-/**
- * @file GhostPreview.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Ghost preview generation for drawing tools, extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Generates transparent "ghost" primitives that follow the cursor while
- *          a drawing tool is active. Uses a strategy pattern — each tool registers
- *          its own ghost handler, eliminating the central switch/case.
- */
-
 import { ElementsEdtActions } from './controllers/ElementsEdtActions.js';
 import type { DrawingModel } from './model/DrawingModel.js';
 import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
@@ -31,8 +20,19 @@ import { StandardLayers } from '../layers/StandardLayers.js';
 const lineGhost: ToolGhostHandler = (ctx) => {
     if (ctx.clickNum === 1) {
         return new PrimitiveLine(
-            ctx.xpoly[1], ctx.ypoly[1], ctx.lx, ctx.ly, ctx.layer,
-            false, false, 0, 3, 2, 0, ctx.font, ctx.fontSize
+            ctx.xpoly[1],
+            ctx.ypoly[1],
+            ctx.lx,
+            ctx.ly,
+            ctx.layer,
+            false,
+            false,
+            0,
+            3,
+            2,
+            0,
+            ctx.font,
+            ctx.fontSize,
         );
     }
     return null;
@@ -41,11 +41,23 @@ const lineGhost: ToolGhostHandler = (ctx) => {
 const bezierGhost: ToolGhostHandler = (ctx) => {
     if (ctx.clickNum === 3) {
         return new PrimitiveBezier(
-            ctx.xpoly[1], ctx.ypoly[1],
-            ctx.xpoly[2], ctx.ypoly[2],
-            ctx.xpoly[3], ctx.ypoly[3],
-            ctx.lx, ctx.ly,
-            ctx.layer, false, false, 0, 3, 2, 0, ctx.font, ctx.fontSize
+            ctx.xpoly[1],
+            ctx.ypoly[1],
+            ctx.xpoly[2],
+            ctx.ypoly[2],
+            ctx.xpoly[3],
+            ctx.ypoly[3],
+            ctx.lx,
+            ctx.ly,
+            ctx.layer,
+            false,
+            false,
+            0,
+            3,
+            2,
+            0,
+            ctx.font,
+            ctx.fontSize,
         );
     } else if (ctx.clickNum >= 1 && ctx.clickNum < 3) {
         const ctrlPoly = new PrimitivePolygon(false, ctx.layer, 0, ctx.font, ctx.fontSize);
@@ -61,7 +73,15 @@ const bezierGhost: ToolGhostHandler = (ctx) => {
 const rectangleGhost: ToolGhostHandler = (ctx) => {
     if (ctx.clickNum === 1) {
         return new PrimitiveRectangle(
-            ctx.xpoly[1], ctx.ypoly[1], ctx.lx, ctx.ly, false, ctx.layer, 0, ctx.font, ctx.fontSize
+            ctx.xpoly[1],
+            ctx.ypoly[1],
+            ctx.lx,
+            ctx.ly,
+            false,
+            ctx.layer,
+            0,
+            ctx.font,
+            ctx.fontSize,
         );
     }
     return null;
@@ -70,7 +90,15 @@ const rectangleGhost: ToolGhostHandler = (ctx) => {
 const ellipseGhost: ToolGhostHandler = (ctx) => {
     if (ctx.clickNum === 1) {
         return new PrimitiveOval(
-            ctx.xpoly[1], ctx.ypoly[1], ctx.lx, ctx.ly, false, ctx.layer, 0, ctx.font, ctx.fontSize
+            ctx.xpoly[1],
+            ctx.ypoly[1],
+            ctx.lx,
+            ctx.ly,
+            false,
+            ctx.layer,
+            0,
+            ctx.font,
+            ctx.fontSize,
         );
     }
     return null;
@@ -91,9 +119,17 @@ const polygonGhost: ToolGhostHandler = (ctx) => {
 const complexCurveGhost: ToolGhostHandler = (ctx) => {
     if (ctx.clickNum >= 1) {
         const cc = new PrimitiveComplexCurve(
-            false, false, ctx.layer,
-            false, false, 0, 3, 2, 0,
-            ctx.font, ctx.fontSize
+            false,
+            false,
+            ctx.layer,
+            false,
+            false,
+            0,
+            3,
+            2,
+            0,
+            ctx.font,
+            ctx.fontSize,
         );
         for (let i = 1; i <= ctx.clickNum; i++) {
             cc.addPoint(ctx.xpoly[i], ctx.ypoly[i]);
@@ -107,19 +143,29 @@ const complexCurveGhost: ToolGhostHandler = (ctx) => {
 const pcbPadGhost: ToolGhostHandler = (ctx, edt) => {
     const ae = edt.getAddElements();
     return new PrimitivePCBPad(
-        ctx.lx, ctx.ly,
-        ae.getPcbPadSizeX(), ae.getPcbPadSizeY(),
-        ae.getPcbPadDrill(), ae.getPcbPadStyle(),
-        ctx.layer, ctx.font, ctx.fontSize
+        ctx.lx,
+        ctx.ly,
+        ae.getPcbPadSizeX(),
+        ae.getPcbPadSizeY(),
+        ae.getPcbPadDrill(),
+        ae.getPcbPadStyle(),
+        ctx.layer,
+        ctx.font,
+        ctx.fontSize,
     );
 };
 
 const pcbLineGhost: ToolGhostHandler = (ctx, edt) => {
     if (ctx.clickNum === 1) {
         return new PrimitivePCBLine(
-            ctx.xpoly[1], ctx.ypoly[1], ctx.lx, ctx.ly,
+            ctx.xpoly[1],
+            ctx.ypoly[1],
+            ctx.lx,
+            ctx.ly,
             edt.getAddElements().getPcbThickness(),
-            ctx.layer, ctx.font, ctx.fontSize
+            ctx.layer,
+            ctx.font,
+            ctx.fontSize,
         );
     }
     return null;
@@ -139,7 +185,7 @@ const macroGhost: ToolGhostHandler = (ctx, edt, model) => {
             model.getLibrary(),
             StandardLayers.createEditingLayerArray(),
             ctx.font,
-            ctx.fontSize
+            ctx.fontSize,
         );
         macroPreview.virtualPoint[0]!.x = ctx.lx;
         macroPreview.virtualPoint[0]!.y = ctx.ly;
@@ -188,7 +234,7 @@ export class GhostPreview {
         ly: number,
         tool: number,
         edt: ElementsEdtActions,
-        model: DrawingModel
+        model: DrawingModel,
     ): GraphicPrimitive | null {
         const handler = registry.get(tool);
         if (!handler) return null;

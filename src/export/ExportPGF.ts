@@ -1,11 +1,3 @@
-/**
- * @file ExportPGF.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief PGF (Portable Graphic File) export for LaTeX documents
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ExportInterface } from './ExportInterface.js';
 import type { DimensionG } from '../graphic/DimensionG.js';
 import type { PointDouble } from '../graphic/PointDouble.js';
@@ -13,7 +5,7 @@ import type { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
 import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
-import { escapeLatex } from './AbstractExport.js';
+import { escapeLatex } from './LatexEscape.js';
 
 export class ExportPGF implements ExportInterface {
     private buffer: string[] = [];

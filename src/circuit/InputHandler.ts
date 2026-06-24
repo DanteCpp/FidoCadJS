@@ -1,15 +1,3 @@
-/**
- * @file InputHandler.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Mouse/wheel event handler and gesture state machine extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Handles all pointer events: selection (click, rubber-band, drag-handle,
- *          move-all), drawing tools (click dispatch, ghost preview), pan (middle
- *          button, hand tool), zoom (tool, wheel), and double-click detection.
- *          Extracted during agent-friendly refactoring (P2.5).
- */
-
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { DrawingModel } from './model/DrawingModel.js';
 import { Ruler } from './Ruler.js';
@@ -236,17 +224,6 @@ export class InputHandler {
     /** Set ghost primitive directly (for external reset). */
     setGhostPrimitive(p: GraphicPrimitive | null): void {
         this._ghostPrimitive = p;
-    }
-
-    /** Set drag handle state directly (for external reset). */
-    setDragHandle(index: number, prim: GraphicPrimitive | null): void {
-        this._dragHandleIndex = index;
-        this._dragHandlePrim = prim;
-    }
-
-    /** Set selRectActive directly (for external reset). */
-    setSelRectActive(active: boolean): void {
-        this._selRectActive = active;
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

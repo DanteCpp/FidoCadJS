@@ -1,11 +1,3 @@
-/**
- * @file LayerDesc.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Layer descriptor model (colour, visibility, alpha, description)
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ColorInterface } from '../graphic/ColorInterface.js';
 
 export class LayerDesc {
@@ -24,14 +16,34 @@ export class LayerDesc {
         this.alphaValue = a;
     }
 
-    getColor(): ColorInterface | null { return this.layerColor; }
-    getAlpha(): number { return this.alphaValue; }
-    isVisible(): boolean { return this.isVisibleFlag; }
-    isModified(): boolean { return this.isModifiedFlag; }
-    getDescription(): string { return this.layerDescription; }
-    setDescription(s: string): void { this.layerDescription = s; }
-    setVisible(v: boolean): void { this.isVisibleFlag = v; }
-    setModified(v: boolean): void { this.isModifiedFlag = v; }
-    setColor(c: ColorInterface): void { this.layerColor = c; }
-    setAlpha(a: number): void { this.alphaValue = a; }
+    getColor(): ColorInterface | null {
+        return this.layerColor;
+    }
+    getAlpha(): number {
+        return this.alphaValue;
+    }
+    isVisible(): boolean {
+        return this.isVisibleFlag;
+    }
+    isModified(): boolean {
+        return this.isModifiedFlag;
+    }
+    getDescription(): string {
+        return this.layerDescription;
+    }
+    setDescription(s: string): void {
+        this.layerDescription = s;
+    }
+    setVisible(v: boolean): void {
+        this.isVisibleFlag = v;
+    }
+    setModified(v: boolean): void {
+        this.isModifiedFlag = v;
+    }
+    setColor(c: ColorInterface): void {
+        this.layerColor = c;
+    }
+    setAlpha(a: number): void {
+        this.alphaValue = a;
+    }
 }

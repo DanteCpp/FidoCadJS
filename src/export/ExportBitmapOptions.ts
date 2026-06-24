@@ -1,11 +1,3 @@
-/**
- * @file ExportBitmapOptions.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Configuration options for bitmap export (PNG, JPG).
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 /** DPI presets matching FidoCadJ's DialogExport. */
 export const DPI_PRESETS = [72, 150, 300, 600, 1200, 1800, 2400] as const;
 export type DpiPreset = (typeof DPI_PRESETS)[number];

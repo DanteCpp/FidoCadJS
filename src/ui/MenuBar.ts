@@ -1,11 +1,3 @@
-/**
- * @file MenuBar.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Application menu bar
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { showOptionsDialog } from './OptionsDialog.js';
 import { showExportDialog, executeExport } from './ExportDialog.js';

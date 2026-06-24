@@ -1,11 +1,3 @@
-/**
- * @file DrawingSize.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Drawing dimensions (width × height)
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { Drawing } from '../circuit/views/Drawing.js';
 import { DrawingModel } from '../circuit/model/DrawingModel.js';
 import { MapCoordinates } from './MapCoordinates.js';
@@ -20,7 +12,7 @@ export class DrawingSize {
         dm: DrawingModel,
         unitPerPixel: number,
         countMin: boolean,
-        origin: PointG
+        origin: PointG,
     ): DimensionG {
         let width: number;
         let height: number;
@@ -84,7 +76,7 @@ export class DrawingSize {
         dm: DrawingModel,
         sizex: number,
         sizey: number,
-        countMin: boolean
+        countMin: boolean,
     ): MapCoordinates {
         const org = new PointG(0, 0);
         const newZoom = new MapCoordinates();

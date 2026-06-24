@@ -1,11 +1,3 @@
-/**
- * @file app.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Application entry point & UI bootstrap
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { CircuitPanel } from './circuit/CircuitPanel.js';
 import { loadStandardLibraries } from './circuit/controllers/LibraryLoader.js';
 import { LibraryModel } from './librarymodel/LibraryModel.js';

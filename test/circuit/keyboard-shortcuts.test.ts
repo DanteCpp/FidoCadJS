@@ -1,11 +1,3 @@
-/**
- * @file keyboard-shortcuts.test.ts
- * @author Dante Loi
- * @date 2026-05-08
- * @brief Tests for all keyboard shortcuts in CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { CircuitPanel } from '../../src/circuit/CircuitPanel.js';
 import { ElementsEdtActions } from '../../src/circuit/controllers/ElementsEdtActions.js';

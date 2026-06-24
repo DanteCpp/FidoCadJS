@@ -1,11 +1,3 @@
-/**
- * @file zoom-pan.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Zoom (in/out, wheel, fit) and pan operations
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, pressKey, getZoomPercent, loadCircuit, canvasBox, settle } from './utils';
 

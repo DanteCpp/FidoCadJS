@@ -1,25 +1,3 @@
-/**
- * @file export-svg.java-parity.test.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Parity checks: TS SVG output matches Java reference modulo the
- *        documented deltas in expected-deltas.json.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * What this catches:
- *   - The TS port stops emitting an element type that Java emits.
- *   - The TS port's coordinate offset drifts from Java's.
- *   - Layer-color mapping diverges.
- *   - Mirror/rotation/opacity contracts regress past the Phase 1 fixes.
- *
- * What this does NOT catch:
- *   - Cosmetic differences (whitespace, float formatting, attribute order) —
- *     those are listed in expected-deltas.json and explicitly tolerated.
- *
- * Skips silently if test/export/fixtures/java/<name>.svg is missing
- * (developer hasn't run scripts/regen-export-fixtures.sh yet).
- */
-
 import { describe, it, expect } from 'vitest';
 import { listFixtures, loadFixtureFacade, readJavaSnapshot } from './fixtures/helpers.js';
 

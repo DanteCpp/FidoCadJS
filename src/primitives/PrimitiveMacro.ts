@@ -1,11 +1,3 @@
-/**
- * @file PrimitiveMacro.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Macro (library component) primitive
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
@@ -76,16 +68,6 @@ export class PrimitiveMacro extends GraphicPrimitive {
         PrimitiveMacro.parserFn = backend.parse;
         PrimitiveMacro.drawFn = backend.draw;
         PrimitiveMacro.exportFn = backend.export;
-    }
-
-    /** Returns true when a backend (or all legacy hooks) is wired. */
-    static isReady(): boolean {
-        if (PrimitiveMacro.backend) return true;
-        return (
-            PrimitiveMacro.parserFn !== null &&
-            PrimitiveMacro.drawFn !== null &&
-            PrimitiveMacro.exportFn !== null
-        );
     }
 
     /** Asserts that the relevant injection hook is wired, throwing a descriptive error if not. */
@@ -184,9 +166,6 @@ export class PrimitiveMacro extends GraphicPrimitive {
     }
     getMacroDesc(): string | null {
         return this.macroDesc;
-    }
-    setMacroDesc(d: string): void {
-        this.macroDesc = d;
     }
 
     /** Look up a macro by key, set name and description, and parse the sub-circuit. */

@@ -1,12 +1,3 @@
-/**
- * @file parser-global-state.test.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Tests for Phase 1.5 fix: macroExpansionDepth moved from module
- *        scope to instance field on ParserActions.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';

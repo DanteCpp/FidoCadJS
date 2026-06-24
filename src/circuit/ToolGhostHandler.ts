@@ -1,14 +1,3 @@
-/**
- * @file ToolGhostHandler.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Strategy interface for tool-specific ghost preview generation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Each drawing tool provides its own ghost primitive creation logic
- *          via this interface. GhostPreview delegates to the active tool's
- *          handler instead of using a central switch/case.
- */
-
 import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
 import type { ElementsEdtActions } from './controllers/ElementsEdtActions.js';
 import type { DrawingModel } from './model/DrawingModel.js';
@@ -42,5 +31,5 @@ export interface GhostContext {
 export type ToolGhostHandler = (
     ctx: GhostContext,
     edt: ElementsEdtActions,
-    model: DrawingModel
+    model: DrawingModel,
 ) => GraphicPrimitive | null;

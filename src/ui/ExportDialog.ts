@@ -1,12 +1,3 @@
-/**
- * @file ExportDialog.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Export dialog — format selection, filename, and options.
- *        Mirrors FidoCadJ's DialogExport.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import type { ExportBitmapOptions } from '../export/ExportBitmapOptions.js';
 import { defaultBitmapOptions, DPI_PRESETS } from '../export/ExportBitmapOptions.js';

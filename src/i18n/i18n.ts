@@ -1,12 +1,3 @@
-/**
- * @file i18n.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Internationalization module — locale loading, string lookup,
- *        change notification, and localStorage persistence.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 type Bundle = Record<string, string>;
 
 /** All locales whose bundles ship with FidoCadJS. */

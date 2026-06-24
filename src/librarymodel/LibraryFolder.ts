@@ -1,23 +1,3 @@
-/**
- * @file LibraryFolder.ts
- * @author Dante Loi
- * @date 2026-06-02
- * @brief Filesystem-backed storage for user libraries via the File System
- *        Access API, with the chosen directory handle persisted in IndexedDB.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * @details
- * Lets the user pick a real filesystem folder (e.g. a Dropbox/iCloud/Drive
- * synced folder) where user libraries are written as `<prefix>.fcl` files, so
- * they are portable across browsers and devices. The directory *handle* itself
- * is browser-local (stored in IndexedDB, as handles are structured-cloneable),
- * but the library *files* live in the real filesystem.
- *
- * Only Chromium-based browsers expose `showDirectoryPicker`; elsewhere
- * {@link LibraryFolder.isSupported} returns false and all operations are
- * no-ops, leaving the localStorage backend in charge.
- */
-
 // ── Minimal typings for File System Access API extras not in lib.dom ──────────
 
 type PermissionMode = 'read' | 'readwrite';

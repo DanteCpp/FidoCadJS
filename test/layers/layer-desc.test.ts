@@ -1,11 +1,3 @@
-/**
- * @file layer-desc.test.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Tests for LayerDesc — layer description model
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { LayerDesc } from '../../src/layers/LayerDesc.js';
 import { StandardLayers } from '../../src/layers/StandardLayers.js';
@@ -67,7 +59,7 @@ describe('LayerDesc', () => {
 
     it('StandardLayers layers have descriptions', () => {
         const layers = StandardLayers.createStandardLayers();
-        const hasDesc = layers.some(l => l.getDescription().length > 0);
+        const hasDesc = layers.some((l) => l.getDescription().length > 0);
         expect(hasDesc).toBe(true);
     });
 });

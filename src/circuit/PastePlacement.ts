@@ -1,17 +1,3 @@
-/**
- * @file PastePlacement.ts
- * @author Dante Loi
- * @date 2026-06-04
- * @brief Interactive "place where you click" state for clipboard paste
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Holds a transient, off-screen drawing parsed from the clipboard so a
- *          green ghost of the pasted content can follow the cursor until the user
- *          confirms its position with a click (or Esc/Enter to drop in place).
- *          The original clipboard text is preserved verbatim; on commit the host
- *          re-parses it into the real model and offsets it by the chosen amount,
- *          exactly mirroring the non-interactive paste path so undo stays simple.
- */
-
 import { DrawingModel } from './model/DrawingModel.js';
 import { ParserActions } from './controllers/ParserActions.js';
 import { Drawing } from './views/Drawing.js';

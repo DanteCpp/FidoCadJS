@@ -1,11 +1,3 @@
-/**
- * @file PrimitivePolygon.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Multi-point polygon primitive
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
 import type { PolygonInterface } from '../graphic/PolygonInterface.js';

@@ -1,11 +1,3 @@
-/**
- * @file map-coordinates.test.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Tests for MapCoordinates — mapping, snapping, zoom, orientation, push/pop
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MapCoordinates } from '../../src/geom/MapCoordinates.js';
 

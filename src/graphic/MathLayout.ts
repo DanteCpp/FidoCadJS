@@ -1,20 +1,3 @@
-/**
- * @file MathLayout.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief Splits a FidoCad text string into plain-text and LaTeX-math segments,
- *        renders math to glyph geometry via the vendored MathJax engine, and
- *        lays the segments out left-to-right with x-advances. Shared by the
- *        on-screen canvas renderer and the SVG/PDF exporters so math appears
- *        identically everywhere.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Math coordinates come back from MathJax in native units
- *          (unitsPerEm, y-down, baseline at 0); a math segment's advance is
- *          `widthEm * emPx`. Text advance is supplied by the caller's
- *          `measure` callback so each backend uses its own font metrics.
- *          Malformed LaTeX degrades to literal `$...$` text.
- */
-
 import { tex2mathgeom, type MathGeometry } from '../vendor/mathjax-shim.js';
 
 export type { MathGeometry } from '../vendor/mathjax-shim.js';

@@ -1,11 +1,3 @@
-/**
- * @file GraphicPrimitive.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Abstract base class for all graphic primitives
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { ExportInterface } from '../export/ExportInterface.js';
@@ -89,9 +81,6 @@ export abstract class GraphicPrimitive {
         this.virtualPoint = Array.from({ length: npoints }, () => new PointG());
     }
 
-    getMacroFont(): string {
-        return this.macroFont;
-    }
     getMacroFontSize(): number {
         return this.macroFontSize;
     }
@@ -504,14 +493,6 @@ export abstract class GraphicPrimitive {
         if (i === this.getNameVirtualPointNumber() && this.name.length === 0) return false;
         if (i === this.getValueVirtualPointNumber() && this.value.length === 0) return false;
         return true;
-    }
-
-    // Phase 4: getControls/setControls use ParameterDescription
-    getControls(): unknown[] {
-        return [];
-    }
-    setControls(_v: unknown[]): number {
-        return 0;
     }
 
     needsHoles(): boolean {

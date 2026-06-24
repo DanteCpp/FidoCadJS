@@ -1,12 +1,3 @@
-/**
- * @file DialogLayer.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Layer edit dialog — edit per-layer color, name, alpha, and visibility.
- *        Mirrors FidoCadJ's DialogLayer.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { getString } from '../i18n/i18n.js';
 

@@ -1,14 +1,3 @@
-/**
- * @file ContextMenuManager.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Context menu management extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Builds and shows the right-click context menu, handles add/remove
- *          node actions. Extracted mechanically during agent-friendly refactoring
- *          (P2.6).
- */
-
 import { getString } from '../i18n/i18n.js';
 import { ContextMenu } from '../ui/ContextMenu.js';
 import { PrimitiveMacro } from '../primitives/PrimitiveMacro.js';

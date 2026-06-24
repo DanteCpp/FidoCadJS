@@ -1,13 +1,3 @@
-/**
- * @file properties-batch.test.ts
- * @author Dante Loi
- * @date 2026-05-20
- * @brief Tests for batch (multi-selection) layer editing in the properties panel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Guards Bug 3 — changing the layer with several elements selected must
- *          apply to every selected element, not just the first.
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { PropertiesPanelController } from '../../src/ui/PropertiesPanelController.js';

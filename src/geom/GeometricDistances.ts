@@ -1,11 +1,3 @@
-/**
- * @file GeometricDistances.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Geometric distance and intersection calculations
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 export class GeometricDistances {
     static readonly MIN_DISTANCE = 100;
     static readonly MAX_BEZIER_SEGMENTS = 10;

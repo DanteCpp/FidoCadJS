@@ -1,11 +1,3 @@
-/**
- * @file GraphicsCanvas.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief HTML Canvas graphics implementation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { GraphicsInterface } from '../GraphicsInterface.js';
 import type { ColorInterface } from '../ColorInterface.js';
 import type { TextInterface } from '../TextInterface.js';
@@ -24,10 +16,7 @@ export class GraphicsCanvas implements GraphicsInterface {
     private ctx: CanvasRenderingContext2D;
     private canvas: HTMLCanvasElement;
     private currentColor: ColorInterface = new ColorCanvas(0, 0, 0);
-    private zoom: number = 1.0;
     private textInterface: TextCanvas;
-    private fontName: string = 'sans-serif';
-    private fontSize: number = 12;
     private fontItalic: boolean = false;
     private fontBold: boolean = false;
     private selectedColor: ColorCanvas = new ColorCanvas(0, 255, 0);
@@ -48,12 +37,7 @@ export class GraphicsCanvas implements GraphicsInterface {
         return this.currentColor;
     }
 
-    setZoom(z: number): void {
-        this.zoom = z;
-    }
-    getZoom(): number {
-        return this.zoom;
-    }
+    setZoom(_z: number): void {}
 
     setColor(c: ColorInterface): void {
         this.currentColor = c;
@@ -115,8 +99,6 @@ export class GraphicsCanvas implements GraphicsInterface {
     }
 
     setFont(name: string, size: number, isItalic?: boolean, isBold?: boolean): void {
-        this.fontName = name;
-        this.fontSize = size;
         this.fontItalic = isItalic ?? false;
         this.fontBold = isBold ?? false;
         const style = `${this.fontItalic ? 'italic ' : ''}${this.fontBold ? 'bold ' : ''}`;
@@ -130,12 +112,6 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.textInterface.setFont(name, size, isItalic, isBold);
     }
 
-    getFontSize(): number {
-        return this.fontSize;
-    }
-    setFontSize(size: number): void {
-        this.setFont(this.fontName, size, this.fontItalic, this.fontBold);
-    }
     getFontAscent(): number {
         return this.textInterface.getFontAscent();
     }

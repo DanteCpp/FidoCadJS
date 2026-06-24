@@ -1,14 +1,3 @@
-/**
- * @file export-bitmap-render.test.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief E2E — the PNG/JPG bitmap export (renderToOffscreen) renders filled
- *        primitives, not just strokes. Regression test for a white-on-white
- *        bug where the direct background fill desynced the GraphicsCanvas
- *        colour cache, making black text and math fills invisible.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';

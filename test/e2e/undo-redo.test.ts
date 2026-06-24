@@ -1,11 +1,3 @@
-/**
- * @file undo-redo.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Undo/redo state tracking and keyboard shortcuts
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, pressKey } from './utils';
 
