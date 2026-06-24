@@ -60,14 +60,14 @@ These match FidoCadJ 0.24.9 exactly and are the same in every language.
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `A` `Space` `Esc` | Select tool | `L` | Line tool |
+| `A` `Esc` | Select tool | `L` | Line tool |
 | `T` | Text tool | `B` | Bezier tool |
 | `P` | Polygon tool | `O` | Complex curve |
 | `E` | Ellipse tool | `G` | Rectangle tool |
 | `C` | Connection dot | `I` | PCB line |
 | `Z` | PCB pad | `M` | Move selected |
 | `R` | Rotate selected | `S` | Mirror selected |
-| `Delete` | Delete selected | `Home` | Fit to view |
+| `Delete` | Delete selected | `Space` `Home` | Fit to view |
 | `Ctrl+Z` | Undo | `Ctrl+Y` | Redo |
 | `Ctrl+C/V/X` | Clipboard | `Alt+arrows` | Nudge 1px |
 | `+`/`-` | Zoom in/out | `Right-drag` | Ruler |

@@ -212,13 +212,10 @@ describe('Keyboard Shortcuts', () => {
     // ─── Special action keys ────────────────────────────────────────────────
 
     describe('Special keys', () => {
-        it('Space selects the Selection tool (FidoCadJ binding)', () => {
-            panel.setTool(Tool.LINE);
-            pressKey(canvas, ' ');
-            expect(panel.getTool()).toBe(Tool.SELECTION);
-        });
-
-        it('Home triggers fit-to-view', () => {
+        it.each([
+            ['Space', ' '],
+            ['Home', 'Home'],
+        ])('%s triggers fit-to-view', (_label, keyValue) => {
             // Add primitives to create non-zero bounding box
             addLineToPanel(panel, 0, 0, 100, 100, 0);
             panel.render();
@@ -228,7 +225,7 @@ describe('Keyboard Shortcuts', () => {
             const zoomBefore = panel.getZoomPercent();
             expect(zoomBefore).toBeLessThan(100);
 
-            pressKey(canvas, 'Home');
+            pressKey(canvas, keyValue);
             const zoomAfter = panel.getZoomPercent();
 
             // Fit-to-view should zoom to fit the 100×100 content,

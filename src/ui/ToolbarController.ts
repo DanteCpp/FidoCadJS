@@ -11,7 +11,7 @@ import { getString } from '../i18n/i18n.js';
  * the descriptive text, never the key letter).
  */
 const TOOL_SHORTCUTS: Record<number, string> = {
-    [Tool.SELECTION]: 'A / Space',
+    [Tool.SELECTION]: 'A',
     [Tool.LINE]: 'L',
     [Tool.TEXT]: 'T',
     [Tool.BEZIER]: 'B',

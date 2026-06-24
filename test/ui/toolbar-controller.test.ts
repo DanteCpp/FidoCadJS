@@ -82,7 +82,7 @@ describe('ToolbarController', () => {
         // onToolChange highlight: the clicked button is active, others not.
         expect(lineBtn.style.background).toBe('rgb(176, 200, 232)');
         const selBtn = Array.from(toolbar.querySelectorAll('button')).find((b) =>
-            (b as HTMLButtonElement).title.startsWith('A / Space:'),
+            (b as HTMLButtonElement).title.startsWith('A:'),
         ) as HTMLButtonElement;
         expect(selBtn.style.background).not.toBe('rgb(176, 200, 232)');
     });
