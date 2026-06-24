@@ -1,14 +1,3 @@
-/**
- * @file CanvasManager.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Canvas element lifecycle manager extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Handles canvas creation, ResizeObserver for responsive sizing,
- *          device-pixel-ratio change detection, and cleanup on destroy.
- *          Extracted during agent-friendly refactoring (P2.1).
- */
-
 export class CanvasManager {
     readonly canvas: HTMLCanvasElement;
     private container: HTMLElement;

@@ -1,11 +1,3 @@
-/**
- * @file ElementsEdtActions.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Element editing action dispatcher for tool-specific behaviour
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { DrawingModel } from '../model/DrawingModel.js';
 import { UndoActions } from './UndoActions.js';
 import { SelectionActions } from './SelectionActions.js';
@@ -60,7 +52,8 @@ export class ElementsEdtActions {
     public static readonly NPOLY = 256;
 
     // Callbacks
-    public onTextEditRequested: ((prim: PrimitiveAdvText, sx: number, sy: number) => void) | null = null;
+    public onTextEditRequested: ((prim: PrimitiveAdvText, sx: number, sy: number) => void) | null =
+        null;
     public onExistingTextEditRequested: ((prim: PrimitiveAdvText) => void) | null = null;
     public onPropertiesRequested: ((prim: GraphicPrimitive) => void) | null = null;
     public onContextMenuRequested: ((sx: number, sy: number) => void) | null = null;
@@ -69,7 +62,7 @@ export class ElementsEdtActions {
         model: DrawingModel,
         selectionActions: SelectionActions,
         undoActions: UndoActions | null,
-        editorActions: EditorActions
+        editorActions: EditorActions,
     ) {
         this.model = model;
         this.undoActions = undoActions;
@@ -85,11 +78,6 @@ export class ElementsEdtActions {
     /** Get the AddElements controller */
     getAddElements(): AddElements {
         return this.addElements;
-    }
-
-    /** Check if currently entering a macro */
-    isEnteringMacro(): boolean {
-        return this.primEdit instanceof PrimitiveMacro;
     }
 
     /** Set the current tool state */
@@ -129,10 +117,11 @@ export class ElementsEdtActions {
      */
     handleClick(
         cs: MapCoordinates,
-        x: number, y: number,
+        x: number,
+        y: number,
         button3: boolean,
         toggle: boolean,
-        doubleClick: boolean
+        doubleClick: boolean,
     ): boolean {
         let repaint = false;
 
@@ -185,17 +174,13 @@ export class ElementsEdtActions {
                 this.addElements.addConnection(
                     cs.unmapXsnap(x),
                     cs.unmapYsnap(y),
-                    this.currentLayer
+                    this.currentLayer,
                 );
                 repaint = true;
                 break;
 
             case ElementsEdtActions.PCB_PAD:
-                this.addElements.addPCBPad(
-                    cs.unmapXsnap(x),
-                    cs.unmapYsnap(y),
-                    this.currentLayer
-                );
+                this.addElements.addPCBPad(cs.unmapXsnap(x), cs.unmapYsnap(y), this.currentLayer);
                 repaint = true;
                 break;
 
@@ -211,7 +196,7 @@ export class ElementsEdtActions {
                         this.ypoly,
                         this.currentLayer,
                         ++this.clickNumber,
-                        button3
+                        button3,
                     );
                     repaint = true;
                 }
@@ -228,11 +213,13 @@ export class ElementsEdtActions {
                     const newText = new PrimitiveAdvText(
                         cs.unmapXsnap(x),
                         cs.unmapYsnap(y),
-                        3, 4,
+                        3,
+                        4,
                         this.model.getTextFont(),
-                        0, 0,
+                        0,
+                        0,
                         'String',
-                        this.currentLayer
+                        this.currentLayer,
                     );
                     this.selectionActions.setSelectionAll(false);
                     this.model.addPrimitive(newText, true, this.undoActions);
@@ -257,7 +244,7 @@ export class ElementsEdtActions {
                         this.xpoly,
                         this.ypoly,
                         this.currentLayer,
-                        ++this.clickNumber
+                        ++this.clickNumber,
                     );
                 }
                 break;
@@ -269,7 +256,7 @@ export class ElementsEdtActions {
                         this.currentLayer,
                         0,
                         this.model.getTextFont(),
-                        this.model.getTextFontSize()
+                        this.model.getTextFontSize(),
                     );
                     for (let i = 1; i <= this.clickNumber; i++) {
                         poly.addPoint(this.xpoly[i], this.ypoly[i]);
@@ -294,9 +281,14 @@ export class ElementsEdtActions {
                         false,
                         false,
                         this.currentLayer,
-                        false, false, 0, 3, 2, 0,
+                        false,
+                        false,
+                        0,
+                        3,
+                        2,
+                        0,
                         this.model.getTextFont(),
-                        this.model.getTextFontSize()
+                        this.model.getTextFontSize(),
                     );
                     for (let i = 1; i <= this.clickNumber; i++) {
                         compc.addPoint(this.xpoly[i], this.ypoly[i]);
@@ -324,7 +316,7 @@ export class ElementsEdtActions {
                     this.ypoly,
                     this.currentLayer,
                     ++this.clickNumber,
-                    toggle && this.clickNumber > 0
+                    toggle && this.clickNumber > 0,
                 );
                 repaint = true;
                 break;
@@ -338,7 +330,7 @@ export class ElementsEdtActions {
                     this.ypoly,
                     this.currentLayer,
                     ++this.clickNumber,
-                    toggle && this.clickNumber > 0
+                    toggle && this.clickNumber > 0,
                 );
                 repaint = true;
                 break;
@@ -356,7 +348,7 @@ export class ElementsEdtActions {
                         this.currentLayer,
                         ++this.clickNumber,
                         button3,
-                        this.addElements.getPcbThickness()
+                        this.addElements.getPcbThickness(),
                     );
                     repaint = true;
                 }
@@ -369,27 +361,12 @@ export class ElementsEdtActions {
                     cs.unmapYsnap(y),
                     this.selectionActions,
                     this.primEdit,
-                    this.macroKey
+                    this.macroKey,
                 );
                 repaint = true;
                 break;
         }
 
         return repaint;
-    }
-
-    /** Get current selection state (active tool) */
-    getSelectionState(): number {
-        return this.actionSelected;
-    }
-
-    /** Set current editing primitive */
-    setPrimEdit(gp: GraphicPrimitive | null): void {
-        this.primEdit = gp;
-    }
-
-    /** Get current editing primitive */
-    getPrimEdit(): GraphicPrimitive | null {
-        return this.primEdit;
     }
 }

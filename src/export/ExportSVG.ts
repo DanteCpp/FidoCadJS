@@ -1,11 +1,3 @@
-/**
- * @file ExportSVG.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief SVG export implementation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ExportInterface } from './ExportInterface.js';
 import type { DimensionG } from '../graphic/DimensionG.js';
 import type { PointDouble } from '../graphic/PointDouble.js';

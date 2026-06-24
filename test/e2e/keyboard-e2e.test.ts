@@ -1,11 +1,3 @@
-/**
- * @file keyboard-e2e.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Keyboard shortcuts exercised through the full browser stack
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import {
     gotoApp,

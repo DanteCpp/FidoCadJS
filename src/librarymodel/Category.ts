@@ -1,13 +1,3 @@
-/**
- * @file Category.ts
- * @author Dante Loi
- * @date 2026-04-23
- * @brief Represents a category of macros within a library.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Port of fidocadj.librarymodel.Category (Kohta Ozaki, 2014).
- */
-
 import type { MacroDesc } from '../primitives/MacroDesc.js';
 import type { Library } from './Library.js';
 
@@ -29,26 +19,35 @@ export class Category {
         this.macros = [];
     }
 
-    getName(): string { return this.name; }
-    setName(name: string): void { this.name = name; }
+    getName(): string {
+        return this.name;
+    }
+    setName(name: string): void {
+        this.name = name;
+    }
 
-    getParentLibrary(): Library { return this.parentLibrary; }
-    setParentLibrary(lib: Library): void { this.parentLibrary = lib; }
+    getParentLibrary(): Library {
+        return this.parentLibrary;
+    }
 
-    addMacro(macro: MacroDesc): void { this.macros.push(macro); }
+    addMacro(macro: MacroDesc): void {
+        this.macros.push(macro);
+    }
 
     removeMacro(macro: MacroDesc): void {
         const idx = this.macros.indexOf(macro);
         if (idx >= 0) this.macros.splice(idx, 1);
     }
 
-    getAllMacros(): MacroDesc[] { return this.macros; }
+    getAllMacros(): MacroDesc[] {
+        return this.macros;
+    }
 
-    isHidden(): boolean { return this.hidden; }
-
-    static isValidName(_name: string): boolean { return true; }
+    isHidden(): boolean {
+        return this.hidden;
+    }
 
     containsMacroKey(key: string): boolean {
-        return this.macros.some(m => plainKey(m) === key);
+        return this.macros.some((m) => plainKey(m) === key);
     }
 }

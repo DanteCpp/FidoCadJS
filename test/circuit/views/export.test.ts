@@ -1,21 +1,3 @@
-/**
- * @file export.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Unit tests for the Export view — verifies the per-layer + PCB-pad
- *        + macro pass call ordering against a recording mock ExportInterface.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Strategy: build a DrawingModel by parsing FCD, hand it to an Export view,
- * and call exportDrawing() with a mock that records every method
- * invocation. Then assert the recorded sequence matches the documented
- * passes:
- *   1) For each layer 0..N, every primitive on that layer (except macros
- *      and pcb pads in their dedicated passes).
- *   2) A second pass that emits PCB pad holes (drawOnlyPads=true).
- *   3) Macros recurse through (1) then (2) themselves.
- */
-
 import { describe, it, expect } from 'vitest';
 import { Export, registerExportHooks } from '../../../src/circuit/views/Export.js';
 import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';

@@ -1,17 +1,3 @@
-/**
- * @file menubar-open-libraries.test.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief Guards that File → Open defers parsing until the component libraries
- *        are loaded.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Macros are expanded once, at parse time, against the in-memory
- *          library map. If a circuit opened from disk is parsed before the
- *          libraries finish loading, every macro reference is dropped (or left
- *          permanently unresolved). The open path must therefore await the
- *          libraries-ready promise before calling loadCircuit.
- */
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { MenuBar } from '../../src/ui/MenuBar.js';

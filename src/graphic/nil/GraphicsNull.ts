@@ -1,11 +1,3 @@
-/**
- * @file GraphicsNull.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Null (no-op) graphics implementation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { GraphicsInterface } from '../GraphicsInterface.js';
 import type { ColorInterface } from '../ColorInterface.js';
 import type { TextInterface } from '../TextInterface.js';
@@ -44,9 +36,6 @@ export class GraphicsNull implements GraphicsInterface {
         return this.color;
     }
     setZoom(_z: number): void {}
-    getZoom(): number {
-        return 1;
-    }
     setColor(c: ColorInterface): void {
         this.color = c;
     }
@@ -73,12 +62,6 @@ export class GraphicsNull implements GraphicsInterface {
 
     setFont(_name: string, _size: number, _isItalic?: boolean, _isBold?: boolean): void {
         this.fontSize = _size;
-    }
-    getFontSize(): number {
-        return this.fontSize;
-    }
-    setFontSize(size: number): void {
-        this.fontSize = size;
     }
     getFontAscent(): number {
         const ctx = this.getContext();

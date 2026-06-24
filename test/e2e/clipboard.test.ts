@@ -1,11 +1,3 @@
-/**
- * @file clipboard.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Copy, cut, duplicate via API
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, grantClipboardPermissions, canvasBox, pressKey, primitiveCount } from './utils';
 

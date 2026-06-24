@@ -1,11 +1,3 @@
-/**
- * @file menu-bar.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Menu bar dropdown interactions and commands
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, loadCircuit, primitiveCount, pressKey } from './utils';
 

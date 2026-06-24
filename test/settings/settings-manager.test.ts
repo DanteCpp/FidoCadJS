@@ -1,11 +1,3 @@
-/**
- * @file settings-manager.test.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Tests for SettingsManager validation, defaults, and persistence
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SettingsManager } from '../../src/settings/SettingsManager.js';
 
@@ -18,12 +10,24 @@ function ensureLocalStorage(): Storage {
     // Create a simple in-memory polyfill
     const store = new Map<string, string>();
     const polyfill = {
-        getItem(key: string): string | null { return store.get(key) ?? null; },
-        setItem(key: string, value: string): void { store.set(key, value); },
-        removeItem(key: string): void { store.delete(key); },
-        clear(): void { store.clear(); },
-        get length(): number { return store.size; },
-        key(_index: number): string | null { return null; },
+        getItem(key: string): string | null {
+            return store.get(key) ?? null;
+        },
+        setItem(key: string, value: string): void {
+            store.set(key, value);
+        },
+        removeItem(key: string): void {
+            store.delete(key);
+        },
+        clear(): void {
+            store.clear();
+        },
+        get length(): number {
+            return store.size;
+        },
+        key(_index: number): string | null {
+            return null;
+        },
     };
     vi.stubGlobal('localStorage', polyfill);
     return polyfill as unknown as Storage;
@@ -98,12 +102,15 @@ describe('SettingsManager', () => {
         });
 
         it('ignores invalid field types', () => {
-            localStorage.setItem('fidocadts.settings.v1', JSON.stringify({
-                gridSizeX: 'not-a-number',
-                snapToGrid: 42,
-                backgroundColor: 'invalid-color',
-                gridSizeY: -5,
-            }));
+            localStorage.setItem(
+                'fidocadts.settings.v1',
+                JSON.stringify({
+                    gridSizeX: 'not-a-number',
+                    snapToGrid: 42,
+                    backgroundColor: 'invalid-color',
+                    gridSizeY: -5,
+                }),
+            );
             (SettingsManager as any).instance = null;
             const sm = SettingsManager.getInstance();
             const s = sm.getSettings();
@@ -114,11 +121,14 @@ describe('SettingsManager', () => {
         });
 
         it('clamps numeric values to valid ranges', () => {
-            localStorage.setItem('fidocadts.settings.v1', JSON.stringify({
-                gridSizeX: 2000,
-                gridSizeY: 0,
-                strokeSize: 0.001,
-            }));
+            localStorage.setItem(
+                'fidocadts.settings.v1',
+                JSON.stringify({
+                    gridSizeX: 2000,
+                    gridSizeY: 0,
+                    strokeSize: 0.001,
+                }),
+            );
             (SettingsManager as any).instance = null;
             const sm = SettingsManager.getInstance();
             const s = sm.getSettings();
@@ -128,23 +138,26 @@ describe('SettingsManager', () => {
         });
 
         it('accepts valid settings from storage', () => {
-            localStorage.setItem('fidocadts.settings.v1', JSON.stringify({
-                gridSizeX: 10,
-                gridSizeY: 20,
-                snapToGrid: false,
-                antiAlias: true,
-                strokeSize: 1.0,
-                connectionSize: 3.0,
-                pcbLineWidth: 8,
-                pcbPadWidth: 6,
-                pcbPadHeight: 7,
-                pcbPadDrill: 3,
-                backgroundColor: '#abcdef',
-                gridColor: '#112233',
-                selectionLTRColor: '#445566',
-                selectionRTLColor: '#778899',
-                renderTeX: true,
-            }));
+            localStorage.setItem(
+                'fidocadts.settings.v1',
+                JSON.stringify({
+                    gridSizeX: 10,
+                    gridSizeY: 20,
+                    snapToGrid: false,
+                    antiAlias: true,
+                    strokeSize: 1.0,
+                    connectionSize: 3.0,
+                    pcbLineWidth: 8,
+                    pcbPadWidth: 6,
+                    pcbPadHeight: 7,
+                    pcbPadDrill: 3,
+                    backgroundColor: '#abcdef',
+                    gridColor: '#112233',
+                    selectionLTRColor: '#445566',
+                    selectionRTLColor: '#778899',
+                    renderTeX: true,
+                }),
+            );
             (SettingsManager as any).instance = null;
             const sm = SettingsManager.getInstance();
             const s = sm.getSettings();

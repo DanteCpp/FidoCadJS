@@ -1,11 +1,3 @@
-/**
- * @file DrawingModel.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Core drawing data model holding primitives, layers, and macro library
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
 import type { MacroDesc } from '../../primitives/MacroDesc.js';
@@ -78,14 +70,6 @@ export class DrawingModel {
             ua.setModified(true);
             this.changedFlag = true;
         }
-    }
-
-    setTextFont(f: string, tsize: number, ua: { setModified(b: boolean): void } | null): void {
-        this.defaultTextFont = f;
-        this.defaultTextFontSize = tsize;
-        for (const g of this.primitiveVector) g.setMacroFont(f, tsize);
-        this.changedFlag = true;
-        if (ua !== null) ua.setModified(true);
     }
 
     getTextFont(): string {
@@ -178,9 +162,6 @@ export class DrawingModel {
     }
     getDrawOnlyLayer(): number {
         return this.drawOnlyLayerVal;
-    }
-    setImgCanvas(ic: ImageAsCanvas): void {
-        this.imgCanvas = ic;
     }
     getImgCanvas(): ImageAsCanvas {
         return this.imgCanvas;

@@ -1,15 +1,3 @@
-/**
- * @file DialogSymbolize.ts
- * @author Dante Loi
- * @date 2026-04-27
- * @brief "Symbol-o-matic" dialog for creating new library macros from selected primitives.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Browser port of fidocadj.dialogs.DialogSymbolize (Phylum2, Davide Bucci, 2012-2023).
- * Shows selected primitives in a preview panel with a draggable origin crosshair.
- * On OK, builds a MacroDesc and adds it to the library model.
- */
-
 import { getString } from '../i18n/i18n.js';
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { DrawingModel } from '../circuit/model/DrawingModel.js';

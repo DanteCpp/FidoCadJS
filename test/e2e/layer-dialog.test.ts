@@ -1,15 +1,3 @@
-/**
- * @file   layer-dialog.test.ts
- * @author Dante Loi
- * @date   2026-06-02
- * @brief  E2E — Layer dialog only writes layers the user actually changed
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Regression: the dialog used to mark every layer "modified" on OK, so the
- * file header listed all 16 FJC L definitions even when a single layer (or
- * none) was changed. Only modified-from-default layers must be serialized.
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, loadCircuit, getCircuitText } from './utils';
 

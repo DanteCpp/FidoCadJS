@@ -1,14 +1,3 @@
-/**
- * @file copy-all-as-primitives.test.ts
- * @author Dante Loi
- * @date 2026-06-05
- * @brief Tests for MacroVectorizer.vectorizeAllToString — the payload behind the
- *        "Copy all as primitives" Edit-menu action. Verifies the whole drawing is
- *        flattened (no MC macro references remain, including nested macros) while
- *        the live model is left untouched.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';

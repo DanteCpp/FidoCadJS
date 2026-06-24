@@ -1,15 +1,3 @@
-/**
- * @file drawing-size.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Unit tests for DrawingSize — bounding-box computation used by
- *        the export pipeline.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * DrawingSize had zero direct coverage. Its `getImageSize` is what the
- * ExportFacade's coordinate-offset fix (Phase 1) relies on.
- */
-
 import { describe, it, expect } from 'vitest';
 import { DrawingSize } from '../../src/geom/DrawingSize.js';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';

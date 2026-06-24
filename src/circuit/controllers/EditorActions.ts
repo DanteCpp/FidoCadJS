@@ -1,11 +1,3 @@
-/**
- * @file EditorActions.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief High-level editor operations (open, save, clipboard, zoom)
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { DrawingModel } from '../model/DrawingModel.js';
 import { UndoActions } from './UndoActions.js';
 import { SelectionActions } from './SelectionActions.js';
@@ -27,16 +19,6 @@ export class EditorActions {
         this.undoActions = undoActions;
         this.selectionActions = selectionActions;
         this.selTolerance = 10;
-    }
-
-    /** Set selection tolerance in pixels */
-    setSelectionTolerance(s: number): void {
-        this.selTolerance = s;
-    }
-
-    /** Get selection tolerance in pixels */
-    getSelectionTolerance(): number {
-        return this.selTolerance;
     }
 
     /** Rotate all selected primitives 90 degrees clockwise */

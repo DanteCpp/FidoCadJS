@@ -1,11 +1,3 @@
-/**
- * @file OptionsDialog.ts
- * @author Dante Loi
- * @date 2026-04-23
- * @brief Tabbed options/preferences dialog for FidoCadTS
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { SettingsManager, type AppSettings } from '../settings/SettingsManager.js';
 import { LibraryFolder } from '../librarymodel/LibraryFolder.js';

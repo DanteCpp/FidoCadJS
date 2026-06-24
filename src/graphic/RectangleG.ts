@@ -1,11 +1,3 @@
-/**
- * @file RectangleG.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Integer rectangle type
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 export class RectangleG {
     x: number;
     y: number;
@@ -19,29 +11,42 @@ export class RectangleG {
         this.height = height;
     }
 
-    getX(): number { return this.x; }
-    getY(): number { return this.y; }
-    getWidth(): number { return this.width; }
-    getHeight(): number { return this.height; }
+    getX(): number {
+        return this.x;
+    }
+    getY(): number {
+        return this.y;
+    }
+    getWidth(): number {
+        return this.width;
+    }
+    getHeight(): number {
+        return this.height;
+    }
 
     contains(px: number, py: number): boolean {
-        return px >= this.x && px <= this.x + this.width
-            && py >= this.y && py <= this.y + this.height;
+        return (
+            px >= this.x && px <= this.x + this.width && py >= this.y && py <= this.y + this.height
+        );
     }
 
     intersects(other: RectangleG): boolean {
-        return other.x < this.x + this.width
-            && other.x + other.width > this.x
-            && other.y < this.y + this.height
-            && other.y + other.height > this.y;
+        return (
+            other.x < this.x + this.width &&
+            other.x + other.width > this.x &&
+            other.y < this.y + this.height &&
+            other.y + other.height > this.y
+        );
     }
 
     intersectsLine(x1: number, y1: number, x2: number, y2: number): boolean {
         const { x, y, width, height } = this;
-        return this._lineXline(x1, y1, x2, y2, x, y, x + width, y)
-            || this._lineXline(x1, y1, x2, y2, x, y, x, y + height)
-            || this._lineXline(x1, y1, x2, y2, x + width, y, x + width, y + height)
-            || this._lineXline(x1, y1, x2, y2, x, y + height, x + width, y + height);
+        return (
+            this._lineXline(x1, y1, x2, y2, x, y, x + width, y) ||
+            this._lineXline(x1, y1, x2, y2, x, y, x, y + height) ||
+            this._lineXline(x1, y1, x2, y2, x + width, y, x + width, y + height) ||
+            this._lineXline(x1, y1, x2, y2, x, y + height, x + width, y + height)
+        );
     }
 
     private _dir(px: number, py: number, qx: number, qy: number, rx: number, ry: number): number {
@@ -49,13 +54,32 @@ export class RectangleG {
         return val === 0 ? 0 : val > 0 ? 1 : 2;
     }
 
-    private _onSeg(px: number, py: number, qx: number, qy: number, rx: number, ry: number): boolean {
-        return rx >= Math.min(px, qx) && rx <= Math.max(px, qx)
-            && ry >= Math.min(py, qy) && ry <= Math.max(py, qy);
+    private _onSeg(
+        px: number,
+        py: number,
+        qx: number,
+        qy: number,
+        rx: number,
+        ry: number,
+    ): boolean {
+        return (
+            rx >= Math.min(px, qx) &&
+            rx <= Math.max(px, qx) &&
+            ry >= Math.min(py, qy) &&
+            ry <= Math.max(py, qy)
+        );
     }
 
-    private _lineXline(x1: number, y1: number, x2: number, y2: number,
-        x3: number, y3: number, x4: number, y4: number): boolean {
+    private _lineXline(
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
+        x3: number,
+        y3: number,
+        x4: number,
+        y4: number,
+    ): boolean {
         const d1 = this._dir(x3, y3, x4, y4, x1, y1);
         const d2 = this._dir(x3, y3, x4, y4, x2, y2);
         const d3 = this._dir(x1, y1, x2, y2, x3, y3);

@@ -1,11 +1,3 @@
-/**
- * @file ruler.test.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief Tests for the on-canvas measuring Ruler (FidoCadJ port)
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Ruler } from '../../src/circuit/Ruler.js';
 import { MapCoordinates } from '../../src/geom/MapCoordinates.js';

@@ -1,12 +1,3 @@
-/**
- * @file confirm-dialog.test.ts
- * @author Dante Loi
- * @date 2026-06-11
- * @brief Unit tests for ConfirmDialog — resolution paths, DOM lifecycle, and
- *        HTML escaping of caller-supplied strings.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { ConfirmDialog } from '../../src/ui/ConfirmDialog.js';

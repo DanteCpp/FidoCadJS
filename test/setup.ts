@@ -1,8 +1,3 @@
-/**
- * @file setup.ts
- * @brief Global test setup — stubs for jsdom environment
- */
-
 import { beforeAll } from 'vitest';
 
 beforeAll(() => {

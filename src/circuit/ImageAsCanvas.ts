@@ -1,14 +1,3 @@
-/**
- * @file ImageAsCanvas.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Image-to-canvas rendering utility for background image attachment.
- *        Stores a raster image, its position, scale, and alpha, and
- *        renders it behind all drawing layers. Mirrors FidoCadJ's
- *        DialogAttachImage / ImageAsCanvas concept.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
 

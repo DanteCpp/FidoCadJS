@@ -1,12 +1,3 @@
-/**
- * @file align-distribute.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Unit tests for align-center and distribute operations
- *        (extending the existing EditorActions alignment suite).
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, vi } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { EditorActions } from '../../src/circuit/controllers/EditorActions.js';

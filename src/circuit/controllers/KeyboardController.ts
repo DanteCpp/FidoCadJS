@@ -1,11 +1,3 @@
-/**
- * @file KeyboardController.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Keyboard shortcut handler extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { ElementsEdtActions } from './ElementsEdtActions.js';
 import type { ClipboardController } from './ClipboardController.js';
 import type { KeyboardHost } from '../KeyboardHost.js';

@@ -1,12 +1,3 @@
-/**
- * @file library-loader.test.ts
- * @author Dante Loi
- * @date 2026-06-11
- * @brief Unit tests for LibraryLoader — locale-aware URL resolution, prefix
- *        plumbing, and per-library failure isolation.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { loadStandardLibraries } from '../../../src/circuit/controllers/LibraryLoader.js';
 import type { ParserActions } from '../../../src/circuit/controllers/ParserActions.js';

@@ -1,11 +1,3 @@
-/**
- * @file CircuitPanel.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Main editor panel controller coordinating input, model, and views
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { DrawingModel } from './model/DrawingModel.js';
 import { ParserActions } from './controllers/ParserActions.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
@@ -370,10 +362,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.mapCoordinates.setYMagnitudeNoCheck(magnitude);
         this.render();
         this.onZoomChange?.();
-    }
-
-    getZoom(): number {
-        return this.mapCoordinates.getXMagnitude();
     }
 
     isSnapActive(): boolean {
@@ -989,46 +977,6 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     isImageAttached(): boolean {
         return this.model.getImgCanvas().isAttached();
-    }
-
-    getImageAlpha(): number {
-        return this.model.getImgCanvas().getAlpha();
-    }
-
-    setImageAlpha(a: number): void {
-        this.model.getImgCanvas().setAlpha(a);
-        this.model.setModified(true);
-        this.render();
-    }
-
-    getImageScale(): number {
-        return this.model.getImgCanvas().getScale();
-    }
-
-    setImageScale(s: number): void {
-        this.model.getImgCanvas().setScale(s);
-        this.model.setModified(true);
-        this.render();
-    }
-
-    getImageX(): number {
-        return this.model.getImgCanvas().getX();
-    }
-
-    setImageX(x: number): void {
-        this.model.getImgCanvas().setX(x);
-        this.model.setModified(true);
-        this.render();
-    }
-
-    getImageY(): number {
-        return this.model.getImgCanvas().getY();
-    }
-
-    setImageY(y: number): void {
-        this.model.getImgCanvas().setY(y);
-        this.model.setModified(true);
-        this.render();
     }
 }
 

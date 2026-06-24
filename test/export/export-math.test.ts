@@ -1,12 +1,3 @@
-/**
- * @file export-math.test.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief Verifies that LaTeX math in TY text primitives is exported as typeset
- *        glyph geometry (MathJax) rather than the literal $...$ source.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';

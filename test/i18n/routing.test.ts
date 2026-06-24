@@ -1,13 +1,3 @@
-/**
- * @file routing.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Tests for the i18n routing layer: loadLocale, setLocale, getString
- *        fallback to English, locale-change subscribers, and localStorage
- *        persistence.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
     loadLocale,

@@ -1,12 +1,3 @@
-/**
- * @file color-canvas.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Verify ColorCanvas.getRGB returns clean 24-bit values
- *        suitable for toString(16) → CSS hex colors.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { ColorCanvas } from '../../src/graphic/canvas/ColorCanvas.js';
 

@@ -1,22 +1,3 @@
-/**
- * @file editor-actions.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Unit tests for EditorActions — selection-driven mutators.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * EditorActions had zero direct coverage before this file. It exposes the
- * alignment + transform + delete operations that the keyboard shortcuts
- * and menu items call into. Each method:
- *   - is a no-op when nothing is selected (no undo state, no model change)
- *   - pushes exactly one undo state when it does mutate
- *   - leaves unselected primitives untouched
- *
- * The "rotateAllSelected", "mirrorAllSelected" and "moveAllSelected" paths
- * already have indirect coverage via undo-actions.test.ts and the keyboard
- * shortcut tests, so this file focuses on alignment + delete.
- */
-
 import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../../src/circuit/controllers/ParserActions.js';

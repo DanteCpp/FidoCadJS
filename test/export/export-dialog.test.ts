@@ -1,17 +1,3 @@
-/**
- * @file export-dialog.test.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Unit tests for ExportDialog.executeExport — verify that each
- *        format selection routes to the correct exporter and the resulting
- *        download is wired up properly.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * The dialog UI itself is exercised by E2E. Here we drive the dispatcher
- * directly with a stub EditorFacade so we can pin the contract without
- * involving the browser.
- */
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { executeExport } from '../../src/ui/ExportDialog.js';
 import { defaultBitmapOptions } from '../../src/export/ExportBitmapOptions.js';

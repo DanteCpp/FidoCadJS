@@ -1,12 +1,3 @@
-/**
- * @file math-layout.test.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief Tests for MathLayout — $/$$ splitting, MathJax geometry rendering,
- *        left-to-right segment positioning, and literal-text fallback.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { splitMathSegments, layoutMath } from '../../src/graphic/MathLayout.js';
 

@@ -1,11 +1,3 @@
-/**
- * @file ClipboardController.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Clipboard operations (copy, cut, paste, duplicate) extracted from CircuitPanel
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { SelectionActions } from './SelectionActions.js';
 import type { ParserActions } from './ParserActions.js';
 import type { EditorActions } from './EditorActions.js';

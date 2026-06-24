@@ -1,12 +1,3 @@
-/**
- * @file dash-scaling.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Verify that applyStroke scales dash patterns with line width
- *        so dashed strokes look consistent at every zoom level.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GraphicsCanvas } from '../../src/graphic/canvas/GraphicsCanvas.js';
 import { Globals } from '../../src/globals/Globals.js';

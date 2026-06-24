@@ -1,14 +1,3 @@
-/**
- * @file mathjax-shim.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief Typed wrapper around the vendored MathJax SVG engine.
- *        Isolates the untyped bundle so the rest of the codebase has full TS
- *        types. The bundle (src/vendor/mathjax/mathjax.mjs) is generated from
- *        scripts/mathjax-svg-entry.mjs by scripts/vendor-mathjax.sh.
- * @copyright Copyright 2026 Dante Loi - GPL v3 (wraps MathJax, Apache-2.0)
- */
-
 // Vendored JS bundle — no types available, suppressed inline.
 // @ts-expect-error untyped vendored module
 import { tex2mathgeom as _tex2mathgeom, tex2svg as _tex2svg } from './mathjax/mathjax.mjs';

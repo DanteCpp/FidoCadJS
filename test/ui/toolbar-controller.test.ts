@@ -1,13 +1,3 @@
-/**
- * @file toolbar-controller.test.ts
- * @author Dante Loi
- * @date 2026-06-11
- * @brief Unit tests for ToolbarController — tool buttons, zoom dropdown sync
- *        (including the keyboard-zoom regression), grid/snap/library toggles,
- *        and the coordinates display.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { ToolbarController } from '../../src/ui/ToolbarController.js';

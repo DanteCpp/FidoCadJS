@@ -1,20 +1,3 @@
-/**
- * @file ExportBitmap.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Bitmap export engine: renders the drawing model to an offscreen
- *        canvas at configurable DPI/pixel resolution, with optional B&W
- *        post-processing and per-layer splitting.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Mirrors FidoCadJ's ExportGraphic.exportImage / exportImageBW.
- *          The FCD logical unit → pixel mapping is:
- *            magnitude = targetDPI / 72
- *          (72 FCD units per logical inch — the standard screen mapping).
- *          For explicit-pixel mode, magnitude is computed to fit the
- *          drawing bounding box into the requested pixel dimensions while
- *          preserving aspect ratio.
- */
-
 import type { DrawingModel } from '../circuit/model/DrawingModel.js';
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import { MapCoordinates as MapCoordsImpl } from '../geom/MapCoordinates.js';

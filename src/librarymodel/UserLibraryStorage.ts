@@ -1,14 +1,3 @@
-/**
- * @file UserLibraryStorage.ts
- * @author Dante Loi
- * @date 2026-04-27
- * @brief localStorage persistence layer for user-created component libraries.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Browser port of the file-based library persistence in fidocadj.globals.LibUtils.
- * User libraries are stored as FCL-formatted strings keyed by library filename prefix.
- */
-
 import type { ParserActions } from '../circuit/controllers/ParserActions.js';
 import { MacroDesc } from '../primitives/MacroDesc.js';
 import { LibUtils } from './LibUtils.js';

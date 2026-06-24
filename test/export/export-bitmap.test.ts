@@ -1,16 +1,3 @@
-/**
- * @file export-bitmap.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Unit tests for ExportBitmap — offscreen rendering, DPI/pixel sizing,
- *        B&W post-processing, and split-layers export.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Note: jsdom canvas is largely a no-op renderer, so we test dimensions,
- * option plumbing, blob creation, and split-layer counts. Visual fidelity
- * (actual pixel content, B&W threshold) is covered by E2E tests.
- */
-
 import { describe, it, expect, vi } from 'vitest';
 import {
     renderToOffscreen,

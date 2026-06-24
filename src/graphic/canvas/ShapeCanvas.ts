@@ -1,11 +1,3 @@
-/**
- * @file ShapeCanvas.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief HTML Canvas shape drawing implementation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ShapeInterface } from '../ShapeInterface.js';
 import { RectangleG } from '../RectangleG.js';
 
@@ -17,7 +9,9 @@ export class ShapeCanvas implements ShapeInterface {
         this.path = new Path2D();
     }
 
-    getPath(): Path2D { return this.path; }
+    getPath(): Path2D {
+        return this.path;
+    }
 
     moveTo(x: number, y: number): void {
         this.path.moveTo(x, y);
@@ -32,7 +26,16 @@ export class ShapeCanvas implements ShapeInterface {
         this.updateBounds(x2, y2);
     }
 
-    createCubicCurve(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void {
+    createCubicCurve(
+        x0: number,
+        y0: number,
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
+        x3: number,
+        y3: number,
+    ): void {
         // Cubic curve: start at (x0,y0), control points at (x1,y1) and (x2,y2), end at (x3,y3)
         this.path.moveTo(x0, y0);
         this.path.bezierCurveTo(x1, y1, x2, y2, x3, y3);

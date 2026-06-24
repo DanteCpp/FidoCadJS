@@ -1,11 +1,3 @@
-/**
- * @file selection-and-transform.test.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  E2E — Selection, move, rotate, mirror, nudge, and delete
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { test, expect } from '@playwright/test';
 import {
     gotoApp,

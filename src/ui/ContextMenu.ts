@@ -1,11 +1,3 @@
-/**
- * @file ContextMenu.ts
- * @author Dante Loi
- * @date 2026-04-23
- * @brief Right-click context menu DOM component
- * @copyright Copyright (C) 2026 Dante Loi — GPL v3
- */
-
 export interface ContextMenuItem {
     label?: string;
     enabled?: boolean;

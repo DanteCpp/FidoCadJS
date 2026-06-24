@@ -1,11 +1,3 @@
-/**
- * @file primitive-edge-cases.test.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Edge-case and unit tests for individual primitives (toString, parseTokens)
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { PrimitiveLine } from '../../src/primitives/PrimitiveLine.js';
 import { PrimitiveBezier } from '../../src/primitives/PrimitiveBezier.js';
@@ -56,7 +48,25 @@ describe('PrimitiveLine', () => {
 
 describe('PrimitiveBezier', () => {
     it('toString produces BE token format', () => {
-        const bz = new PrimitiveBezier(50, 5, 20, 60, 70, 35, 50, 70, 0, false, false, 0, 3, 2, 0, FONT, FSIZE);
+        const bz = new PrimitiveBezier(
+            50,
+            5,
+            20,
+            60,
+            70,
+            35,
+            50,
+            70,
+            0,
+            false,
+            false,
+            0,
+            3,
+            2,
+            0,
+            FONT,
+            FSIZE,
+        );
         const s = bz.toString(false);
         expect(s).toContain('BE');
         expect(s).toContain('50');

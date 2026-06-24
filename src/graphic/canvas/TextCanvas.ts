@@ -1,11 +1,3 @@
-/**
- * @file TextCanvas.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief HTML Canvas text rendering implementation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { TextInterface } from '../TextInterface.js';
 
 export class TextCanvas implements TextInterface {
@@ -47,15 +39,5 @@ export class TextCanvas implements TextInterface {
     drawString(str: string, x: number, y: number): void {
         this.ctx.font = this.font;
         this.ctx.fillText(str, x, y);
-    }
-
-    getFontSize(): number {
-        return this.fontSize;
-    }
-
-    setFontSize(size: number): void {
-        this.fontSize = size;
-        this.font = `${size}px sans-serif`;
-        this.ctx.font = this.font;
     }
 }

@@ -1,15 +1,3 @@
-/**
- * @file SvgPathToPdf.ts
- * @author Dante Loi
- * @date 2026-06-03
- * @brief Converts an SVG path `d` string (as emitted by MathJax glyph outlines)
- *        into PDF content-stream path operators (m / l / c / h). Quadratic
- *        Béziers (Q/T) are converted to cubics since PDF has no quadratic
- *        operator. Coordinates are passed through unscaled; the caller sets the
- *        CTM (via cm) so the raw glyph units map into place.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 /** Tokenise a path `d` string into command letters and numbers. */
 function tokenize(d: string): Array<string | number> {
     const out: Array<string | number> = [];

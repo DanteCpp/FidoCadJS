@@ -1,11 +1,3 @@
-/**
- * @file utils.ts
- * @author Dante Loi
- * @date   2026-05-10
- * @brief  Shared helpers for FidoCadJS Playwright E2E tests
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { Page, BrowserContext } from '@playwright/test';
 
 /** Navigate to the app and wait for it to fully initialise.

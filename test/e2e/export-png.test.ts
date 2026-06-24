@@ -1,20 +1,3 @@
-/**
- * @file export-png.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief E2E — PNG export through the full browser stack.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Verifies that the canvas-to-blob path works in a real browser:
- *   - the blob is a valid PNG (magic-number check),
- *   - non-empty circuits produce non-trivially large blobs,
- *   - the download has the right filename + MIME type.
- *
- * Uses Playwright's `evaluate` to invoke the canvas.toBlob path directly
- * since the dialog flow is exercised by export-dialog.test.ts at the
- * unit level.
- */
-
 import { test, expect } from '@playwright/test';
 import { gotoApp, loadCircuit, clearCircuit } from './utils';
 

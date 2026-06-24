@@ -1,11 +1,3 @@
-/**
- * @file export-pgf.fixtures.test.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Golden-snapshot tests for ExportPGF against the fixture corpus.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import {
     listFixtures,

@@ -1,11 +1,3 @@
-/**
- * @file GraphicsInterface.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Graphics abstraction layer interface
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import type { ColorInterface } from './ColorInterface.js';
 import type { TextInterface } from './TextInterface.js';
 import type { ShapeInterface } from './ShapeInterface.js';
@@ -17,7 +9,6 @@ import type { LaidOutSegment } from './MathLayout.js';
 export interface GraphicsInterface {
     getColor(): ColorInterface;
     setZoom(z: number): void;
-    getZoom(): number;
     setColor(c: ColorInterface): void;
     getTextInterface(): TextInterface;
     applyStroke(w: number, dashStyle: number): void;
@@ -34,8 +25,6 @@ export interface GraphicsInterface {
     hitClip(x: number, y: number, width: number, height: number): boolean;
     drawLine(x1: number, y1: number, x2: number, y2: number): void;
     setFont(name: string, size: number, isItalic?: boolean, isBold?: boolean): void;
-    getFontSize(): number;
-    setFontSize(size: number): void;
     getFontAscent(): number;
     getFontDescent(): number;
     getStringWidth(s: string): number;

@@ -1,14 +1,3 @@
-/**
- * @file Toast.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Non-modal toast notification helper
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Lightweight, auto-dismissing notification bar. Used to surface
- * localStorage failures and other non-fatal errors to the user.
- */
-
 export class Toast {
     private static readonly DURATION_MS = 4000;
 

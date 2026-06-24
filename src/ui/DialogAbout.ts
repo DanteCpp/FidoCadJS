@@ -1,12 +1,3 @@
-/**
- * @file DialogAbout.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief About dialog — version, license, credits.
- *        Mirrors FidoCadJ's DialogAbout.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { getString } from '../i18n/i18n.js';
 
 /**

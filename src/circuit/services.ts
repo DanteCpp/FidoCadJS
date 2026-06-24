@@ -1,14 +1,3 @@
-/**
- * @file services.ts
- * @author Dante Loi
- * @date 2026-05-13
- * @brief Service container / factory for wiring editor dependencies
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Central factory function that creates and wires all controllers,
- *          making the dependency graph explicit. Enables unit testing of
- *          individual controllers without constructing the full CircuitPanel.
- */
-
 import { DrawingModel } from './model/DrawingModel.js';
 import { StandardLayers } from '../layers/StandardLayers.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
@@ -49,11 +38,13 @@ export function createEditorServices(): EditorServices {
     const selectionActions = new SelectionActions(model);
     const undoActions = new UndoActions(parserActions);
     const editorActions = new EditorActions(model, selectionActions, undoActions);
-    const elementsEdt = new ElementsEdtActions(
-        model, selectionActions, undoActions, editorActions
-    );
+    const elementsEdt = new ElementsEdtActions(model, selectionActions, undoActions, editorActions);
     const clipboardController = new ClipboardController(
-        selectionActions, parserActions, editorActions, undoActions, mapCoordinates
+        selectionActions,
+        parserActions,
+        editorActions,
+        undoActions,
+        mapCoordinates,
     );
 
     return {

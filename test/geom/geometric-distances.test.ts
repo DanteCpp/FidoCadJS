@@ -1,11 +1,3 @@
-/**
- * @file geometric-distances.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Unit tests for GeometricDistances — point/shape distance helpers.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { GeometricDistances } from '../../src/geom/GeometricDistances.js';
 

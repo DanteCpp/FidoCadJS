@@ -1,13 +1,3 @@
-/**
- * @file complex-curve-fixes.test.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Tests for Phase 1 fixes in PrimitiveComplexCurve:
- *        1.3 — off-by-one insertion at boundaries
- *        1.4 — stale-reference in hit-test after mutation
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
 import { PrimitiveComplexCurve } from '../../src/primitives/PrimitiveComplexCurve.js';
 

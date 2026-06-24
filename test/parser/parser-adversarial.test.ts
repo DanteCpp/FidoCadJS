@@ -1,23 +1,3 @@
-/**
- * @file parser-adversarial.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Adversarial / fuzz tests for ParserActions — malformed FCD must
- *        never crash the parser. The contract is: either parse it (best
- *        effort) or throw a defined Error.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * The tests are hand-rolled rather than property-based (no fast-check
- * dependency) but cover the same shapes:
- *   - syntactically malformed input (empty, truncated, mixed line endings)
- *   - boundary integer values (Number.MAX_SAFE_INTEGER, negative coords)
- *   - long lines (>10 000 tokens)
- *   - Unicode (BMP + surrogate pairs + emoji) in text fields
- *   - NUL bytes
- *   - embedded markup that could escape an XML/LaTeX context
- *   - macro recursion at the depth limit (16)
- */
-
 import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';

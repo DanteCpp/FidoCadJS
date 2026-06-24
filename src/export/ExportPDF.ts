@@ -1,33 +1,3 @@
-/**
- * @file ExportPDF.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief PDF export implementation — vendor-free, no npm dependencies.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- * @details Writes a minimal PDF 1.4 document by emitting content-stream
- *          operators directly. Mirrors FidoCadJ's ExportPDF.java but drops
- *          the Unicode glyph mapping (uses WinAnsiEncoding); fonts are
- *          limited to the 14 standard PDF base fonts (Helvetica, Courier,
- *          Times, Symbol families). The drawing is rendered at 200 dpi
- *          internally and scaled to PDF units (72 dpi).
- *
- *          Object layout:
- *            1  /Info
- *            2  /ProcSet
- *            3  /Catalog
- *            4  /Page
- *            5  /Pages
- *            6  Font F1: Courier
- *            7  Font F2: Courier-Bold
- *            8  Font F3: Times-Roman
- *            9  Font F4: Times-Bold
- *           10  Font F5: Helvetica
- *           11  Font F6: Helvetica-Bold
- *           12  Font F7: Symbol
- *           13  Font F8: ZapfDingbats
- *           14  Content stream
- */
-
 import type { ExportInterface } from './ExportInterface.js';
 import type { DimensionG } from '../graphic/DimensionG.js';
 import type { PointDouble } from '../graphic/PointDouble.js';

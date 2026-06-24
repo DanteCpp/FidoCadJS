@@ -1,11 +1,3 @@
-/**
- * @file placement.test.ts
- * @author Dante Loi
- * @date 2026-05-09
- * @brief Integration tests: tool selection + canvas clicks place primitives correctly
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CircuitPanel } from '../../src/circuit/CircuitPanel.js';
 import { ElementsEdtActions } from '../../src/circuit/controllers/ElementsEdtActions.js';

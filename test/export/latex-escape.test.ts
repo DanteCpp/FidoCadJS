@@ -1,13 +1,5 @@
-/**
- * @file latex-escape.test.ts
- * @author Dante Loi
- * @date 2026-05-14
- * @brief Tests for Phase 1.7: LaTeX special-character escaping
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect } from 'vitest';
-import { escapeLatex } from '../../src/export/AbstractExport.js';
+import { escapeLatex } from '../../src/export/LatexEscape.js';
 
 describe('escapeLatex', () => {
     it('escapes backslash', () => {

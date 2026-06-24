@@ -1,17 +1,8 @@
-/**
- * @file library-model.test.ts
- * @author Dante Loi
- * @date 2026-04-24
- * @brief Tests for LibraryModel, Library, and Category.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
 import { StandardLayers } from '../../src/layers/StandardLayers.js';
 import { LibraryModel } from '../../src/librarymodel/LibraryModel.js';
-import type { LibraryListener } from '../../src/librarymodel/event/LibraryListener.js';
 
 const SAMPLE_FCL = `[FIDOLIB Test Library]
 {Passive}
@@ -42,7 +33,7 @@ describe('LibraryModel', () => {
         const libs = lm.getAllLibraries();
         expect(libs.length).toBeGreaterThanOrEqual(1);
 
-        const testLib = libs.find(l => l.getFilename() === 'testlib');
+        const testLib = libs.find((l) => l.getFilename() === 'testlib');
         expect(testLib).toBeDefined();
     });
 
@@ -57,65 +48,46 @@ describe('LibraryModel', () => {
         const lm = new LibraryModel(model);
 
         const libs = lm.getAllLibraries();
-        const testLib = libs.find(l => l.getFilename() === 'testlib')!;
-        const categories = testLib.getAllCategories().map(c => c.getName());
+        const testLib = libs.find((l) => l.getFilename() === 'testlib')!;
+        const categories = testLib.getAllCategories().map((c) => c.getName());
         expect(categories).toContain('Active');
     });
 
     it('category contains correct macros', () => {
         const model = makePopulatedModel();
         const lm = new LibraryModel(model);
-        const testLib = lm.getAllLibraries().find(l => l.getFilename() === 'testlib')!;
+        const testLib = lm.getAllLibraries().find((l) => l.getFilename() === 'testlib')!;
 
-        const allMacros = testLib.getAllCategories().flatMap(c => c.getAllMacros());
-        const keys = allMacros.map(m => m.key);
-        expect(keys.some(k => k.includes('u001'))).toBe(true);
-    });
-
-    it('forceUpdate fires libraryLoaded on all listeners', () => {
-        const model = makePopulatedModel();
-        const lm = new LibraryModel(model);
-
-        const listener: LibraryListener = {
-            libraryLoaded: vi.fn(),
-            libraryNodeRenamed: vi.fn(),
-            libraryNodeRemoved: vi.fn(),
-            libraryNodeAdded: vi.fn(),
-            libraryNodeKeyChanged: vi.fn(),
-        };
-        lm.addLibraryListener(listener);
-        lm.forceUpdate();
-
-        expect(listener.libraryLoaded).toHaveBeenCalledOnce();
-    });
-
-    it('removeLibraryListener stops receiving events', () => {
-        const model = makePopulatedModel();
-        const lm = new LibraryModel(model);
-
-        const listener: LibraryListener = {
-            libraryLoaded: vi.fn(),
-            libraryNodeRenamed: vi.fn(),
-            libraryNodeRemoved: vi.fn(),
-            libraryNodeAdded: vi.fn(),
-            libraryNodeKeyChanged: vi.fn(),
-        };
-        lm.addLibraryListener(listener);
-        lm.removeLibraryListener(listener);
-        lm.forceUpdate();
-
-        expect(listener.libraryLoaded).not.toHaveBeenCalled();
+        const allMacros = testLib.getAllCategories().flatMap((c) => c.getAllMacros());
+        const keys = allMacros.map((m) => m.key);
+        expect(keys.some((k) => k.includes('u001'))).toBe(true);
     });
 });
 
 describe('LibraryModel static helpers', () => {
     it('getPlainMacroKey strips library prefix', () => {
-        const macro = { key: 'testlib.r001', name: '', description: '', category: '', library: '', filename: '', level: 0 };
+        const macro = {
+            key: 'testlib.r001',
+            name: '',
+            description: '',
+            category: '',
+            library: '',
+            filename: '',
+            level: 0,
+        };
         expect(LibraryModel.getPlainMacroKey(macro)).toBe('r001');
     });
 
     it('getPlainMacroKey works for unprefixed keys', () => {
-        const macro = { key: '000', name: '', description: '', category: '', library: '', filename: '', level: 0 };
+        const macro = {
+            key: '000',
+            name: '',
+            description: '',
+            category: '',
+            library: '',
+            filename: '',
+            level: 0,
+        };
         expect(LibraryModel.getPlainMacroKey(macro)).toBe('000');
     });
 
@@ -128,7 +100,7 @@ describe('Library', () => {
     it('containsMacroKey finds macro in any category', () => {
         const model = makePopulatedModel();
         const lm = new LibraryModel(model);
-        const testLib = lm.getAllLibraries().find(l => l.getFilename() === 'testlib')!;
+        const testLib = lm.getAllLibraries().find((l) => l.getFilename() === 'testlib')!;
         // 'u001' is the plain key for testlib.u001
         expect(testLib.containsMacroKey('u001')).toBe(true);
         expect(testLib.containsMacroKey('doesnotexist')).toBe(false);

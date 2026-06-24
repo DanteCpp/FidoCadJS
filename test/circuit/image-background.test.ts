@@ -1,12 +1,3 @@
-/**
- * @file image-background.test.ts
- * @author Dante Loi
- * @date 2026-05-15
- * @brief Unit tests for ImageAsCanvas — attach/detach, state serialisation,
- *        position/scale/alpha accessors, and FJC IMG token round-trip.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ImageAsCanvas } from '../../src/circuit/ImageAsCanvas.js';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';

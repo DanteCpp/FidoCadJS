@@ -1,15 +1,3 @@
-/**
- * @file MacroPicker.ts
- * @author Dante Loi
- * @date 2026-04-27
- * @brief HTML-based component library tree browser with context menu for library management.
- * @copyright Copyright 2026 Dante Loi - GPL v3
- *
- * Browser port of fidocadj.macropicker.MacroTree (Swing). Renders a collapsible
- * tree: Library → Category → Macro. Supports right-click context menus for
- * rename, remove, copy, paste, and change-key operations on user libraries.
- */
-
 import { getString } from '../i18n/i18n.js';
 import type { LibraryModel } from '../librarymodel/LibraryModel.js';
 import { Library } from '../librarymodel/Library.js';
