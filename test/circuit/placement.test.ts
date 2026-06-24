@@ -1,6 +1,6 @@
+import { Tool } from '../../src/circuit/controllers/Tool.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CircuitPanel } from '../../src/circuit/CircuitPanel.js';
-import { ElementsEdtActions } from '../../src/circuit/controllers/ElementsEdtActions.js';
 import { MacroDesc } from '../../src/primitives/MacroDesc.js';
 
 /**
@@ -67,7 +67,7 @@ describe('Primitive placement via tools', () => {
     describe('line tool', () => {
         it('places a line after two clicks (mousedown + mouseup each)', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
 
             const model = panel.getModel();
             expect(model.getPrimitiveVector().length).toBe(0);
@@ -84,15 +84,15 @@ describe('Primitive placement via tools', () => {
             const panel = makePanel();
 
             // Place first line
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             clickSequence(panel, [
                 [50, 50],
                 [150, 150],
             ]);
 
             // Switch away and back to reset the line tool state
-            panel.setTool(ElementsEdtActions.SELECTION);
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.SELECTION);
+            panel.setTool(Tool.LINE);
 
             // Place second line
             clickSequence(panel, [
@@ -107,7 +107,7 @@ describe('Primitive placement via tools', () => {
     describe('rectangle tool', () => {
         it('places a rectangle after two clicks', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.RECTANGLE);
+            panel.setTool(Tool.RECTANGLE);
 
             clickSequence(panel, [
                 [100, 100],
@@ -121,7 +121,7 @@ describe('Primitive placement via tools', () => {
     describe('ellipse tool', () => {
         it('places an ellipse after two clicks', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.ELLIPSE);
+            panel.setTool(Tool.ELLIPSE);
 
             clickSequence(panel, [
                 [100, 100],
@@ -135,7 +135,7 @@ describe('Primitive placement via tools', () => {
     describe('bezier tool', () => {
         it('places a bezier after four clicks', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.BEZIER);
+            panel.setTool(Tool.BEZIER);
 
             clickSequence(panel, [
                 [50, 50],
@@ -154,21 +154,21 @@ describe('Primitive placement via tools', () => {
         // The tool itself is verified via the parser round-trip tests.
         it('polygon tool is selectable and clickable without crash', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.POLYGON);
-            expect(panel.getTool()).toBe(ElementsEdtActions.POLYGON);
+            panel.setTool(Tool.POLYGON);
+            expect(panel.getTool()).toBe(Tool.POLYGON);
 
             // Clicking should not crash
             clickCanvas(panel, 100, 100);
 
             // Tool remains POLYGON (waiting for more clicks or right-click to finish)
-            expect(panel.getTool()).toBe(ElementsEdtActions.POLYGON);
+            expect(panel.getTool()).toBe(Tool.POLYGON);
         });
     });
 
     describe('connection tool', () => {
         it('places a connection after one click', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.CONNECTION);
+            panel.setTool(Tool.CONNECTION);
 
             clickCanvas(panel, 200, 200);
 
@@ -179,7 +179,7 @@ describe('Primitive placement via tools', () => {
     describe('PCB line tool', () => {
         it('places a PCB line after two clicks', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.PCB_LINE);
+            panel.setTool(Tool.PCB_LINE);
 
             clickSequence(panel, [
                 [50, 50],
@@ -193,7 +193,7 @@ describe('Primitive placement via tools', () => {
     describe('PCB pad tool', () => {
         it('places a PCB pad after one click', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.PCB_PAD);
+            panel.setTool(Tool.PCB_PAD);
 
             clickCanvas(panel, 200, 200);
 
@@ -204,7 +204,7 @@ describe('Primitive placement via tools', () => {
     describe('text tool', () => {
         it('places text after one click (properties panel opens for editing)', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.TEXT);
+            panel.setTool(Tool.TEXT);
 
             clickCanvas(panel, 150, 150);
 
@@ -217,28 +217,28 @@ describe('Primitive placement via tools', () => {
         it('getTool returns the correct tool after setTool', () => {
             const panel = makePanel();
 
-            panel.setTool(ElementsEdtActions.LINE);
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
 
-            panel.setTool(ElementsEdtActions.RECTANGLE);
-            expect(panel.getTool()).toBe(ElementsEdtActions.RECTANGLE);
+            panel.setTool(Tool.RECTANGLE);
+            expect(panel.getTool()).toBe(Tool.RECTANGLE);
 
-            panel.setTool(ElementsEdtActions.SELECTION);
-            expect(panel.getTool()).toBe(ElementsEdtActions.SELECTION);
+            panel.setTool(Tool.SELECTION);
+            expect(panel.getTool()).toBe(Tool.SELECTION);
         });
 
         it('switching tools does not place primitives', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             expect(panel.getModel().getPrimitiveVector().length).toBe(0);
 
-            panel.setTool(ElementsEdtActions.RECTANGLE);
+            panel.setTool(Tool.RECTANGLE);
             expect(panel.getModel().getPrimitiveVector().length).toBe(0);
         });
 
         it('selection tool does not place primitives on click', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.SELECTION);
+            panel.setTool(Tool.SELECTION);
 
             clickCanvas(panel, 200, 200);
 
@@ -249,7 +249,7 @@ describe('Primitive placement via tools', () => {
     describe('rapid placement stress test', () => {
         it('places 20 connection dots in rapid succession', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.CONNECTION);
+            panel.setTool(Tool.CONNECTION);
 
             for (let i = 0; i < 20; i++) {
                 clickCanvas(panel, 10 + i * 10, 10 + i * 5);
@@ -260,7 +260,7 @@ describe('Primitive placement via tools', () => {
 
         it('renders primitives at widely spread coordinates without clipping', () => {
             const panel = makePanel();
-            panel.setTool(ElementsEdtActions.CONNECTION);
+            panel.setTool(Tool.CONNECTION);
 
             // Place dots across a wide coordinate range (0 to 500)
             const points = [

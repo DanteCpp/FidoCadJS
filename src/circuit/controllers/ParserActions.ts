@@ -1,7 +1,7 @@
 import { DrawingModel } from '../model/DrawingModel.js';
 import { Globals } from '../../globals/Globals.js';
 import { LayerDesc } from '../../layers/LayerDesc.js';
-import { StandardLayers } from '../../layers/StandardLayers.js';
+import * as StandardLayers from '../../layers/StandardLayers.js';
 import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import { PrimitiveAdvText } from '../../primitives/PrimitiveAdvText.js';
 import { PrimitiveBezier } from '../../primitives/PrimitiveBezier.js';

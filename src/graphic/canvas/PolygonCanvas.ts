@@ -1,8 +1,8 @@
-import type { PolygonInterface } from '../PolygonInterface.js';
+import type { Polygon } from '../Polygon.js';
 import type { PointG } from '../PointG.js';
 import { RectangleG } from '../RectangleG.js';
 
-export class PolygonCanvas implements PolygonInterface {
+export class PolygonCanvas implements Polygon {
     private xpoints: number[] = [];
     private ypoints: number[] = [];
 

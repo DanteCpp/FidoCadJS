@@ -1,6 +1,6 @@
+import { Tool } from '../../src/circuit/controllers/Tool.js';
 import { describe, it, expect, beforeEach, beforeAll, vi } from 'vitest';
 import { CircuitPanel } from '../../src/circuit/CircuitPanel.js';
-import { ElementsEdtActions } from '../../src/circuit/controllers/ElementsEdtActions.js';
 import { PrimitiveLine } from '../../src/primitives/PrimitiveLine.js';
 
 // jsdom does not ship ResizeObserver or full Canvas 2D — provide minimal stubs
@@ -145,67 +145,67 @@ describe('Keyboard Shortcuts', () => {
 
     describe('Tool selection shortcuts', () => {
         it('A selects the Selection tool', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'a');
-            expect(panel.getTool()).toBe(ElementsEdtActions.SELECTION);
+            expect(panel.getTool()).toBe(Tool.SELECTION);
         });
 
         it('L selects the Line tool', () => {
             pressKey(canvas, 'l');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('T selects the Text tool', () => {
             pressKey(canvas, 't');
-            expect(panel.getTool()).toBe(ElementsEdtActions.TEXT);
+            expect(panel.getTool()).toBe(Tool.TEXT);
         });
 
         it('B selects the Bezier tool', () => {
             pressKey(canvas, 'b');
-            expect(panel.getTool()).toBe(ElementsEdtActions.BEZIER);
+            expect(panel.getTool()).toBe(Tool.BEZIER);
         });
 
         it('P selects the Polygon tool', () => {
             pressKey(canvas, 'p');
-            expect(panel.getTool()).toBe(ElementsEdtActions.POLYGON);
+            expect(panel.getTool()).toBe(Tool.POLYGON);
         });
 
         it('O selects the Complex curve tool', () => {
             pressKey(canvas, 'o');
-            expect(panel.getTool()).toBe(ElementsEdtActions.COMPLEXCURVE);
+            expect(panel.getTool()).toBe(Tool.COMPLEXCURVE);
         });
 
         it('E selects the Ellipse tool', () => {
             pressKey(canvas, 'e');
-            expect(panel.getTool()).toBe(ElementsEdtActions.ELLIPSE);
+            expect(panel.getTool()).toBe(Tool.ELLIPSE);
         });
 
         it('G selects the Rectangle tool', () => {
             pressKey(canvas, 'g');
-            expect(panel.getTool()).toBe(ElementsEdtActions.RECTANGLE);
+            expect(panel.getTool()).toBe(Tool.RECTANGLE);
         });
 
         it('C selects the Connection tool', () => {
             pressKey(canvas, 'c');
-            expect(panel.getTool()).toBe(ElementsEdtActions.CONNECTION);
+            expect(panel.getTool()).toBe(Tool.CONNECTION);
         });
 
         it('I selects the PCB track tool', () => {
             pressKey(canvas, 'i');
-            expect(panel.getTool()).toBe(ElementsEdtActions.PCB_LINE);
+            expect(panel.getTool()).toBe(Tool.PCB_LINE);
         });
 
         it('Z selects the PCB pad tool', () => {
             pressKey(canvas, 'z');
-            expect(panel.getTool()).toBe(ElementsEdtActions.PCB_PAD);
+            expect(panel.getTool()).toBe(Tool.PCB_PAD);
         });
 
         it('uppercase letters also work for tool selection', () => {
             pressKey(canvas, 'L');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
 
             pressKey(canvas, 'G');
-            expect(panel.getTool()).toBe(ElementsEdtActions.RECTANGLE);
+            expect(panel.getTool()).toBe(Tool.RECTANGLE);
         });
     });
 
@@ -213,9 +213,9 @@ describe('Keyboard Shortcuts', () => {
 
     describe('Special keys', () => {
         it('Space selects the Selection tool (FidoCadJ binding)', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, ' ');
-            expect(panel.getTool()).toBe(ElementsEdtActions.SELECTION);
+            expect(panel.getTool()).toBe(Tool.SELECTION);
         });
 
         it('Home triggers fit-to-view', () => {
@@ -237,13 +237,13 @@ describe('Keyboard Shortcuts', () => {
         });
 
         it('Escape clears selection and switches to Selection tool', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             addLineToPanel(panel, 0, 0, 10, 10, 0);
             selectAll(panel);
 
             pressKey(canvas, 'Escape');
 
-            expect(panel.getTool()).toBe(ElementsEdtActions.SELECTION);
+            expect(panel.getTool()).toBe(Tool.SELECTION);
             // All primitives should be deselected
             for (const prim of getModelPrimitives(panel)) {
                 expect(prim.isSelected()).toBe(false);
@@ -352,9 +352,9 @@ describe('Keyboard Shortcuts', () => {
         });
 
         it('plain A (no modifier) still switches to the Selection tool', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'a');
-            expect(panel.getTool()).toBe(ElementsEdtActions.SELECTION);
+            expect(panel.getTool()).toBe(Tool.SELECTION);
         });
     });
 
@@ -384,10 +384,10 @@ describe('Keyboard Shortcuts', () => {
         });
 
         it('R does nothing when nothing is selected', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'r');
             // Tool should NOT change to selection — R is not a tool shortcut
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('S mirrors selected primitives horizontally', () => {
@@ -418,10 +418,10 @@ describe('Keyboard Shortcuts', () => {
         });
 
         it('M does nothing when nothing is selected', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'm');
             // Tool should not change — M is a transform, not a tool shortcut
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('Delete removes selected primitives', () => {
@@ -565,11 +565,11 @@ describe('Keyboard Shortcuts', () => {
             document.body.appendChild(input);
             input.focus();
 
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
 
             // Press L while input is focused — should NOT change tool
             pressKey(input, 'l');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
 
             document.body.removeChild(input);
             canvas.focus();
@@ -580,10 +580,10 @@ describe('Keyboard Shortcuts', () => {
             document.body.appendChild(textarea);
             textarea.focus();
 
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
 
             pressKey(textarea, 'g');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
 
             document.body.removeChild(textarea);
             canvas.focus();
@@ -594,10 +594,10 @@ describe('Keyboard Shortcuts', () => {
             document.body.appendChild(select);
             select.focus();
 
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
 
             pressKey(select, 'c');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
 
             document.body.removeChild(select);
             canvas.focus();
@@ -633,55 +633,55 @@ describe('Keyboard Shortcuts', () => {
     describe('Edge cases', () => {
         it('Ctrl+Shift+S triggers save-as without triggering mirror', () => {
             // mirror uses 's' without Ctrl; Ctrl+Shift+S should not mirror
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 's', { ctrlKey: true, shiftKey: true });
 
             // Should not have changed tool (not a mirror shortcut)
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('Ctrl+E does not switch to Ellipse tool', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'e', { ctrlKey: true });
 
             // Ctrl+E is export, not ellipse tool
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('Ctrl+P does not switch to Polygon tool', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'p', { ctrlKey: true });
 
             // Ctrl+P is print, not polygon tool
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('Ctrl+O does not switch to Complex curve tool', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'o', { ctrlKey: true });
 
             // Ctrl+O is open file, not complex curve tool
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('Ctrl+Z does not switch to PCB pad tool', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'z', { ctrlKey: true });
 
             // Ctrl+Z is undo, not PCB pad tool
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
 
         it('unknown keys do not crash or change state', () => {
-            panel.setTool(ElementsEdtActions.LINE);
+            panel.setTool(Tool.LINE);
             pressKey(canvas, 'q');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
 
             pressKey(canvas, '1');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
 
             pressKey(canvas, 'F1');
-            expect(panel.getTool()).toBe(ElementsEdtActions.LINE);
+            expect(panel.getTool()).toBe(Tool.LINE);
         });
     });
 });

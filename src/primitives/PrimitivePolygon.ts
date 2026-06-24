@@ -1,11 +1,11 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
-import type { PolygonInterface } from '../graphic/PolygonInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
+import type { Exporter } from '../export/Exporter.js';
+import type { Polygon } from '../graphic/Polygon.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
-import { GeometricDistances } from '../geom/GeometricDistances.js';
+import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { RectangleG } from '../graphic/RectangleG.js';
 import { PointG } from '../graphic/PointG.js';
 import { PointDouble } from '../graphic/PointDouble.js';
@@ -14,7 +14,7 @@ export class PrimitivePolygon extends GraphicPrimitive {
     private nPoints: number = 0;
     private isFilled: boolean = false;
     private dashStyle: number = 0;
-    private p: PolygonInterface | null = null;
+    private p: Polygon | null = null;
     private storageSize: number = 5;
     private xmin: number = 0;
     private ymin: number = 0;
@@ -146,7 +146,7 @@ export class PrimitivePolygon extends GraphicPrimitive {
         this.changed = true;
     }
 
-    createPolygon(coordSys: MapCoordinates, g: GraphicsInterface): void {
+    createPolygon(coordSys: MapCoordinates, g: Graphics): void {
         this.xmin = Number.MAX_SAFE_INTEGER;
         this.ymin = Number.MAX_SAFE_INTEGER;
         let xmax = -Number.MAX_SAFE_INTEGER,
@@ -166,7 +166,7 @@ export class PrimitivePolygon extends GraphicPrimitive {
         this.height = ymax - this.ymin;
     }
 
-    draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
+    draw(g: Graphics, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);
         if (this.changed) {
@@ -261,7 +261,7 @@ export class PrimitivePolygon extends GraphicPrimitive {
         return cmd;
     }
 
-    export(exp: ExportInterface, cs: MapCoordinates): void {
+    export(exp: Exporter, cs: MapCoordinates): void {
         this.exportText(exp, cs, -1);
         const vertices: PointDouble[] = [];
         for (let i = 0; i < this.nPoints; i++) {

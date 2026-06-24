@@ -1,8 +1,8 @@
-import type { GraphicsInterface } from '../GraphicsInterface.js';
-import type { ColorInterface } from '../ColorInterface.js';
-import type { TextInterface } from '../TextInterface.js';
-import type { PolygonInterface } from '../PolygonInterface.js';
-import type { ShapeInterface } from '../ShapeInterface.js';
+import type { Graphics } from '../Graphics.js';
+import type { Color } from '../Color.js';
+import type { TextRenderer } from '../TextRenderer.js';
+import type { Polygon } from '../Polygon.js';
+import type { Shape } from '../Shape.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
 import type { LaidOutSegment } from '../MathLayout.js';
@@ -10,11 +10,11 @@ import { PolygonCanvas } from '../canvas/PolygonCanvas.js';
 import { ShapeCanvas } from '../canvas/ShapeCanvas.js';
 import { ColorCanvas } from '../canvas/ColorCanvas.js';
 
-export class GraphicsNull implements GraphicsInterface {
+export class GraphicsNull implements Graphics {
     private offscreenCtx: OffscreenCanvasRenderingContext2D | null = null;
     private canvas2dCtx: CanvasRenderingContext2D | null = null;
     private fontSize: number = 12;
-    private color: ColorInterface = new ColorCanvas(0, 0, 0);
+    private color: Color = new ColorCanvas(0, 0, 0);
 
     constructor() {
         try {
@@ -32,14 +32,14 @@ export class GraphicsNull implements GraphicsInterface {
         return this.offscreenCtx ?? this.canvas2dCtx;
     }
 
-    getColor(): ColorInterface {
+    getColor(): Color {
         return this.color;
     }
     setZoom(_z: number): void {}
-    setColor(c: ColorInterface): void {
+    setColor(c: Color): void {
         this.color = c;
     }
-    getTextInterface(): TextInterface {
+    getTextInterface(): TextRenderer {
         return this;
     }
     applyStroke(_w: number, _dashStyle: number): void {}
@@ -93,14 +93,14 @@ export class GraphicsNull implements GraphicsInterface {
     fillOval(_x: number, _y: number, _width: number, _height: number): void {}
     drawOval(_x: number, _y: number, _width: number, _height: number): void {}
 
-    fill(_s: ShapeInterface): void {}
-    draw(_s: ShapeInterface): void {}
+    fill(_s: Shape): void {}
+    draw(_s: Shape): void {}
 
-    fillPolygon(_p: PolygonInterface): void {}
-    drawPolygon(_p: PolygonInterface): void {}
+    fillPolygon(_p: Polygon): void {}
+    drawPolygon(_p: Polygon): void {}
 
     activateSelectColor(_l: LayerDesc): void {}
-    setSelectedColor(_c: ColorInterface): void {}
+    setSelectedColor(_c: Color): void {}
 
     drawAdvText(
         _xyfactor: number,
@@ -134,19 +134,19 @@ export class GraphicsNull implements GraphicsInterface {
         _ymin: number,
         _xmax: number,
         _ymax: number,
-        _colorDots: ColorInterface,
-        _colorLines: ColorInterface,
+        _colorDots: Color,
+        _colorLines: Color,
     ): void {}
 
-    createPolygon(): PolygonInterface {
+    createPolygon(): Polygon {
         return new PolygonCanvas();
     }
 
-    createColor(): ColorInterface {
+    createColor(): Color {
         return new ColorCanvas(0, 0, 0);
     }
 
-    createShape(): ShapeInterface {
+    createShape(): Shape {
         return new ShapeCanvas();
     }
 

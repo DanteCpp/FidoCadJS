@@ -1,6 +1,6 @@
-import type { ColorInterface } from '../ColorInterface.js';
+import type { Color } from '../Color.js';
 
-export class ColorCanvas implements ColorInterface {
+export class ColorCanvas implements Color {
     private r: number;
     private g: number;
     private b: number;
@@ -17,19 +17,19 @@ export class ColorCanvas implements ColorInterface {
         return c;
     }
 
-    white(): ColorInterface {
+    white(): Color {
         return new ColorCanvas(255, 255, 255);
     }
-    gray(): ColorInterface {
+    gray(): Color {
         return new ColorCanvas(128, 128, 128);
     }
-    green(): ColorInterface {
+    green(): Color {
         return new ColorCanvas(0, 255, 0);
     }
-    red(): ColorInterface {
+    red(): Color {
         return new ColorCanvas(255, 0, 0);
     }
-    black(): ColorInterface {
+    black(): Color {
         return new ColorCanvas(0, 0, 0);
     }
 

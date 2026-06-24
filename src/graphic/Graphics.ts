@@ -1,16 +1,16 @@
-import type { ColorInterface } from './ColorInterface.js';
-import type { TextInterface } from './TextInterface.js';
-import type { ShapeInterface } from './ShapeInterface.js';
-import type { PolygonInterface } from './PolygonInterface.js';
+import type { Color } from './Color.js';
+import type { TextRenderer } from './TextRenderer.js';
+import type { Shape } from './Shape.js';
+import type { Polygon } from './Polygon.js';
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { LayerDesc } from '../layers/LayerDesc.js';
 import type { LaidOutSegment } from './MathLayout.js';
 
-export interface GraphicsInterface {
-    getColor(): ColorInterface;
+export interface Graphics {
+    getColor(): Color;
     setZoom(z: number): void;
-    setColor(c: ColorInterface): void;
-    getTextInterface(): TextInterface;
+    setColor(c: Color): void;
+    getTextInterface(): TextRenderer;
     applyStroke(w: number, dashStyle: number): void;
     drawRect(x: number, y: number, width: number, height: number): void;
     fillRect(x: number, y: number, width: number, height: number): void;
@@ -32,12 +32,12 @@ export interface GraphicsInterface {
     setAlpha(alpha: number): void;
     fillOval(x: number, y: number, width: number, height: number): void;
     drawOval(x: number, y: number, width: number, height: number): void;
-    fill(s: ShapeInterface): void;
-    draw(s: ShapeInterface): void;
-    fillPolygon(p: PolygonInterface): void;
-    drawPolygon(p: PolygonInterface): void;
+    fill(s: Shape): void;
+    draw(s: Shape): void;
+    fillPolygon(p: Polygon): void;
+    drawPolygon(p: Polygon): void;
     activateSelectColor(l: LayerDesc): void;
-    setSelectedColor(c: ColorInterface): void;
+    setSelectedColor(c: Color): void;
     drawAdvText(
         xyfactor: number,
         xa: number,
@@ -74,11 +74,11 @@ export interface GraphicsInterface {
         ymin: number,
         xmax: number,
         ymax: number,
-        colorDots: ColorInterface,
-        colorLines: ColorInterface,
+        colorDots: Color,
+        colorLines: Color,
     ): void;
-    createPolygon(): PolygonInterface;
-    createColor(): ColorInterface;
-    createShape(): ShapeInterface;
+    createPolygon(): Polygon;
+    createColor(): Color;
+    createShape(): Shape;
     getScreenDensity(): number;
 }

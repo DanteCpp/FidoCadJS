@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GeometricDistances } from '../../src/geom/GeometricDistances.js';
+import * as GeometricDistances from '../../src/geom/GeometricDistances.js';
 
 describe('GeometricDistances.pointToSegment', () => {
     it('returns 0 for a point on the segment', () => {

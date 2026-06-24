@@ -1,12 +1,12 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
+import type { Exporter } from '../export/Exporter.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { TeXMode } from '../graphic/TeXMode.js';
 import { layoutMath, hasMathDelimiter, type MathLayoutResult } from '../graphic/MathLayout.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
-import { GeometricDistances } from '../geom/GeometricDistances.js';
+import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { RectangleG } from '../graphic/RectangleG.js';
 import { PointG } from '../graphic/PointG.js';
 import { GraphicsNull } from '../graphic/nil/GraphicsNull.js';
@@ -118,7 +118,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         if (this.six > PrimitiveAdvText.MAXSIZE) this.six = PrimitiveAdvText.MAXSIZE;
     }
 
-    draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
+    draw(g: Graphics, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         if (this.txt.length === 0) return;
 
@@ -403,7 +403,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         );
     }
 
-    export(exp: ExportInterface, cs: MapCoordinates): void {
+    export(exp: Exporter, cs: MapCoordinates): void {
         // Mirror-aware rotation is the exporter's responsibility (matches
         // Java PrimitiveAdvText.export at FidoCadJ:712). Earlier versions
         // pre-negated `resultingO` here to compensate for a missing branch

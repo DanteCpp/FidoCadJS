@@ -1,6 +1,6 @@
 import type { RectangleG } from './RectangleG.js';
 
-export interface ShapeInterface {
+export interface Shape {
     getBounds(): RectangleG;
     createCubicCurve(
         x0: number,

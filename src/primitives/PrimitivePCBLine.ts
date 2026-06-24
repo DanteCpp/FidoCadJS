@@ -1,10 +1,10 @@
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
-import type { ExportInterface } from '../export/ExportInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
+import type { Exporter } from '../export/Exporter.js';
 import { GraphicPrimitive } from './GraphicPrimitive.js';
 import { Globals } from '../globals/Globals.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
-import { GeometricDistances } from '../geom/GeometricDistances.js';
+import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { RectangleG } from '../graphic/RectangleG.js';
 
 export class PrimitivePCBLine extends GraphicPrimitive {
@@ -76,7 +76,7 @@ export class PrimitivePCBLine extends GraphicPrimitive {
         this.setChanged(true);
     }
 
-    draw(g: GraphicsInterface, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
+    draw(g: Graphics, coordSys: MapCoordinates, layerV: LayerDesc[]): void {
         if (!this.selectLayer(g, layerV)) return;
         this.drawText(g, coordSys, layerV, -1);
 
@@ -157,7 +157,7 @@ export class PrimitivePCBLine extends GraphicPrimitive {
         return s;
     }
 
-    export(exp: ExportInterface, cs: MapCoordinates): void {
+    export(exp: Exporter, cs: MapCoordinates): void {
         this.exportText(exp, cs, -1);
         exp.exportPCBLine(
             cs.mapX(this.virtualPoint[0]!.x, this.virtualPoint[0]!.y),

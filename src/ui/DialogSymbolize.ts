@@ -8,8 +8,8 @@ import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
 import { DrawingSize } from '../geom/DrawingSize.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { MacroDesc } from '../primitives/MacroDesc.js';
-import { LibUtils } from '../librarymodel/LibUtils.js';
-import { StandardLayers } from '../layers/StandardLayers.js';
+import * as LibUtils from '../librarymodel/LibUtils.js';
+import * as StandardLayers from '../layers/StandardLayers.js';
 import { UserLibraryStorage } from '../librarymodel/UserLibraryStorage.js';
 
 export class DialogSymbolize {

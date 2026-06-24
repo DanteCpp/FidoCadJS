@@ -1,9 +1,10 @@
+import { Tool } from './controllers/Tool.js';
 import { DrawingModel } from './model/DrawingModel.js';
 import { ParserActions } from './controllers/ParserActions.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import { GraphicsCanvas } from '../graphic/canvas/GraphicsCanvas.js';
 import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
-import type { ColorInterface } from '../graphic/ColorInterface.js';
+import type { Color } from '../graphic/Color.js';
 import { Drawing, registerDrawingHooks } from './views/Drawing.js';
 import { registerExportHooks } from './views/Export.js';
 import { TeXMode } from '../graphic/TeXMode.js';
@@ -70,7 +71,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private editorActions!: EditorActions;
     private elementsEdt!: ElementsEdtActions;
 
-    private currentTool: number = ElementsEdtActions.SELECTION;
+    private currentTool: number = Tool.SELECTION;
 
     private textEditDialog: InPlaceTextEditor;
 
@@ -337,7 +338,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.render();
     }
 
-    setSelectedColor(c: ColorInterface): void {
+    setSelectedColor(c: Color): void {
         this.ctx.setSelectedColor(c);
     }
 
@@ -611,10 +612,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
 
     setMacroTool(macroKey: string): void {
-        this.currentTool = ElementsEdtActions.MACRO;
-        this.elementsEdt.setState(ElementsEdtActions.MACRO, macroKey);
+        this.currentTool = Tool.MACRO;
+        this.elementsEdt.setState(Tool.MACRO, macroKey);
         this.canvas.style.cursor = 'crosshair';
-        this.onToolChange?.(ElementsEdtActions.MACRO);
+        this.onToolChange?.(Tool.MACRO);
     }
 
     loadLibraryString(content: string, prefix: string): void {

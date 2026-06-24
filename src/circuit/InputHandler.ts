@@ -1,3 +1,4 @@
+import { Tool } from './controllers/Tool.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { DrawingModel } from './model/DrawingModel.js';
 import { Ruler } from './Ruler.js';
@@ -291,12 +292,12 @@ export class InputHandler {
 
         const tool = this.cb.getTool();
 
-        if (tool === ElementsEdtActions.ZOOM) {
+        if (tool === Tool.ZOOM) {
             this.zoomAtCursor(sx, sy, e.button === 2 ? 1 / 1.3 : 1.3);
             return;
         }
 
-        if (e.button === 1 || (e.button === 0 && tool === ElementsEdtActions.HAND)) {
+        if (e.button === 1 || (e.button === 0 && tool === Tool.HAND)) {
             if (this.cb.isTextEditActive()) this.cb.commitTextEdit();
             this._isPanning = true;
             this.panStartX = e.clientX;
@@ -327,7 +328,7 @@ export class InputHandler {
                 return;
             }
 
-            if (tool === ElementsEdtActions.SELECTION) {
+            if (tool === Tool.SELECTION) {
                 const handleIdx = this.findHandleAt(sx, sy);
                 if (handleIdx !== GraphicPrimitive.NO_DRAG && this._dragHandlePrim !== null) {
                     this.undoActions.saveUndoState();
@@ -503,8 +504,8 @@ export class InputHandler {
             this.rulerArmed = false;
             if (!this.rulerDragged) {
                 const t = this.cb.getTool();
-                if (t !== ElementsEdtActions.SELECTION) {
-                    this.cb.setTool(ElementsEdtActions.SELECTION);
+                if (t !== Tool.SELECTION) {
+                    this.cb.setTool(Tool.SELECTION);
                     this.cb.render();
                 } else {
                     this.cb.showContextMenu(e.clientX, e.clientY);
@@ -595,7 +596,7 @@ export class InputHandler {
         // mouseleave reuses this handler to terminate gestures, but must NOT
         // re-fire placement at the stale mousedown coordinates. Likewise, never
         // place while the in-place text editor is open.
-        if (!isLeave && tool !== ElementsEdtActions.SELECTION && !this.cb.isTextEditActive()) {
+        if (!isLeave && tool !== Tool.SELECTION && !this.cb.isTextEditActive()) {
             const repaint = this.elementsEdt.handleClick(
                 this.mapCoords,
                 this.lastScreenX,
@@ -706,11 +707,11 @@ function isVisibleForSelection(
 
 export function cursorForTool(toolId: number): string {
     switch (toolId) {
-        case ElementsEdtActions.HAND:
+        case Tool.HAND:
             return 'grab';
-        case ElementsEdtActions.ZOOM:
+        case Tool.ZOOM:
             return 'zoom-in';
-        case ElementsEdtActions.SELECTION:
+        case Tool.SELECTION:
             return 'default';
         default:
             return 'crosshair';

@@ -1,4 +1,4 @@
-import { ElementsEdtActions } from '../circuit/controllers/ElementsEdtActions.js';
+import { Tool } from '../circuit/controllers/Tool.js';
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import { LayerDropdown } from './LayerDropdown.js';
 import { getString } from '../i18n/i18n.js';
@@ -11,17 +11,17 @@ import { getString } from '../i18n/i18n.js';
  * the descriptive text, never the key letter).
  */
 const TOOL_SHORTCUTS: Record<number, string> = {
-    [ElementsEdtActions.SELECTION]: 'A / Space',
-    [ElementsEdtActions.LINE]: 'L',
-    [ElementsEdtActions.TEXT]: 'T',
-    [ElementsEdtActions.BEZIER]: 'B',
-    [ElementsEdtActions.POLYGON]: 'P',
-    [ElementsEdtActions.COMPLEXCURVE]: 'O',
-    [ElementsEdtActions.ELLIPSE]: 'E',
-    [ElementsEdtActions.RECTANGLE]: 'G',
-    [ElementsEdtActions.CONNECTION]: 'C',
-    [ElementsEdtActions.PCB_LINE]: 'I',
-    [ElementsEdtActions.PCB_PAD]: 'Z',
+    [Tool.SELECTION]: 'A / Space',
+    [Tool.LINE]: 'L',
+    [Tool.TEXT]: 'T',
+    [Tool.BEZIER]: 'B',
+    [Tool.POLYGON]: 'P',
+    [Tool.COMPLEXCURVE]: 'O',
+    [Tool.ELLIPSE]: 'E',
+    [Tool.RECTANGLE]: 'G',
+    [Tool.CONNECTION]: 'C',
+    [Tool.PCB_LINE]: 'I',
+    [Tool.PCB_PAD]: 'Z',
 };
 
 /**
@@ -67,7 +67,7 @@ export class ToolbarController {
         this.buildSecondRow();
 
         // Initialize with SELECT tool
-        this.circuitPanel.setTool(ElementsEdtActions.SELECTION);
+        this.circuitPanel.setTool(Tool.SELECTION);
     }
 
     private buildFirstRow(): void {
@@ -75,19 +75,19 @@ export class ToolbarController {
         firstRow.style.cssText = 'display: flex; align-items: center; gap: 4px; padding: 2px 0;';
 
         const toolDefs: Array<[string, string, number]> = [
-            [getString('tooltip_selection'), 'arrow.png', ElementsEdtActions.SELECTION],
-            [getString('tooltip_zoom'), 'magnifier.png', ElementsEdtActions.ZOOM],
-            [getString('tooltip_hand'), 'move.png', ElementsEdtActions.HAND],
-            [getString('tooltip_line'), 'line.png', ElementsEdtActions.LINE],
-            [getString('tooltip_text'), 'text.png', ElementsEdtActions.TEXT],
-            [getString('tooltip_bezier'), 'bezier.png', ElementsEdtActions.BEZIER],
-            [getString('tooltip_polygon'), 'polygon.png', ElementsEdtActions.POLYGON],
-            [getString('tooltip_curve'), 'complexcurve.png', ElementsEdtActions.COMPLEXCURVE],
-            [getString('tooltip_ellipse'), 'ellipse.png', ElementsEdtActions.ELLIPSE],
-            [getString('tooltip_rectangle'), 'rectangle.png', ElementsEdtActions.RECTANGLE],
-            [getString('tooltip_connection'), 'connection.png', ElementsEdtActions.CONNECTION],
-            [getString('tooltip_pcbline'), 'pcbline.png', ElementsEdtActions.PCB_LINE],
-            [getString('tooltip_pcbpad'), 'pcbpad.png', ElementsEdtActions.PCB_PAD],
+            [getString('tooltip_selection'), 'arrow.png', Tool.SELECTION],
+            [getString('tooltip_zoom'), 'magnifier.png', Tool.ZOOM],
+            [getString('tooltip_hand'), 'move.png', Tool.HAND],
+            [getString('tooltip_line'), 'line.png', Tool.LINE],
+            [getString('tooltip_text'), 'text.png', Tool.TEXT],
+            [getString('tooltip_bezier'), 'bezier.png', Tool.BEZIER],
+            [getString('tooltip_polygon'), 'polygon.png', Tool.POLYGON],
+            [getString('tooltip_curve'), 'complexcurve.png', Tool.COMPLEXCURVE],
+            [getString('tooltip_ellipse'), 'ellipse.png', Tool.ELLIPSE],
+            [getString('tooltip_rectangle'), 'rectangle.png', Tool.RECTANGLE],
+            [getString('tooltip_connection'), 'connection.png', Tool.CONNECTION],
+            [getString('tooltip_pcbline'), 'pcbline.png', Tool.PCB_LINE],
+            [getString('tooltip_pcbpad'), 'pcbpad.png', Tool.PCB_PAD],
         ];
 
         for (const [tooltip, icon, toolId] of toolDefs) {

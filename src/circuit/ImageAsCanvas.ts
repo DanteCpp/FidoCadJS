@@ -1,5 +1,5 @@
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
 
 export interface ImageAttachState {
     dataUrl: string;
@@ -187,10 +187,10 @@ export class ImageAsCanvas {
     // ── Rendering ──────────────────────────────────────────────────────
 
     /**
-     * Render the attached image onto a GraphicsInterface.
+     * Render the attached image onto a Graphics.
      * Called before drawing primitives so the image appears behind everything.
      */
-    draw(gi: GraphicsInterface, cs: MapCoordinates): void {
+    draw(gi: Graphics, cs: MapCoordinates): void {
         if (!this.hasImage || !this.imageElement) return;
 
         const ctx = (gi as any).getCtx?.();

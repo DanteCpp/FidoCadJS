@@ -3,7 +3,7 @@ import { loadLocale } from '../../src/i18n/i18n.js';
 import { MacroPicker } from '../../src/macropicker/MacroPicker.js';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { LibraryModel } from '../../src/librarymodel/LibraryModel.js';
 
 const TEST_FCL = [

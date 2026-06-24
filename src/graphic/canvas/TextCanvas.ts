@@ -1,6 +1,6 @@
-import type { TextInterface } from '../TextInterface.js';
+import type { TextRenderer } from '../TextRenderer.js';
 
-export class TextCanvas implements TextInterface {
+export class TextCanvas implements TextRenderer {
     private ctx: CanvasRenderingContext2D;
     private font: string = '12px sans-serif';
     private fontSize: number = 12;

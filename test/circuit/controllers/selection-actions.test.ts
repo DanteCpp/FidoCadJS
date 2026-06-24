@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DrawingModel } from '../../../src/circuit/model/DrawingModel.js';
 import { SelectionActions } from '../../../src/circuit/controllers/SelectionActions.js';
-import { StandardLayers } from '../../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../../src/layers/StandardLayers.js';
 import { PrimitiveLine } from '../../../src/primitives/PrimitiveLine.js';
 
 describe('SelectionActions', () => {

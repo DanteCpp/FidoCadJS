@@ -1,8 +1,8 @@
-import type { GraphicsInterface } from '../GraphicsInterface.js';
-import type { ColorInterface } from '../ColorInterface.js';
-import type { TextInterface } from '../TextInterface.js';
-import type { ShapeInterface } from '../ShapeInterface.js';
-import type { PolygonInterface } from '../PolygonInterface.js';
+import type { Graphics } from '../Graphics.js';
+import type { Color } from '../Color.js';
+import type { TextRenderer } from '../TextRenderer.js';
+import type { Shape } from '../Shape.js';
+import type { Polygon } from '../Polygon.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import type { LayerDesc } from '../../layers/LayerDesc.js';
 import type { LaidOutSegment } from '../MathLayout.js';
@@ -12,10 +12,10 @@ import { ShapeCanvas } from './ShapeCanvas.js';
 import { PolygonCanvas } from './PolygonCanvas.js';
 import { Globals } from '../../globals/Globals.js';
 
-export class GraphicsCanvas implements GraphicsInterface {
+export class GraphicsCanvas implements Graphics {
     private ctx: CanvasRenderingContext2D;
     private canvas: HTMLCanvasElement;
-    private currentColor: ColorInterface = new ColorCanvas(0, 0, 0);
+    private currentColor: Color = new ColorCanvas(0, 0, 0);
     private textInterface: TextCanvas;
     private fontItalic: boolean = false;
     private fontBold: boolean = false;
@@ -33,19 +33,19 @@ export class GraphicsCanvas implements GraphicsInterface {
         return this.ctx;
     }
 
-    getColor(): ColorInterface {
+    getColor(): Color {
         return this.currentColor;
     }
 
     setZoom(_z: number): void {}
 
-    setColor(c: ColorInterface): void {
+    setColor(c: Color): void {
         this.currentColor = c;
         this.ctx.fillStyle = (c as ColorCanvas).toCSSColor();
         this.ctx.strokeStyle = (c as ColorCanvas).toCSSColor();
     }
 
-    getTextInterface(): TextInterface {
+    getTextInterface(): TextRenderer {
         return this.textInterface;
     }
 
@@ -141,22 +141,22 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.ctx.stroke();
     }
 
-    fill(s: ShapeInterface): void {
+    fill(s: Shape): void {
         const shape = s as unknown as ShapeCanvas;
         this.ctx.fill(shape.getPath());
     }
 
-    draw(s: ShapeInterface): void {
+    draw(s: Shape): void {
         const shape = s as unknown as ShapeCanvas;
         this.ctx.stroke(shape.getPath());
     }
 
-    fillPolygon(p: PolygonInterface): void {
+    fillPolygon(p: Polygon): void {
         const poly = p as unknown as PolygonCanvas;
         this.ctx.fill(poly.toPath2D());
     }
 
-    drawPolygon(p: PolygonInterface): void {
+    drawPolygon(p: Polygon): void {
         const poly = p as unknown as PolygonCanvas;
         this.ctx.stroke(poly.toPath2D());
     }
@@ -182,7 +182,7 @@ export class GraphicsCanvas implements GraphicsInterface {
         this.ctx.globalAlpha = 1.0;
     }
 
-    setSelectedColor(c: ColorInterface): void {
+    setSelectedColor(c: Color): void {
         this.selectedColor = new ColorCanvas(c.getRed(), c.getGreen(), c.getBlue());
     }
 
@@ -301,8 +301,8 @@ export class GraphicsCanvas implements GraphicsInterface {
         ymin: number,
         xmax: number,
         ymax: number,
-        colorDots: ColorInterface,
-        colorLines: ColorInterface,
+        colorDots: Color,
+        colorLines: Color,
     ): void {
         const xStep = cs.getXGridStep() * cs.getXMagnitude();
         const yStep = cs.getYGridStep() * cs.getYMagnitude();
@@ -343,13 +343,13 @@ export class GraphicsCanvas implements GraphicsInterface {
         }
     }
 
-    createPolygon(): PolygonInterface {
+    createPolygon(): Polygon {
         return new PolygonCanvas();
     }
-    createColor(): ColorInterface {
+    createColor(): Color {
         return new ColorCanvas();
     }
-    createShape(): ShapeInterface {
+    createShape(): Shape {
         return new ShapeCanvas();
     }
 

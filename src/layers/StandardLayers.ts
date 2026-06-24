@@ -42,17 +42,13 @@ const LAYER_KEYS = [
     'Other_12',
 ];
 
-export class StandardLayers {
-    private constructor() {}
+export function createStandardLayers(): LayerDesc[] {
+    return LAYER_DEFAULTS.map(
+        ([r, g, b, a], i) =>
+            new LayerDesc(new ColorCanvas(r, g, b), true, getString(LAYER_KEYS[i] ?? ''), a),
+    );
+}
 
-    static createStandardLayers(): LayerDesc[] {
-        return LAYER_DEFAULTS.map(
-            ([r, g, b, a], i) =>
-                new LayerDesc(new ColorCanvas(r, g, b), true, getString(LAYER_KEYS[i] ?? ''), a),
-        );
-    }
-
-    static createEditingLayerArray(): LayerDesc[] {
-        return [new LayerDesc(new ColorCanvas(0, 255, 0), true, '', 1.0)];
-    }
+export function createEditingLayerArray(): LayerDesc[] {
+    return [new LayerDesc(new ColorCanvas(0, 255, 0), true, '', 1.0)];
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { DrawingModel } from '../../src/circuit/model/DrawingModel.js';
 import { ParserActions } from '../../src/circuit/controllers/ParserActions.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import { registerDrawingHooks } from '../../src/circuit/views/Drawing.js';
 import { MacroDesc } from '../../src/primitives/MacroDesc.js';
 import { MacroVectorizer } from '../../src/circuit/MacroVectorizer.js';

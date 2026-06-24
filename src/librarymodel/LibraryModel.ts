@@ -2,7 +2,7 @@ import type { DrawingModel } from '../circuit/model/DrawingModel.js';
 import { MacroDesc } from '../primitives/MacroDesc.js';
 import { Library } from './Library.js';
 import { Category } from './Category.js';
-import { LibUtils } from './LibUtils.js';
+import * as LibUtils from './LibUtils.js';
 import { UserLibraryStorage } from './UserLibraryStorage.js';
 
 // ── Exception classes ────────────────────────────────────────────────────────

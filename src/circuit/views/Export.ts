@@ -1,4 +1,4 @@
-import type { ExportInterface } from '../../export/ExportInterface.js';
+import type { Exporter } from '../../export/Exporter.js';
 import type { MapCoordinates } from '../../geom/MapCoordinates.js';
 import { DrawingModel } from '../model/DrawingModel.js';
 import { DrawingSize } from '../../geom/DrawingSize.js';
@@ -12,7 +12,7 @@ export class Export {
 
     constructor(private readonly drawingModel: DrawingModel) {}
 
-    exportHeader(exp: ExportInterface, mp: MapCoordinates): void {
+    exportHeader(exp: Exporter, mp: MapCoordinates): void {
         const o = new PointG(0, 0);
         const d = DrawingSize.getImageSize(this.drawingModel, 1, true, o);
         d.width += Export.EXPORT_BORDER;
@@ -22,7 +22,7 @@ export class Export {
         exp.exportStart(d, this.drawingModel.getLayers(), mp.getXGridStep());
     }
 
-    exportDrawing(exp: ExportInterface, exportInvisible: boolean, mp: MapCoordinates): void {
+    exportDrawing(exp: Exporter, exportInvisible: boolean, mp: MapCoordinates): void {
         if (this.drawingModel.getDrawOnlyLayer() >= 0 && !this.drawingModel.getDrawOnlyPads()) {
             this.exportAllObjects(exp, exportInvisible, mp);
         } else if (!this.drawingModel.getDrawOnlyPads()) {
@@ -59,11 +59,7 @@ export class Export {
         }
     }
 
-    private exportAllObjects(
-        exp: ExportInterface,
-        exportInvisible: boolean,
-        mp: MapCoordinates,
-    ): void {
+    private exportAllObjects(exp: Exporter, exportInvisible: boolean, mp: MapCoordinates): void {
         for (let i = 0; i < this.drawingModel.getPrimitiveVector().length; ++i) {
             const g = this.drawingModel.getPrimitiveVector()[i];
 
@@ -95,7 +91,7 @@ export class Export {
 export function registerExportHooks(): void {
     PrimitiveMacro.exportFn = (
         model: DrawingModel,
-        exp: ExportInterface,
+        exp: Exporter,
         exportInvisible: boolean,
         cs: MapCoordinates,
     ): void => {

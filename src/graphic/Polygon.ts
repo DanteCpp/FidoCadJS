@@ -1,4 +1,4 @@
-export interface PolygonInterface {
+export interface Polygon {
     addPoint(x: number, y: number): void;
     getNpoints(): number;
     reset(): void;

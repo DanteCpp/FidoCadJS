@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { LayerDesc } from '../../src/layers/LayerDesc.js';
-import { StandardLayers } from '../../src/layers/StandardLayers.js';
+import * as StandardLayers from '../../src/layers/StandardLayers.js';
 
 describe('LayerDesc', () => {
     it('default constructor creates visible layer', () => {

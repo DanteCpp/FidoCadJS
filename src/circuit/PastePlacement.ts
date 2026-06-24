@@ -3,7 +3,7 @@ import { ParserActions } from './controllers/ParserActions.js';
 import { Drawing } from './views/Drawing.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
 import { ColorCanvas } from '../graphic/canvas/ColorCanvas.js';
-import type { GraphicsInterface } from '../graphic/GraphicsInterface.js';
+import type { Graphics } from '../graphic/Graphics.js';
 import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import type { MacroDesc } from '../primitives/MacroDesc.js';
 
@@ -107,7 +107,7 @@ export class PastePlacement {
     }
 
     /** Render the green ghost. Caller is responsible for the surrounding alpha. */
-    draw(gi: GraphicsInterface, cs: MapCoordinates): void {
+    draw(gi: Graphics, cs: MapCoordinates): void {
         if (!this._active) return;
         this.drawing.draw(gi, cs);
     }
