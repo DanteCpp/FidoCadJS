@@ -1,4 +1,4 @@
-import { ElementsEdtActions } from './ElementsEdtActions.js';
+import { Tool } from './Tool.js';
 import type { ClipboardController } from './ClipboardController.js';
 import type { KeyboardHost } from '../KeyboardHost.js';
 
@@ -60,7 +60,7 @@ export class KeyboardController {
             if (
                 e.key === 'Escape' &&
                 !this.host.isTextEditActive() &&
-                this.host.getTool() === ElementsEdtActions.TEXT
+                this.host.getTool() === Tool.TEXT
             ) {
                 this.onKeyDown(e);
                 return;
@@ -200,7 +200,7 @@ export class KeyboardController {
         // A or Escape: Selection tool
         if (key === 'a' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.SELECTION);
+            this.host.setTool(Tool.SELECTION);
             this.host.clearGhostAndSelection();
             this.host.render();
             return;
@@ -210,7 +210,7 @@ export class KeyboardController {
         // the selection state). Home is the fit-to-view shortcut.
         if (key === ' ' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.SELECTION);
+            this.host.setTool(Tool.SELECTION);
             this.host.clearGhostAndSelection();
             this.host.render();
             return;
@@ -233,7 +233,7 @@ export class KeyboardController {
             this.host.deselectAll();
 
             // Switch to Selection tool (resets clickNumber, successiveMove, primEdit)
-            this.host.setTool(ElementsEdtActions.SELECTION);
+            this.host.setTool(Tool.SELECTION);
             this.host.clearGhostAndSelection();
             this.host.render();
             return;
@@ -242,70 +242,70 @@ export class KeyboardController {
         // L: Line tool
         if (key === 'l' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.LINE);
+            this.host.setTool(Tool.LINE);
             return;
         }
 
         // T: Text tool
         if (key === 't' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.TEXT);
+            this.host.setTool(Tool.TEXT);
             return;
         }
 
         // B: Bezier curve tool
         if (key === 'b' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.BEZIER);
+            this.host.setTool(Tool.BEZIER);
             return;
         }
 
         // P: Polygon tool
         if (key === 'p' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.POLYGON);
+            this.host.setTool(Tool.POLYGON);
             return;
         }
 
         // O: Complex curve tool
         if (key === 'o' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.COMPLEXCURVE);
+            this.host.setTool(Tool.COMPLEXCURVE);
             return;
         }
 
         // E: Ellipse tool
         if (key === 'e' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.ELLIPSE);
+            this.host.setTool(Tool.ELLIPSE);
             return;
         }
 
         // G: Rectangle tool
         if (key === 'g' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.RECTANGLE);
+            this.host.setTool(Tool.RECTANGLE);
             return;
         }
 
         // C: Connection tool
         if (key === 'c' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.CONNECTION);
+            this.host.setTool(Tool.CONNECTION);
             return;
         }
 
         // I: PCB track tool
         if (key === 'i' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.PCB_LINE);
+            this.host.setTool(Tool.PCB_LINE);
             return;
         }
 
         // Z: PCB pad tool
         if (key === 'z' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(ElementsEdtActions.PCB_PAD);
+            this.host.setTool(Tool.PCB_PAD);
             return;
         }
 

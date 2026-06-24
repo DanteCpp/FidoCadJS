@@ -11,8 +11,6 @@ import { LayerDesc } from '../layers/LayerDesc.js';
 
 export abstract class GraphicPrimitive {
     static readonly NO_DRAG = -1;
-    static readonly DRAG_PRIMITIVE = -2;
-    static readonly RECT_SELECTION = -3;
 
     protected static readonly D_MIN = 0.5;
     private static readonly BASE_RESOLUTION = 112;

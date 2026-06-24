@@ -1,3 +1,4 @@
+import { Tool } from './controllers/Tool.js';
 import { DrawingModel } from './model/DrawingModel.js';
 import { ParserActions } from './controllers/ParserActions.js';
 import { MapCoordinates } from '../geom/MapCoordinates.js';
@@ -70,7 +71,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     private editorActions!: EditorActions;
     private elementsEdt!: ElementsEdtActions;
 
-    private currentTool: number = ElementsEdtActions.SELECTION;
+    private currentTool: number = Tool.SELECTION;
 
     private textEditDialog: InPlaceTextEditor;
 
@@ -611,10 +612,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
 
     setMacroTool(macroKey: string): void {
-        this.currentTool = ElementsEdtActions.MACRO;
-        this.elementsEdt.setState(ElementsEdtActions.MACRO, macroKey);
+        this.currentTool = Tool.MACRO;
+        this.elementsEdt.setState(Tool.MACRO, macroKey);
         this.canvas.style.cursor = 'crosshair';
-        this.onToolChange?.(ElementsEdtActions.MACRO);
+        this.onToolChange?.(Tool.MACRO);
     }
 
     loadLibraryString(content: string, prefix: string): void {

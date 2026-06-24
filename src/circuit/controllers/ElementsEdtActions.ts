@@ -1,3 +1,4 @@
+import { Tool } from './Tool.js';
 import { DrawingModel } from '../model/DrawingModel.js';
 import { UndoActions } from './UndoActions.js';
 import { SelectionActions } from './SelectionActions.js';
@@ -15,23 +16,6 @@ import { PrimitiveMacro } from '../../primitives/PrimitiveMacro.js';
  * Coordinates all tool operations and manages the editing state.
  */
 export class ElementsEdtActions {
-    // Tool state constants
-    public static readonly NONE = 0;
-    public static readonly SELECTION = 1;
-    public static readonly ZOOM = 2;
-    public static readonly HAND = 3;
-    public static readonly LINE = 4;
-    public static readonly TEXT = 5;
-    public static readonly BEZIER = 6;
-    public static readonly POLYGON = 7;
-    public static readonly ELLIPSE = 8;
-    public static readonly RECTANGLE = 9;
-    public static readonly CONNECTION = 10;
-    public static readonly PCB_LINE = 11;
-    public static readonly PCB_PAD = 12;
-    public static readonly MACRO = 13;
-    public static readonly COMPLEXCURVE = 14;
-
     private readonly model: DrawingModel;
     private readonly undoActions: UndoActions | null;
     private readonly editorActions: EditorActions;
@@ -45,7 +29,7 @@ export class ElementsEdtActions {
     public macroKey: string = '';
     public clickNumber: number = 0;
     public primEdit: GraphicPrimitive | null = null;
-    public actionSelected: number = ElementsEdtActions.SELECTION;
+    public actionSelected: number = Tool.SELECTION;
     public successiveMove: boolean = false;
 
     // Maximum polygon vertices (must match PrimitivePolygon)
@@ -72,7 +56,7 @@ export class ElementsEdtActions {
 
         this.xpoly = new Array(ElementsEdtActions.NPOLY);
         this.ypoly = new Array(ElementsEdtActions.NPOLY);
-        this.actionSelected = ElementsEdtActions.SELECTION;
+        this.actionSelected = Tool.SELECTION;
     }
 
     /** Get the AddElements controller */
@@ -130,24 +114,24 @@ export class ElementsEdtActions {
         }
 
         // Reset primEdit unless entering a macro (need to preserve orientation/mirror)
-        if (this.actionSelected !== ElementsEdtActions.MACRO) {
+        if (this.actionSelected !== Tool.MACRO) {
             this.primEdit = null;
         }
 
         // Right-click cancels any active drawing tool and returns to selection
-        if (button3 && this.actionSelected > ElementsEdtActions.HAND) {
-            this.actionSelected = ElementsEdtActions.SELECTION;
+        if (button3 && this.actionSelected > Tool.HAND) {
+            this.actionSelected = Tool.SELECTION;
             this.clickNumber = 0;
             this.primEdit = null;
             return true;
         }
 
         switch (this.actionSelected) {
-            case ElementsEdtActions.NONE:
+            case Tool.NONE:
                 this.clickNumber = 0;
                 break;
 
-            case ElementsEdtActions.SELECTION:
+            case Tool.SELECTION:
                 this.clickNumber = 0;
                 if (doubleClick) {
                     // Fire callback if a primitive is selected
@@ -166,11 +150,11 @@ export class ElementsEdtActions {
                 }
                 break;
 
-            case ElementsEdtActions.ZOOM:
+            case Tool.ZOOM:
                 // TODO: Change zoom by step
                 break;
 
-            case ElementsEdtActions.CONNECTION:
+            case Tool.CONNECTION:
                 this.addElements.addConnection(
                     cs.unmapXsnap(x),
                     cs.unmapYsnap(y),
@@ -179,12 +163,12 @@ export class ElementsEdtActions {
                 repaint = true;
                 break;
 
-            case ElementsEdtActions.PCB_PAD:
+            case Tool.PCB_PAD:
                 this.addElements.addPCBPad(cs.unmapXsnap(x), cs.unmapYsnap(y), this.currentLayer);
                 repaint = true;
                 break;
 
-            case ElementsEdtActions.LINE:
+            case Tool.LINE:
                 if (doubleClick) {
                     this.clickNumber = 0;
                 } else {
@@ -202,7 +186,7 @@ export class ElementsEdtActions {
                 }
                 break;
 
-            case ElementsEdtActions.TEXT:
+            case Tool.TEXT:
                 if (doubleClick) {
                     // Fire callback if a text primitive is selected
                     const sel = this.selectionActions.getSelectedPrimitives();
@@ -230,7 +214,7 @@ export class ElementsEdtActions {
                 }
                 break;
 
-            case ElementsEdtActions.BEZIER:
+            case Tool.BEZIER:
                 repaint = true;
                 if (button3) {
                     this.clickNumber = 0;
@@ -249,7 +233,7 @@ export class ElementsEdtActions {
                 }
                 break;
 
-            case ElementsEdtActions.POLYGON:
+            case Tool.POLYGON:
                 if (doubleClick) {
                     const poly = new PrimitivePolygon(
                         false,
@@ -275,7 +259,7 @@ export class ElementsEdtActions {
                 }
                 break;
 
-            case ElementsEdtActions.COMPLEXCURVE:
+            case Tool.COMPLEXCURVE:
                 if (doubleClick) {
                     const compc = new PrimitiveComplexCurve(
                         false,
@@ -307,7 +291,7 @@ export class ElementsEdtActions {
                 }
                 break;
 
-            case ElementsEdtActions.ELLIPSE:
+            case Tool.ELLIPSE:
                 this.successiveMove = false;
                 this.clickNumber = this.addElements.addEllipse(
                     cs.unmapXsnap(x),
@@ -321,7 +305,7 @@ export class ElementsEdtActions {
                 repaint = true;
                 break;
 
-            case ElementsEdtActions.RECTANGLE:
+            case Tool.RECTANGLE:
                 this.successiveMove = false;
                 this.clickNumber = this.addElements.addRectangle(
                     cs.unmapXsnap(x),
@@ -335,7 +319,7 @@ export class ElementsEdtActions {
                 repaint = true;
                 break;
 
-            case ElementsEdtActions.PCB_LINE:
+            case Tool.PCB_LINE:
                 if (doubleClick) {
                     this.clickNumber = 0;
                 } else {
@@ -354,7 +338,7 @@ export class ElementsEdtActions {
                 }
                 break;
 
-            case ElementsEdtActions.MACRO:
+            case Tool.MACRO:
                 this.successiveMove = false;
                 this.primEdit = this.addElements.addMacro(
                     cs.unmapXsnap(x),

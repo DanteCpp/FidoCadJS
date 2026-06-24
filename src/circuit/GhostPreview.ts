@@ -1,3 +1,4 @@
+import { Tool } from './controllers/Tool.js';
 import { ElementsEdtActions } from './controllers/ElementsEdtActions.js';
 import type { DrawingModel } from './model/DrawingModel.js';
 import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
@@ -209,15 +210,15 @@ const macroGhost: ToolGhostHandler = (ctx, edt, model) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const registry = new Map<number, ToolGhostHandler>([
-    [ElementsEdtActions.LINE, lineGhost],
-    [ElementsEdtActions.BEZIER, bezierGhost],
-    [ElementsEdtActions.RECTANGLE, rectangleGhost],
-    [ElementsEdtActions.ELLIPSE, ellipseGhost],
-    [ElementsEdtActions.POLYGON, polygonGhost],
-    [ElementsEdtActions.COMPLEXCURVE, complexCurveGhost],
-    [ElementsEdtActions.PCB_LINE, pcbLineGhost],
-    [ElementsEdtActions.PCB_PAD, pcbPadGhost],
-    [ElementsEdtActions.MACRO, macroGhost],
+    [Tool.LINE, lineGhost],
+    [Tool.BEZIER, bezierGhost],
+    [Tool.RECTANGLE, rectangleGhost],
+    [Tool.ELLIPSE, ellipseGhost],
+    [Tool.POLYGON, polygonGhost],
+    [Tool.COMPLEXCURVE, complexCurveGhost],
+    [Tool.PCB_LINE, pcbLineGhost],
+    [Tool.PCB_PAD, pcbPadGhost],
+    [Tool.MACRO, macroGhost],
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════════

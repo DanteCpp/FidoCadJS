@@ -1,7 +1,7 @@
+import { Tool } from '../../src/circuit/controllers/Tool.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { loadLocale } from '../../src/i18n/i18n.js';
 import { ToolbarController } from '../../src/ui/ToolbarController.js';
-import { ElementsEdtActions } from '../../src/circuit/controllers/ElementsEdtActions.js';
 import * as StandardLayers from '../../src/layers/StandardLayers.js';
 import type { EditorFacade } from '../../src/circuit/EditorFacade.js';
 
@@ -67,7 +67,7 @@ describe('ToolbarController', () => {
     it('builds 13 tool buttons and arms the Selection tool', () => {
         const iconButtons = toolbar.querySelectorAll('button img');
         expect(iconButtons).toHaveLength(13);
-        expect(facade.state.tool).toBe(ElementsEdtActions.SELECTION);
+        expect(facade.state.tool).toBe(Tool.SELECTION);
     });
 
     it('clicking a tool button selects that tool and highlights only it', () => {
@@ -78,7 +78,7 @@ describe('ToolbarController', () => {
 
         lineBtn.click();
 
-        expect(facade.state.tool).toBe(ElementsEdtActions.LINE);
+        expect(facade.state.tool).toBe(Tool.LINE);
         // onToolChange highlight: the clicked button is active, others not.
         expect(lineBtn.style.background).toBe('rgb(176, 200, 232)');
         const selBtn = Array.from(toolbar.querySelectorAll('button')).find((b) =>
