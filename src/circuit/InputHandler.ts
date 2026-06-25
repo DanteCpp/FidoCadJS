@@ -319,6 +319,9 @@ export class InputHandler {
         }
 
         if (e.button === 1 || (e.button === 0 && tool === Tool.HAND)) {
+            // Middle-button drag pans (scrolls) the view from any tool. Suppress
+            // the browser's native middle-click autoscroll so our pan wins.
+            if (e.button === 1) e.preventDefault();
             if (this.cb.isTextEditActive()) this.cb.commitTextEdit();
             this._isPanning = true;
             this.panStartX = e.clientX;
