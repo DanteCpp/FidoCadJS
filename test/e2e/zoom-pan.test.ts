@@ -78,16 +78,18 @@ test.describe('Zoom Operations', () => {
         await expect.poll(() => getZoomPercent(page)).toBeLessThan(zoomedIn);
     });
 
-    test('mouse wheel zooms toward cursor', async ({ page }) => {
+    test('Ctrl + wheel zooms toward cursor', async ({ page }) => {
         const box = await canvasBox(page);
         expect(box).not.toBeNull();
 
         const before = await getZoomPercent(page);
 
-        // Scroll down (zoom in). Starting from 100 % no clamp applies, so the
-        // zoom must strictly increase.
+        // A plain wheel now scrolls; zoom is Ctrl/Cmd + wheel (and trackpad
+        // pinch). Negative delta zooms in. No clamp applies from 100 %.
         await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+        await page.keyboard.down('Control');
         await page.mouse.wheel(0, -120);
+        await page.keyboard.up('Control');
         await expect.poll(() => getZoomPercent(page)).toBeGreaterThan(before);
     });
 
@@ -127,19 +129,21 @@ test.describe('Zoom Operations', () => {
     // Regression: wheel zoom is handled by InputHandler, whose onZoomChange
     // callback was captured by value before ToolbarController wired the dropdown
     // sync — so the dropdown never updated on wheel zoom. It must now stay in sync.
-    test('zoom select dropdown updates on mouse-wheel zoom', async ({ page }) => {
+    test('zoom select dropdown updates on Ctrl + wheel zoom', async ({ page }) => {
         const box = await canvasBox(page);
         expect(box).not.toBeNull();
 
         const select = page.locator('[data-testid="zoom-select"]');
         const initialVal = await select.inputValue();
 
-        // Hover the canvas centre and zoom in a few wheel notches.
+        // Hover the canvas centre and zoom in a few Ctrl+wheel notches.
         await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+        await page.keyboard.down('Control');
         for (let i = 0; i < 3; i++) {
             await page.mouse.wheel(0, -120);
             await settle(page);
         }
+        await page.keyboard.up('Control');
 
         // The dropdown must have moved off its initial preset…
         await expect.poll(() => select.inputValue()).not.toBe(initialVal);
@@ -188,6 +192,30 @@ test.describe('Pan Operations', () => {
                 return center.x !== centerBefore.x || center.y !== centerBefore.y;
             })
             .toBe(true);
+    });
+
+    test('plain mouse wheel / two-finger swipe pans the view', async ({ page }) => {
+        const box = await canvasBox(page);
+        expect(box).not.toBeNull();
+
+        const yBefore = await page.evaluate(() => {
+            const mc = (window as any).__FidoCadJS__.circuitPanel.getMapCoordinates();
+            return mc.getYCenter();
+        });
+
+        // A plain wheel (no modifier) now scrolls. Positive deltaY moves the
+        // clamped (≤ 0) view origin negative, so it is observable from the start.
+        await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+        await page.mouse.wheel(0, 200);
+
+        await expect
+            .poll(async () =>
+                page.evaluate(() => {
+                    const mc = (window as any).__FidoCadJS__.circuitPanel.getMapCoordinates();
+                    return mc.getYCenter();
+                }),
+            )
+            .toBeLessThan(yBefore);
     });
 });
 

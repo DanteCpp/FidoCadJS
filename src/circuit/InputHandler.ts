@@ -133,6 +133,8 @@ export class InputHandler {
     private _ruler = new Ruler();
     private rulerArmed = false;
     private rulerDragged = false;
+    /** True while a ruler gesture is being driven by Shift + left-drag. */
+    private _rulerViaLeft = false;
 
     private static readonly DRAG_THRESHOLD_PX = 5;
 
@@ -237,11 +239,31 @@ export class InputHandler {
             this.cb.commitTextEdit();
         }
 
-        const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+        // Zoom is reserved for the pinch gesture (delivered as a ctrl+wheel
+        // synthesised by the OS) and an explicit Ctrl/Cmd + wheel — the latter
+        // being how a mouse user zooms. The step is scaled by the (continuous)
+        // delta so a pinch feels smooth.
+        if (e.ctrlKey || e.metaKey) {
+            this.zoomTowardCursor(Math.pow(1.0015, -e.deltaY), e.clientX, e.clientY);
+            return;
+        }
+
+        // Every other wheel / two-finger swipe scrolls (pans) the view, in any
+        // direction. A plain mouse wheel pans too — it is indistinguishable from
+        // a two-finger vertical drag, so both share this behaviour.
+        const dpr = window.devicePixelRatio || 1;
+        this.mapCoords.setXCenter(this.mapCoords.getXCenter() - e.deltaX * dpr);
+        this.mapCoords.setYCenter(this.mapCoords.getYCenter() - e.deltaY * dpr);
+        this.cb.clampCenter();
+        this.cb.render();
+    }
+
+    /** Zoom by `factor`, keeping the point under (clientX, clientY) fixed. */
+    private zoomTowardCursor(factor: number, clientX: number, clientY: number): void {
         const dpr = window.devicePixelRatio || 1;
         const rect = this.canvas.getBoundingClientRect();
-        const mx = (e.clientX - rect.left) * dpr;
-        const my = (e.clientY - rect.top) * dpr;
+        const mx = (clientX - rect.left) * dpr;
+        const my = (clientY - rect.top) * dpr;
 
         const oldZ = this.mapCoords.getXMagnitude();
         const newZ = Math.max(
@@ -291,6 +313,20 @@ export class InputHandler {
         }
 
         const tool = this.cb.getTool();
+
+        // Shift + left-drag measures with the ruler. The ruler is otherwise a
+        // right-button drag, which is awkward on a trackpad — this gives it a
+        // one-finger, trackpad-friendly trigger that works from any tool.
+        if (e.button === 0 && e.shiftKey) {
+            this._ruler.setActive(false);
+            this._ruler.setStart(sx, sy);
+            this._ruler.setEnd(sx, sy);
+            this.rulerArmed = true;
+            this.rulerDragged = false;
+            this._rulerViaLeft = true;
+            this.cb.render();
+            return;
+        }
 
         if (tool === Tool.ZOOM) {
             if (e.button === 0) {
@@ -403,7 +439,8 @@ export class InputHandler {
         }
 
         // Measuring ruler: drag with the right button held down.
-        if (this.rulerArmed && (e.buttons & 2) !== 0) {
+        const rulerButtonHeld = this._rulerViaLeft ? (e.buttons & 1) !== 0 : (e.buttons & 2) !== 0;
+        if (this.rulerArmed && rulerButtonHeld) {
             this._ruler.setEnd(sx, sy);
             this._ruler.setActive(true);
             this.rulerDragged = true;
@@ -516,6 +553,20 @@ export class InputHandler {
             } else if (e.button === 2) {
                 this.cb.cancelPastePlacement();
             }
+            return;
+        }
+
+        // Shift + left-drag ruler release. A real drag leaves the measurement on
+        // screen (like the right-button ruler); a plain Shift-click leaves
+        // nothing. Resolved before the normal left-button handling below.
+        if (this._rulerViaLeft && e.button === 0) {
+            this.rulerArmed = false;
+            this._rulerViaLeft = false;
+            if (!this.rulerDragged) {
+                this._ruler.setActive(false);
+                this.cb.render();
+            }
+            this.rulerDragged = false;
             return;
         }
 
