@@ -12,6 +12,13 @@ import { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
 // Types
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/** Safari's proprietary trackpad-pinch event, absent from the DOM typings. */
+export interface SafariGestureEvent extends Event {
+    readonly scale: number;
+    readonly clientX: number;
+    readonly clientY: number;
+}
+
 /** Externally-readable subset of gesture state (used by CircuitPanel.render). */
 export interface InputState {
     readonly ghostPrimitive: GraphicPrimitive | null;
@@ -256,6 +263,31 @@ export class InputHandler {
         this.mapCoords.setYCenter(this.mapCoords.getYCenter() - e.deltaY * dpr);
         this.cb.clampCenter();
         this.cb.render();
+    }
+
+    /** Zoom level captured when a Safari pinch gesture starts. */
+    private gestureStartZoom = 0;
+
+    /**
+     * Safari never synthesises the ctrl+wheel that other browsers emit for a
+     * trackpad pinch; it fires proprietary gesturestart/gesturechange events
+     * instead. These map that pinch onto the same zoom-toward-cursor logic.
+     */
+    onGestureStart(e: SafariGestureEvent): void {
+        e.preventDefault();
+        if (this.cb.isTextEditActive()) {
+            this.cb.commitTextEdit();
+        }
+        this.gestureStartZoom = this.mapCoords.getXMagnitude();
+    }
+
+    onGestureChange(e: SafariGestureEvent): void {
+        e.preventDefault();
+        if (this.gestureStartZoom <= 0) return;
+        // e.scale is cumulative since gesturestart; express it as a factor
+        // relative to the current zoom so zoomTowardCursor clamps correctly.
+        const factor = (this.gestureStartZoom * e.scale) / this.mapCoords.getXMagnitude();
+        this.zoomTowardCursor(factor, e.clientX, e.clientY);
     }
 
     /** Zoom by `factor`, keeping the point under (clientX, clientY) fixed. */

@@ -82,7 +82,18 @@ export class GraphicsCanvas implements Graphics {
     ): void {
         const radii = Math.min(arcWidth / 2, arcHeight / 2);
         this.ctx.beginPath();
-        this.ctx.roundRect(x, y, width, height, radii);
+        if (typeof this.ctx.roundRect === 'function') {
+            this.ctx.roundRect(x, y, width, height, radii);
+        } else {
+            // Safari < 16 and Firefox < 112 have no roundRect.
+            const r = Math.max(0, Math.min(radii, width / 2, height / 2));
+            this.ctx.moveTo(x + r, y);
+            this.ctx.arcTo(x + width, y, x + width, y + height, r);
+            this.ctx.arcTo(x + width, y + height, x, y + height, r);
+            this.ctx.arcTo(x, y + height, x, y, r);
+            this.ctx.arcTo(x, y, x + width, y, r);
+            this.ctx.closePath();
+        }
         this.ctx.fill();
     }
 

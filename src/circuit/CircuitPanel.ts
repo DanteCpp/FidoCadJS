@@ -32,7 +32,7 @@ import { ContextMenuManager } from './ContextMenuManager.js';
 import { ExportFacade } from '../export/ExportFacade.js';
 import { createEditorServices } from './services.js';
 import { InputHandler } from './InputHandler.js';
-import type { InputCallbacks } from './InputHandler.js';
+import type { InputCallbacks, SafariGestureEvent } from './InputHandler.js';
 import { getString } from '../i18n/i18n.js';
 
 export class CircuitPanel implements KeyboardHost, EditorFacade {
@@ -250,6 +250,21 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
             passive: false,
             signal: this.lifecycle.signal,
         });
+
+        // Safari reports trackpad pinches as proprietary gesture events, not
+        // the ctrl+wheel other browsers synthesise; route them to the zoom.
+        if ('GestureEvent' in window) {
+            this.canvas.addEventListener(
+                'gesturestart',
+                (e) => this.inputHandler.onGestureStart(e as SafariGestureEvent),
+                { passive: false, signal: this.lifecycle.signal },
+            );
+            this.canvas.addEventListener(
+                'gesturechange',
+                (e) => this.inputHandler.onGestureChange(e as SafariGestureEvent),
+                { passive: false, signal: this.lifecycle.signal },
+            );
+        }
 
         // Drag-to-pan
         this.canvas.addEventListener('mousedown', (e) => this.inputHandler.onMouseDown(e), {
@@ -914,19 +929,30 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
 
     async copyAsImage(): Promise<void> {
-        try {
+        // ClipboardItem is missing in Firefox < 127; the menu entry is disabled
+        // there, but the Ctrl+I shortcut still reaches this method.
+        if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+            console.warn('Copy as Image is not supported by this browser.');
+            return;
+        }
+        const blobPromise = (async () => {
             const { renderToOffscreen } = await import('../export/ExportBitmap.js');
             const { defaultBitmapOptions } = await import('../export/ExportBitmapOptions.js');
             const opts = defaultBitmapOptions();
             opts.dpi = 150;
             const canvas = renderToOffscreen(this.model, opts);
-            const blob = await new Promise<Blob>((resolve, reject) => {
+            return new Promise<Blob>((resolve, reject) => {
                 canvas.toBlob((b) => {
                     if (b) resolve(b);
                     else reject(new Error('toBlob returned null'));
                 }, 'image/png');
             });
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        })();
+        try {
+            // clipboard.write() must be called before any await: Safari only
+            // honours it inside the user-activation window, so the PNG is
+            // handed over as a promise and rendered while the write is pending.
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
         } catch (e) {
             console.error('Copy as Image failed:', e);
         }

@@ -217,9 +217,18 @@ describe('ExportDialog.executeExport', () => {
             expect(download.getLastBlob()!.size).toBe(svgText.length);
         });
 
-        it('text-format downloads revoke their object URLs immediately', () => {
-            executeExport(panel, { format: 'svg', filename: 'foo', bitmapOptions: defOpts() });
-            expect(download.revoked).toEqual(download.created);
+        it('text-format downloads revoke their object URLs on a delay', () => {
+            // Revocation is deferred: Safari resolves blob URLs asynchronously
+            // after the click, so revoking immediately aborts the download.
+            vi.useFakeTimers();
+            try {
+                executeExport(panel, { format: 'svg', filename: 'foo', bitmapOptions: defOpts() });
+                expect(download.revoked).toEqual([]);
+                vi.runAllTimers();
+                expect(download.revoked).toEqual(download.created);
+            } finally {
+                vi.useRealTimers();
+            }
         });
     });
 });

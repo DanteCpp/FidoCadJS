@@ -1,6 +1,7 @@
 import type { EditorFacade } from '../circuit/EditorFacade.js';
 import type { ExportBitmapOptions } from '../export/ExportBitmapOptions.js';
 import { defaultBitmapOptions, DPI_PRESETS } from '../export/ExportBitmapOptions.js';
+import { triggerBlobDownload } from './download.js';
 import { getString } from '../i18n/i18n.js';
 
 /** Supported export formats */
@@ -399,13 +400,7 @@ async function exportJPG(
 }
 
 function downloadBlob(content: string, mimeType: string, filename: string): void {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerBlobDownload(new Blob([content], { type: mimeType }), filename);
 }
 
 import type { BitmapLayerResult } from '../export/ExportBitmap.js';
@@ -429,12 +424,7 @@ function downloadBlobs(results: BitmapLayerResult[], baseFilename: string, ext: 
         } else {
             fname = ensureExt(baseFilename, ext);
         }
-        const url = URL.createObjectURL(r.blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fname;
-        a.click();
-        URL.revokeObjectURL(url);
+        triggerBlobDownload(r.blob, fname);
     }
 }
 

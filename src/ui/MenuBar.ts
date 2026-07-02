@@ -3,6 +3,7 @@ import { showOptionsDialog } from './OptionsDialog.js';
 import { showExportDialog, executeExport } from './ExportDialog.js';
 import { showLayerDialog } from './DialogLayer.js';
 import { showAboutDialog } from './DialogAbout.js';
+import { triggerBlobDownload } from './download.js';
 import { getString } from '../i18n/i18n.js';
 
 /** Ensure a filename ends with the `.fcd` circuit extension. */
@@ -272,6 +273,8 @@ export class MenuBar {
                 shortcut: 'Ctrl+I',
                 icon: 'copy_image.png',
                 action: () => void this.panel.copyAsImage(),
+                // Firefox only ships ClipboardItem from version 127.
+                enabled: () => typeof ClipboardItem !== 'undefined' && !!navigator.clipboard?.write,
             },
             {
                 kind: 'action',
@@ -620,13 +623,7 @@ export class MenuBar {
 
     /** Trigger a browser download of the given text with the given filename. */
     private downloadText(text: string, fileName: string): void {
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
+        triggerBlobDownload(new Blob([text], { type: 'text/plain' }), fileName);
     }
 
     /**
@@ -634,6 +631,11 @@ export class MenuBar {
      * or null if the user cancels.
      */
     private promptFileName(defaultName: string): Promise<string | null> {
+        // Browsers without <dialog> support (Safari < 15.4) get the native
+        // prompt so saving still works instead of failing silently.
+        if (typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) {
+            return Promise.resolve(window.prompt(getString('SaveName'), defaultName));
+        }
         return new Promise((resolve) => {
             const dialog = document.createElement('dialog');
             dialog.style.cssText =

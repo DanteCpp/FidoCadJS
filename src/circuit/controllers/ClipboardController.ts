@@ -77,18 +77,27 @@ export class ClipboardController {
      */
     async paste(interactive = false): Promise<void> {
         let text = '';
-        // Prefer system clipboard, but race against a short timeout: Firefox
-        // can leave readText() pending indefinitely when permissions have not
-        // been granted, which would block the fallback to internal clipboard
-        // and stall duplicate/paste flows.
+        // Prefer the system clipboard. When the internal clipboard has content
+        // to fall back to, race the read against a short timeout: Firefox can
+        // leave readText() pending indefinitely when permissions have not been
+        // granted, which would stall duplicate/paste flows. With nothing to
+        // fall back to, wait as long as it takes — Safari pops up a native
+        // "Paste" confirmation the user must click, which can easily exceed
+        // any fixed timeout.
         if (navigator.clipboard?.readText) {
             try {
-                text = await Promise.race([
-                    navigator.clipboard.readText(),
-                    new Promise<string>((_, reject) =>
-                        setTimeout(() => reject(new Error('clipboard read timeout')), 200),
-                    ),
-                ]);
+                const read = navigator.clipboard.readText();
+                // If the read loses the race and rejects later, keep that from
+                // surfacing as an unhandled rejection.
+                read.catch(() => {});
+                text = this.internalClipboard
+                    ? await Promise.race([
+                          read,
+                          new Promise<string>((_, reject) =>
+                              setTimeout(() => reject(new Error('clipboard read timeout')), 200),
+                          ),
+                      ])
+                    : await read;
             } catch {
                 // permission denied / non-secure context / timeout – fall back
             }

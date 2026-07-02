@@ -158,6 +158,11 @@ FidoCadJS runs in any modern browser with Canvas 2D and ES2022 support. There is
 | Firefox | 102 |
 | Safari | 15.4 |
 
+Two features degrade gracefully on older browsers: "Copy as image" requires
+`ClipboardItem` (Firefox 127+; the menu entry is disabled below that), and
+"Save"/"Save As" keep the file in place only where the File System Access API
+exists (Chromium); elsewhere they fall back to a regular browser download.
+
 It works on desktop, tablet, and mobile; pointer events are handled uniformly so touch and mouse input behave the same.
 
 ### Differences from FidoCadJ (Java)
@@ -314,7 +319,7 @@ npm run test:run        # Run once (CI)
 npm test                # Watch mode
 ```
 
-**E2E tests** use [Playwright](https://playwright.dev) driving headless Chromium for real browser interaction (canvas clicks, keyboard input, export verification).
+**E2E tests** use [Playwright](https://playwright.dev) driving headless Chromium, Firefox, and WebKit for real browser interaction (canvas clicks, keyboard input, export verification). They run against the production build in `dist/`, so use `test:e2e:prod` (or run `npm run build` first) when testing local changes.
 
 ```bash
 npm run test:e2e        # Run all E2E tests (headless)
