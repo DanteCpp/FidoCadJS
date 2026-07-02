@@ -629,6 +629,11 @@ When a library is loaded with a *prefix* `P`, each macro is registered under the
 key `P.key` (or just `key` when the prefix is empty), **lowercased**. `MC`
 commands must reference this fully-qualified, lowercased key.
 
+The **standard library** (`FCDstdlib`) is loaded with an *empty* prefix, so its
+macros are registered and referenced by their bare `key` alone, **without any
+prefix** (e.g. `MC 100 100 0 0 080`). Only non-standard libraries use the
+`library.macroname` form.
+
 ### 8.3 Example library
 
 ```
