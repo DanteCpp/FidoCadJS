@@ -11,6 +11,13 @@ import { RectangleG } from '../graphic/RectangleG.js';
 import { PointG } from '../graphic/PointG.js';
 import { GraphicsNull } from '../graphic/nil/GraphicsNull.js';
 
+interface GlyphHitBox {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+}
+
 export class PrimitiveAdvText extends GraphicPrimitive {
     static readonly TEXT_BOLD = 1;
     static readonly TEXT_ITALIC = 2;
@@ -42,6 +49,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
     private wSCI: number = 0;
     private xpSCI: number[] = [];
     private ypSCI: number[] = [];
+    private glyphHitBoxesSCI: GlyphHitBox[] = [];
+    private glyphHitTestingSCI: boolean = false;
 
     private mirror: boolean = false;
     private orientation: number = 0;
@@ -322,6 +331,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.wSCI = Math.trunc(gSCI.getStringWidth(this.txt));
             this.hSCI = gSCI.getFontAscent();
             this.thSCI = this.hSCI + gSCI.getFontDescent();
+            this.glyphHitBoxesSCI = [];
+            this.glyphHitTestingSCI = true;
 
             // For LaTeX text, size the selection box from the typeset math
             // geometry (analytical, in logical units), matching what is drawn.
@@ -329,6 +340,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 const emPxLogical = Math.trunc(this.six * PrimitiveAdvText.FONT_SIZE_RATIO + 0.5);
                 const layout = layoutMath(this.txt, emPxLogical, (s) => gSCI.getStringWidth(s));
                 if (layout.hasMath) {
+                    this.glyphHitTestingSCI = false;
                     this.wSCI = Math.trunc(layout.totalWidth);
                     let asc = this.hSCI;
                     let desc = this.thSCI - this.hSCI;
@@ -341,14 +353,38 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                     this.thSCI = Math.trunc(asc + desc);
                 }
             }
+
+            if (this.glyphHitTestingSCI) {
+                let prefix = '';
+                for (const character of this.txt) {
+                    prefix += character;
+                    if (/^\s$/u.test(character)) continue;
+
+                    const metrics = gSCI.measureGlyphInk(character);
+                    const endAdvance = gSCI.measureTextInk(prefix).advance;
+                    const origin = endAdvance - metrics.advance;
+                    this.glyphHitBoxesSCI.push({
+                        left: origin - metrics.left,
+                        top: this.hSCI - metrics.ascent,
+                        right: origin + metrics.right,
+                        bottom: this.hSCI + metrics.descent,
+                    });
+                }
+            }
+
             this.recalcSize = false;
             this.xaSCI = this.virtualPoint[0]!.x;
             this.yaSCI = this.virtualPoint[0]!.y;
             this.orientationSCI = this.o;
 
             if (this.siy / this.six !== 10 / 7) {
-                this.hSCI = Math.round(this.hSCI * ((this.siy * 22.0) / 40.0 / this.six));
-                this.thSCI = Math.round(this.thSCI * ((this.siy * 22.0) / 40.0 / this.six));
+                const stretch = (this.siy * 22.0) / 40.0 / this.six;
+                this.hSCI = Math.round(this.hSCI * stretch);
+                this.thSCI = Math.round(this.thSCI * stretch);
+                for (const box of this.glyphHitBoxesSCI) {
+                    box.top *= stretch;
+                    box.bottom *= stretch;
+                }
             }
             if ((this.sty & PrimitiveAdvText.TEXT_MIRRORED) !== 0) {
                 this.orientationSCI = -this.orientationSCI;
@@ -372,6 +408,30 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                     Math.trunc(this.yaSCI - this.wSCI * si),
                 ];
             }
+        }
+
+        if (this.glyphHitTestingSCI) {
+            const dx = px - this.xaSCI;
+            const dy = py - this.yaSCI;
+            const angle = (this.orientationSCI * Math.PI) / 180;
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const direction = this.wSCI < 0 ? -1 : 1;
+            const localX = direction * (dx * cos - dy * sin);
+            const localY = dx * sin + dy * cos;
+            const padding = Math.min(0.75, Math.max(0.2, Math.min(this.six, this.siy) * 0.08));
+
+            for (const box of this.glyphHitBoxesSCI) {
+                if (
+                    localX >= Math.min(box.left, box.right) - padding &&
+                    localX <= Math.max(box.left, box.right) + padding &&
+                    localY >= Math.min(box.top, box.bottom) - padding &&
+                    localY <= Math.max(box.top, box.bottom) + padding
+                ) {
+                    return 0;
+                }
+            }
+            return Math.trunc(Number.MAX_SAFE_INTEGER / 2);
         }
 
         if (this.orientationSCI === 0) {

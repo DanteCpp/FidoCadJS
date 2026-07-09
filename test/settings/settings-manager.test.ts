@@ -59,6 +59,10 @@ describe('SettingsManager', () => {
             expect(s.gridColor).toBe('#6464c8');
             expect(s.selectionLTRColor).toBe('#008000');
             expect(s.selectionRTLColor).toBe('#0000ff');
+            expect(s.defaultFont).toBe('Courier New');
+            expect(s.defaultFontSize).toBe(4);
+            expect(s.nameValueFont).toBe('Courier New');
+            expect(s.nameValueFontSize).toBe(3);
             expect(s.renderTeX).toBe(false);
         });
 
@@ -109,6 +113,10 @@ describe('SettingsManager', () => {
                     snapToGrid: 42,
                     backgroundColor: 'invalid-color',
                     gridSizeY: -5,
+                    defaultFont: '',
+                    defaultFontSize: 0,
+                    nameValueFont: 42,
+                    nameValueFontSize: -1,
                 }),
             );
             (SettingsManager as any).instance = null;
@@ -118,6 +126,10 @@ describe('SettingsManager', () => {
             expect(s.snapToGrid).toBe(true);
             expect(s.backgroundColor).toBe('#ffffff');
             expect(s.gridSizeY).toBe(5);
+            expect(s.defaultFont).toBe('Courier New');
+            expect(s.defaultFontSize).toBe(4);
+            expect(s.nameValueFont).toBe('Courier New');
+            expect(s.nameValueFontSize).toBe(3);
         });
 
         it('clamps numeric values to valid ranges', () => {
@@ -155,6 +167,10 @@ describe('SettingsManager', () => {
                     gridColor: '#112233',
                     selectionLTRColor: '#445566',
                     selectionRTLColor: '#778899',
+                    defaultFont: 'Georgia',
+                    defaultFontSize: 12,
+                    nameValueFont: 'Helvetica',
+                    nameValueFontSize: 5,
                     renderTeX: true,
                 }),
             );
@@ -175,6 +191,10 @@ describe('SettingsManager', () => {
             expect(s.gridColor).toBe('#112233');
             expect(s.selectionLTRColor).toBe('#445566');
             expect(s.selectionRTLColor).toBe('#778899');
+            expect(s.defaultFont).toBe('Georgia');
+            expect(s.defaultFontSize).toBe(12);
+            expect(s.nameValueFont).toBe('Helvetica');
+            expect(s.nameValueFontSize).toBe(5);
             expect(s.renderTeX).toBe(true);
         });
     });

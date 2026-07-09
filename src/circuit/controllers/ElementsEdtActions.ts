@@ -197,9 +197,9 @@ export class ElementsEdtActions {
                     const newText = new PrimitiveAdvText(
                         cs.unmapXsnap(x),
                         cs.unmapYsnap(y),
-                        3,
-                        4,
-                        this.model.getTextFont(),
+                        Math.max(1, Math.round((this.model.getDefaultTextFontSize() * 7) / 10)),
+                        this.model.getDefaultTextFontSize(),
+                        this.model.getDefaultTextFont(),
                         0,
                         0,
                         'String',

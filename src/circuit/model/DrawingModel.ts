@@ -10,8 +10,10 @@ export class DrawingModel {
     private drawOnlyPadsFlag: boolean = false;
     private drawOnlyLayerVal: number = -1;
     private imgCanvas: ImageAsCanvas = new ImageAsCanvas();
+    private nameValueFont: string = 'Courier New';
+    private nameValueFontSize: number = 3;
     private defaultTextFont: string = 'Courier New';
-    private defaultTextFontSize: number = 0;
+    private defaultTextFontSize: number = 4;
     private changedFlag: boolean = true;
     private modifiedSinceSaveFlag: boolean = false;
 
@@ -73,14 +75,33 @@ export class DrawingModel {
     }
 
     getTextFont(): string {
-        return this.defaultTextFont;
+        return this.nameValueFont;
     }
 
     getTextFontSize(): number {
-        if (this.primitiveVector.length === 0) return this.defaultTextFontSize;
-        const size = this.primitiveVector[0]!.getMacroFontSize();
-        this.defaultTextFontSize = size > 0 ? size : 1;
+        return this.nameValueFontSize;
+    }
+
+    setTextFont(font: string, size: number): void {
+        this.nameValueFont = font;
+        this.nameValueFontSize = Math.max(1, size);
+        for (const primitive of this.primitiveVector) {
+            primitive.setMacroFont(this.nameValueFont, this.nameValueFontSize);
+        }
+        this.changedFlag = true;
+    }
+
+    getDefaultTextFont(): string {
+        return this.defaultTextFont;
+    }
+
+    getDefaultTextFontSize(): number {
         return this.defaultTextFontSize;
+    }
+
+    setDefaultTextStyle(font: string, size: number): void {
+        this.defaultTextFont = font;
+        this.defaultTextFontSize = Math.max(1, size);
     }
 
     sortPrimitiveLayers(): void {

@@ -9,6 +9,10 @@ node_modules/
 # Build output
 dist/
 
+# Tauri build artifacts and generated schemas
+src-tauri/target/
+src-tauri/gen/schemas/
+
 # Test coverage
 coverage/
 

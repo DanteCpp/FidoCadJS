@@ -2,6 +2,7 @@ import { Tool } from '../../src/circuit/controllers/Tool.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CircuitPanel } from '../../src/circuit/CircuitPanel.js';
 import { MacroDesc } from '../../src/primitives/MacroDesc.js';
+import { PrimitiveAdvText } from '../../src/primitives/PrimitiveAdvText.js';
 
 /**
  * Simulate a full mousedown + mouseup click cycle at canvas coordinates (sx, sy).
@@ -210,6 +211,19 @@ describe('Primitive placement via tools', () => {
 
             // Text tool places an empty PrimitiveAdvText immediately on click
             expect(panel.getModel().getPrimitiveVector().length).toBe(1);
+        });
+
+        it('uses the configured default font and size for new text', () => {
+            const panel = makePanel();
+            panel.getModel().setDefaultTextStyle('Georgia', 12);
+            panel.setTool(Tool.TEXT);
+
+            clickCanvas(panel, 150, 150);
+
+            const text = panel.getModel().getPrimitiveVector()[0] as PrimitiveAdvText;
+            expect(text.getFontName()).toBe('Georgia');
+            expect(text.getFontDimension()).toBe(12);
+            expect(text.getFontWidth()).toBe(8);
         });
     });
 

@@ -25,6 +25,10 @@ interface MenuItem {
 /** Base URL for menu icons, ported from FidoCadJ's /icons/menu_icons set. */
 const MENU_ICON_BASE = `${import.meta.env.BASE_URL}icons/menu_icons/`;
 
+function menuLabel(text: string): string {
+    return text.replace(/(?:\.{3}|…)\s*$/, '');
+}
+
 export class MenuBar {
     private readonly el: HTMLElement;
     private readonly panel: EditorFacade;
@@ -82,6 +86,7 @@ export class MenuBar {
         for (const item of items) {
             if (item.kind === 'separator') {
                 const sep = document.createElement('div');
+                sep.setAttribute('role', 'separator');
                 sep.style.cssText = 'height: 1px; background: #ddd; margin: 2px 0;';
                 dropdown.appendChild(sep);
             } else if (item.kind === 'action') {
@@ -111,7 +116,8 @@ export class MenuBar {
                 left.appendChild(iconBox);
 
                 const label = document.createElement('span');
-                label.textContent = item.label || '';
+                label.textContent = menuLabel(item.label || '');
+                label.dataset.menuLabel = '';
                 left.appendChild(label);
 
                 menuItem.appendChild(left);
@@ -201,10 +207,24 @@ export class MenuBar {
             },
             {
                 kind: 'action',
-                label: `${getString('Export')}...`,
+                label: getString('Export'),
                 shortcut: 'Ctrl+E',
                 icon: 'export.png',
                 action: () => this.exportFile(),
+            },
+            { kind: 'separator' },
+            {
+                kind: 'action',
+                label: getString('Circ_opt'),
+                shortcut: 'Ctrl+,',
+                icon: 'options.png',
+                action: () =>
+                    showOptionsDialog(
+                        this.panel,
+                        this.onReloadLibraries,
+                        'drawing',
+                        this.onImportLibrary,
+                    ),
             },
         ];
     }
@@ -397,7 +417,7 @@ export class MenuBar {
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: `${getString('Attach_image_menu')}...`,
+                label: getString('Attach_image_menu'),
                 icon: 'back_image.png',
                 action: () => this.attachImageFile(),
             },
@@ -413,17 +433,10 @@ export class MenuBar {
             { kind: 'separator' },
             {
                 kind: 'action',
-                label: `${getString('Layer_options')}...`,
+                label: getString('Layer_options'),
                 shortcut: 'Ctrl+L',
                 icon: 'layers.png',
                 action: () => showLayerDialog(this.panel),
-            },
-            {
-                kind: 'action',
-                label: `${getString('Circ_opt')}...`,
-                shortcut: 'Ctrl+,',
-                icon: 'options.png',
-                action: () => showOptionsDialog(this.panel, this.onReloadLibraries),
             },
         ];
     }
@@ -466,7 +479,7 @@ export class MenuBar {
             },
             {
                 kind: 'action',
-                label: `${getString('ImportLibrary_menu')}...`,
+                label: getString('ImportLibrary_menu'),
                 icon: 'libs.png',
                 action: () => this.importLibraryFile(),
             },

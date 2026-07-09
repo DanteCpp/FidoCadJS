@@ -1,10 +1,13 @@
 export interface ContextMenuItem {
     label?: string;
+    icon?: string;
     enabled?: boolean;
     visible?: boolean;
     separator?: boolean;
     action?: () => void;
 }
+
+const MENU_ICON_BASE = `${import.meta.env.BASE_URL}icons/menu_icons/`;
 
 export class ContextMenu {
     private readonly el: HTMLDivElement;
@@ -13,6 +16,8 @@ export class ContextMenu {
 
     constructor(container: HTMLElement = document.body) {
         this.el = document.createElement('div');
+        this.el.setAttribute('role', 'menu');
+        this.el.setAttribute('aria-label', 'Drawing actions');
         this.el.style.cssText = [
             'position: fixed',
             'z-index: 9999',
@@ -34,19 +39,22 @@ export class ContextMenu {
 
         this.el.innerHTML = '';
         for (const item of items) {
+            if (item.visible === false) continue;
             if (item.separator) {
                 const hr = document.createElement('hr');
+                hr.setAttribute('role', 'separator');
                 hr.style.cssText = 'margin: 4px 0; border: none; border-top: 1px solid #e0e0e0;';
                 this.el.appendChild(hr);
                 continue;
             }
-            if (item.visible === false) continue;
 
             const btn = document.createElement('button');
-            btn.textContent = item.label ?? '';
+            btn.setAttribute('role', 'menuitem');
             btn.disabled = item.enabled === false;
             btn.style.cssText = [
-                'display: block',
+                'display: flex',
+                'align-items: center',
+                'gap: 8px',
                 'width: 100%',
                 'padding: 5px 16px',
                 'background: none',
@@ -56,6 +64,24 @@ export class ContextMenu {
                 'color: ' + (item.enabled === false ? '#a0a0a0' : '#1a1a1a'),
                 'font: inherit',
             ].join(';');
+
+            const iconBox = document.createElement('span');
+            iconBox.style.cssText =
+                'width: 16px; height: 16px; flex: none; display: flex; ' +
+                'align-items: center; justify-content: center;';
+            if (item.icon) {
+                const img = document.createElement('img');
+                img.src = `${MENU_ICON_BASE}${item.icon}`;
+                img.width = 16;
+                img.height = 16;
+                img.alt = '';
+                iconBox.appendChild(img);
+            }
+            btn.appendChild(iconBox);
+
+            const label = document.createElement('span');
+            label.textContent = item.label ?? '';
+            btn.appendChild(label);
 
             if (item.enabled !== false) {
                 btn.addEventListener('mouseenter', () => {

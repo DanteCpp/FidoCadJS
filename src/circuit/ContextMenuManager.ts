@@ -71,10 +71,14 @@ export class ContextMenuManager {
             (first instanceof PrimitivePolygon || first instanceof PrimitiveComplexCurve);
         const isMacroPrim =
             this.selectionActions.isUniquePrimitiveSelected() && first instanceof PrimitiveMacro;
+        const showNodeActions = isNodePrim;
+        const showSymbolize = somethingSelected && !isMacroPrim;
+        const showVectorize = isMacroPrim;
 
         this.contextMenu.show(clientX, clientY, [
             {
                 label: getString('Properties'),
+                icon: 'param.png',
                 enabled: somethingSelected,
                 action: () => {
                     const selected = this.selectionActions.getSelectedPrimitives();
@@ -88,27 +92,32 @@ export class ContextMenuManager {
             { separator: true },
             {
                 label: getString('Cut'),
+                icon: 'cut.png',
                 enabled: somethingSelected,
                 action: () => this.callbacks.cutSelected(),
             },
             {
                 label: getString('Copy'),
+                icon: 'copy.png',
                 enabled: somethingSelected,
                 action: () => this.callbacks.copySelected(),
             },
             {
                 label: getString('Paste'),
+                icon: 'paste.png',
                 enabled: hasCb,
                 action: () => this.callbacks.paste(),
             },
             {
                 label: getString('Duplicate'),
+                icon: 'duplicate.png',
                 enabled: somethingSelected,
                 action: () => this.callbacks.duplicateSelected(),
             },
             { separator: true },
             {
                 label: getString('SelectAll'),
+                icon: 'select_all.png',
                 enabled: true,
                 action: () => {
                     this.callbacks.selectAll();
@@ -117,43 +126,51 @@ export class ContextMenuManager {
             { separator: true },
             {
                 label: getString('Move'),
+                icon: 'move.png',
                 enabled: somethingSelected,
                 action: () => this.callbacks.startMoveSelected(),
             },
             {
                 label: getString('Rotate'),
+                icon: 'rotate.png',
                 enabled: somethingSelected,
                 action: () => this.callbacks.rotateSelected(),
             },
             {
                 label: getString('Mirror_E'),
+                icon: 'mirror.png',
                 enabled: somethingSelected,
                 action: () => this.callbacks.mirrorSelected(),
             },
-            {
-                label: getString('Symbolize'),
-                enabled: somethingSelected,
-                visible: somethingSelected && !isMacroPrim,
-                action: () => this.callbacks.onSymbolizeRequested?.(),
-            },
-            {
-                label: getString('Unsymbolize'),
-                enabled: isMacroPrim,
-                visible: isMacroPrim,
-                action: () => this.callbacks.vectorizeMacro(),
-            },
-            { separator: true },
+            { separator: true, visible: showNodeActions },
             {
                 label: getString('Add_node'),
+                icon: 'add_node.png',
                 enabled: isNodePrim,
-                visible: isNodePrim,
+                visible: showNodeActions,
                 action: () => this.addNodeAt(contextMenuLogX, contextMenuLogY),
             },
             {
                 label: getString('Remove_node'),
+                icon: 'remove_node.png',
                 enabled: isNodePrim,
-                visible: isNodePrim,
+                visible: showNodeActions,
                 action: () => this.removeNodeAt(contextMenuLogX, contextMenuLogY),
+            },
+            { separator: true, visible: showSymbolize || showVectorize },
+            {
+                label: getString('Symbolize'),
+                icon: 'symbolize.png',
+                enabled: somethingSelected,
+                visible: showSymbolize,
+                action: () => this.callbacks.onSymbolizeRequested?.(),
+            },
+            {
+                label: getString('Unsymbolize'),
+                icon: 'split_macro.png',
+                enabled: isMacroPrim,
+                visible: showVectorize,
+                action: () => this.callbacks.vectorizeMacro(),
             },
         ]);
     }

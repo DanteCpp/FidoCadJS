@@ -7,6 +7,13 @@ import { getString } from '../i18n/i18n.js';
 
 const REGISTRY_KEY = 'fidocadts.libs.v1';
 const LIB_PREFIX = 'fidocadts.lib.v1.';
+const BACKUP_FORMAT = 'fidocadjs-user-libraries';
+const BACKUP_VERSION = 1;
+
+export interface UserLibraryFile {
+    prefix: string;
+    content: string;
+}
 
 export class UserLibraryStorage {
     private constructor() {}
@@ -101,6 +108,54 @@ export class UserLibraryStorage {
         }
     }
 
+    /** Return every browser-stored user library for backup/export. */
+    static getUserLibraryFiles(): UserLibraryFile[] {
+        const libraries: UserLibraryFile[] = [];
+        for (const prefix of UserLibraryStorage.getUserLibraryPrefixes()) {
+            const content = localStorage.getItem(LIB_PREFIX + prefix);
+            if (content !== null) libraries.push({ prefix, content });
+        }
+        return libraries;
+    }
+
+    /** Serialize all browser-stored user libraries into one portable backup. */
+    static createBackup(): string {
+        return JSON.stringify(
+            {
+                format: BACKUP_FORMAT,
+                version: BACKUP_VERSION,
+                libraries: UserLibraryStorage.getUserLibraryFiles(),
+            },
+            null,
+            2,
+        );
+    }
+
+    /** Validate and read a backup previously produced by createBackup(). */
+    static parseBackup(text: string): UserLibraryFile[] {
+        const parsed: unknown = JSON.parse(text);
+        if (
+            !isRecord(parsed) ||
+            parsed.format !== BACKUP_FORMAT ||
+            parsed.version !== BACKUP_VERSION ||
+            !Array.isArray(parsed.libraries)
+        ) {
+            throw new Error('Invalid library backup');
+        }
+
+        return parsed.libraries.map((library) => {
+            if (
+                !isRecord(library) ||
+                typeof library.prefix !== 'string' ||
+                library.prefix.trim() === '' ||
+                typeof library.content !== 'string'
+            ) {
+                throw new Error('Invalid library backup');
+            }
+            return { prefix: library.prefix, content: library.content };
+        });
+    }
+
     /** Add a prefix to the registry if not already present. */
     private static addPrefix(prefix: string): void {
         const prefixes = UserLibraryStorage.getUserLibraryPrefixes();
@@ -115,4 +170,8 @@ export class UserLibraryStorage {
         const prefixes = UserLibraryStorage.getUserLibraryPrefixes().filter((p) => p !== prefix);
         localStorage.setItem(REGISTRY_KEY, JSON.stringify(prefixes));
     }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
 }

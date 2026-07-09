@@ -3,6 +3,7 @@ import { SettingsManager, type AppSettings } from '../settings/SettingsManager.j
 import { LibraryFolder } from '../librarymodel/LibraryFolder.js';
 import { UserLibraryStorage } from '../librarymodel/UserLibraryStorage.js';
 import { Toast } from './Toast.js';
+import { triggerBlobDownload } from './download.js';
 import {
     getString,
     getCurrentLocale,
@@ -11,12 +12,37 @@ import {
     LOCALE_LABELS,
 } from '../i18n/i18n.js';
 
-type TabId = 'drawing' | 'pcb' | 'appearance' | 'libraries' | 'language';
+type TabId = 'drawing' | 'pcb' | 'appearance' | 'text' | 'libraries' | 'language';
+type ImportLibrary = (content: string, fileName: string) => Promise<void>;
+
+const FONT_FAMILIES = [
+    'Arial',
+    'Calibri',
+    'Cambria',
+    'Consolas',
+    'Courier New',
+    'DejaVu Sans',
+    'DejaVu Sans Mono',
+    'DejaVu Serif',
+    'Georgia',
+    'Helvetica',
+    'Helvetica Neue',
+    'Menlo',
+    'Monaco',
+    'Monospace',
+    'Sans-serif',
+    'Segoe UI',
+    'Serif',
+    'Tahoma',
+    'Times New Roman',
+    'Verdana',
+];
 
 export function showOptionsDialog(
     panel: EditorFacade,
-    onLibrariesChanged?: () => void,
+    onLibrariesChanged?: () => void | Promise<void>,
     initialTab: TabId = 'drawing',
+    onImportLibrary?: ImportLibrary,
 ): void {
     const mgr = SettingsManager.getInstance();
     const s = mgr.getSettings();
@@ -45,6 +71,7 @@ export function showOptionsDialog(
         { id: 'drawing', label: getString('Drawing') },
         { id: 'pcb', label: 'PCB' },
         { id: 'appearance', label: getString('Theme_management') },
+        { id: 'text', label: getString('Text') },
         { id: 'libraries', label: getString('Libraries_tab') },
         { id: 'language', label: getString('Languages_tab') },
     ];
@@ -60,7 +87,8 @@ export function showOptionsDialog(
         drawing: buildDrawingPanel(draft),
         pcb: buildPCBPanel(draft),
         appearance: buildAppearancePanel(draft),
-        libraries: buildLibrariesPanel(onLibrariesChanged),
+        text: buildTextPanel(draft),
+        libraries: buildLibrariesPanel(onLibrariesChanged, onImportLibrary),
         language: buildLanguagePanel(),
     };
 
@@ -175,13 +203,78 @@ function buildAppearancePanel(s: AppSettings): HTMLElement {
     p.appendChild(colorRow(getString('Grid_dots_color'), 'gridColor', s.gridColor));
     p.appendChild(colorRow(getString('Select_LR_color'), 'selectionLTRColor', s.selectionLTRColor));
     p.appendChild(colorRow(getString('Select_RL_color'), 'selectionRTLColor', s.selectionRTLColor));
+    return p;
+}
+
+function buildTextPanel(s: AppSettings): HTMLElement {
+    const p = document.createElement('div');
+    p.appendChild(fontRow(getString('Default_font'), 'defaultFont', s.defaultFont));
+    p.appendChild(
+        numRow(getString('Default_font_size'), 'defaultFontSize', s.defaultFontSize, 1, 1),
+    );
+    p.appendChild(fontRow(getString('Name_value_font'), 'nameValueFont', s.nameValueFont));
+    p.appendChild(
+        numRow(getString('Name_value_font_size'), 'nameValueFontSize', s.nameValueFontSize, 1, 1),
+    );
     p.appendChild(document.createElement('hr'));
     p.appendChild(checkRow(getString('Render_tex'), 'renderTeX', s.renderTeX));
     return p;
 }
 
-function buildLibrariesPanel(onLibrariesChanged?: () => void): HTMLElement {
+function buildLibrariesPanel(
+    onLibrariesChanged?: () => void | Promise<void>,
+    onImportLibrary?: ImportLibrary,
+): HTMLElement {
     const p = document.createElement('div');
+
+    const transferInfo = document.createElement('p');
+    transferInfo.textContent = getString('Lib_transfer_info');
+    transferInfo.style.cssText = 'margin: 0 0 10px 0; font-size: 11px; color: #666;';
+    p.appendChild(transferInfo);
+
+    const transferButtons = document.createElement('div');
+    transferButtons.style.cssText = 'display: flex; gap: 8px; margin-bottom: 14px;';
+
+    const importBtn = document.createElement('button');
+    importBtn.textContent = getString('Lib_import_files');
+    importBtn.dataset.testid = 'import-user-libraries';
+    importBtn.disabled = !onImportLibrary;
+    importBtn.style.cssText =
+        'padding: 6px 14px; background: #007bff; color: white; border: none; ' +
+        'border-radius: 4px; cursor: pointer; font-size: 12px;';
+    importBtn.addEventListener('click', () => {
+        if (onImportLibrary) {
+            importUserLibraries(onImportLibrary, onLibrariesChanged, importBtn, exportBtn);
+        }
+    });
+
+    const exportBtn = document.createElement('button');
+    exportBtn.textContent = getString('Lib_export_all');
+    exportBtn.dataset.testid = 'export-user-libraries';
+    exportBtn.disabled = UserLibraryStorage.getUserLibraryFiles().length === 0;
+    exportBtn.style.cssText =
+        'padding: 6px 14px; background: #6c757d; color: white; border: none; ' +
+        'border-radius: 4px; cursor: pointer; font-size: 12px;';
+    exportBtn.addEventListener('click', () => {
+        if (UserLibraryStorage.getUserLibraryFiles().length === 0) {
+            Toast.show(getString('Lib_export_empty'), 'info');
+            return;
+        }
+        triggerBlobDownload(
+            new Blob([UserLibraryStorage.createBackup()], {
+                type: 'application/json;charset=utf-8',
+            }),
+            'fidocadjs-libraries-backup.json',
+        );
+    });
+
+    transferButtons.appendChild(importBtn);
+    transferButtons.appendChild(exportBtn);
+    p.appendChild(transferButtons);
+
+    const separator = document.createElement('hr');
+    separator.style.cssText = 'border: 0; border-top: 1px solid #ddd; margin: 0 0 14px;';
+    p.appendChild(separator);
 
     const info = document.createElement('p');
     info.textContent = getString('Lib_folder_info');
@@ -269,6 +362,67 @@ function buildLibrariesPanel(onLibrariesChanged?: () => void): HTMLElement {
     void LibraryFolder.getLinkedDirectoryName().then(showLinked);
 
     return p;
+}
+
+function importUserLibraries(
+    onImportLibrary: ImportLibrary,
+    onLibrariesChanged: (() => void | Promise<void>) | undefined,
+    importBtn: HTMLButtonElement,
+    exportBtn: HTMLButtonElement,
+): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.fcl,.txt,.json,application/json,text/plain';
+    input.multiple = true;
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    const cleanup = (): void => input.remove();
+    input.addEventListener('cancel', cleanup, { once: true });
+    input.addEventListener(
+        'change',
+        () => {
+            void (async () => {
+                importBtn.disabled = true;
+                let imported = 0;
+                try {
+                    for (const file of Array.from(input.files ?? [])) {
+                        try {
+                            if (/\.json$/i.test(file.name)) {
+                                const libraries = UserLibraryStorage.parseBackup(await file.text());
+                                for (const library of libraries) {
+                                    await onImportLibrary(library.content, `${library.prefix}.fcl`);
+                                    imported++;
+                                }
+                            } else {
+                                await onImportLibrary(await file.text(), file.name);
+                                imported++;
+                            }
+                        } catch (error) {
+                            console.error(`Failed to import libraries from "${file.name}":`, error);
+                            Toast.show(
+                                getString('Lib_import_error').replace('{0}', file.name),
+                                'error',
+                            );
+                        }
+                    }
+                    if (imported > 0) {
+                        await onLibrariesChanged?.();
+                        exportBtn.disabled = false;
+                        Toast.show(
+                            getString('Lib_import_done').replace('{0}', String(imported)),
+                            'info',
+                        );
+                    }
+                } finally {
+                    importBtn.disabled = false;
+                    cleanup();
+                }
+            })();
+        },
+        { once: true },
+    );
+    input.click();
 }
 
 function buildLanguagePanel(): HTMLElement {
@@ -362,6 +516,36 @@ function checkRow(label: string, name: string, value: boolean): HTMLElement {
     return row;
 }
 
+function fontRow(label: string, name: string, value: string): HTMLElement {
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; margin-bottom: 10px; gap: 8px;';
+
+    const lbl = document.createElement('label');
+    lbl.textContent = label;
+    lbl.style.cssText = 'flex: 1; color: #333;';
+    lbl.htmlFor = `opt-${name}`;
+
+    const select = document.createElement('select');
+    select.id = `opt-${name}`;
+    select.name = name;
+    select.style.cssText =
+        'width: 180px; padding: 4px 6px; border: 1px solid #ccc; ' +
+        'border-radius: 3px; font-size: 12px;';
+
+    const fonts = FONT_FAMILIES.includes(value) ? FONT_FAMILIES : [value, ...FONT_FAMILIES];
+    for (const font of fonts) {
+        const option = document.createElement('option');
+        option.value = font;
+        option.textContent = font;
+        option.selected = font === value;
+        select.appendChild(option);
+    }
+
+    row.appendChild(lbl);
+    row.appendChild(select);
+    return row;
+}
+
 function colorRow(label: string, name: string, value: string): HTMLElement {
     const row = document.createElement('div');
     row.style.cssText = 'display: flex; align-items: center; margin-bottom: 10px; gap: 8px;';
@@ -398,10 +582,15 @@ function collectDraft(draft: AppSettings, panels: Record<TabId, HTMLElement>): v
                 d[key] = input.checked;
             } else if (input.type === 'color') {
                 d[key] = input.value;
+            } else if (input.type === 'text') {
+                d[key] = input.value.trim();
             } else {
                 const n = parseFloat(input.value);
                 if (!isNaN(n)) d[key] = n;
             }
+        }
+        for (const select of panel.querySelectorAll<HTMLSelectElement>('select[name]')) {
+            d[select.name] = select.value;
         }
     }
 }

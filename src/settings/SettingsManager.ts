@@ -24,7 +24,11 @@ export interface AppSettings {
     selectionLTRColor: string;
     selectionRTLColor: string;
 
-    // TeX
+    // Text
+    defaultFont: string;
+    defaultFontSize: number;
+    nameValueFont: string;
+    nameValueFontSize: number;
     renderTeX: boolean;
 }
 
@@ -43,6 +47,10 @@ const DEFAULTS: AppSettings = {
     gridColor: '#6464c8',
     selectionLTRColor: '#008000',
     selectionRTLColor: '#0000ff',
+    defaultFont: 'Courier New',
+    defaultFontSize: 4,
+    nameValueFont: 'Courier New',
+    nameValueFontSize: 3,
     renderTeX: false,
 };
 
@@ -55,6 +63,10 @@ function isFiniteNumberInRange(v: unknown, min: number, max: number): v is numbe
 
 function isValidColor(v: unknown): v is string {
     return typeof v === 'string' && COLOR_RE.test(v);
+}
+
+function isValidFont(v: unknown): v is string {
+    return typeof v === 'string' && v.trim().length > 0 && v.length <= 200;
 }
 
 function sanitize(parsed: unknown): Partial<AppSettings> {
@@ -76,6 +88,11 @@ function sanitize(parsed: unknown): Partial<AppSettings> {
     if (isValidColor(p.gridColor)) out.gridColor = p.gridColor;
     if (isValidColor(p.selectionLTRColor)) out.selectionLTRColor = p.selectionLTRColor;
     if (isValidColor(p.selectionRTLColor)) out.selectionRTLColor = p.selectionRTLColor;
+    if (isValidFont(p.defaultFont)) out.defaultFont = p.defaultFont.trim();
+    if (isFiniteNumberInRange(p.defaultFontSize, 1, 2000)) out.defaultFontSize = p.defaultFontSize;
+    if (isValidFont(p.nameValueFont)) out.nameValueFont = p.nameValueFont.trim();
+    if (isFiniteNumberInRange(p.nameValueFontSize, 1, 2000))
+        out.nameValueFontSize = p.nameValueFontSize;
     if (typeof p.renderTeX === 'boolean') out.renderTeX = p.renderTeX;
     return out;
 }
@@ -125,6 +142,9 @@ export class SettingsManager {
         panel.setGridColor(s.gridColor);
         panel.setSelectionLTRColor(s.selectionLTRColor);
         panel.setSelectionRTLColor(s.selectionRTLColor);
+        const model = panel.getModel();
+        model.setDefaultTextStyle(s.defaultFont, s.defaultFontSize);
+        model.setTextFont(s.nameValueFont, s.nameValueFontSize);
         panel.setRenderTeX(s.renderTeX);
     }
 

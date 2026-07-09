@@ -302,7 +302,12 @@ class FidoCadJS {
         };
         this.macroPicker.onAddLibrary = () => this.pickAndImportLibrary();
         this.macroPicker.onConfigureLibrary = () => {
-            showOptionsDialog(this.circuitPanel, () => this.reloadAllLibraries(), 'libraries');
+            showOptionsDialog(
+                this.circuitPanel,
+                () => this.reloadAllLibraries(),
+                'libraries',
+                (content, fileName) => this.importLibrary(content, fileName),
+            );
         };
         this.circuitPanel.onSymbolizeRequested = () => {
             const dlg = new DialogSymbolize(

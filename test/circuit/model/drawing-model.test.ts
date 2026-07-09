@@ -64,4 +64,23 @@ describe('DrawingModel', () => {
         model.resetLibrary();
         expect(model.getLibrary().size).toBe(0);
     });
+
+    it('stores separate defaults for text and name/value labels', () => {
+        model.setDefaultTextStyle('Georgia', 12);
+        model.setTextFont('Helvetica', 5);
+
+        expect(model.getDefaultTextFont()).toBe('Georgia');
+        expect(model.getDefaultTextFontSize()).toBe(12);
+        expect(model.getTextFont()).toBe('Helvetica');
+        expect(model.getTextFontSize()).toBe(5);
+    });
+
+    it('applies name/value font size changes to existing primitives', () => {
+        const prim = new PrimitiveLine(0, 0, 10, 10, 0, false, false, 0, 3, 2, 0, '', 4);
+        model.addPrimitive(prim, true, null);
+
+        model.setTextFont('Helvetica', 6);
+
+        expect(prim.getMacroFontSize()).toBe(6);
+    });
 });

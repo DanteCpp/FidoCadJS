@@ -254,12 +254,9 @@ export class PropertiesPanelController {
                 contentInput.focus();
                 contentInput.select();
             });
-            // Font size (height) and font width — custom inputs with LaTeX auto-sync.
-            // For LaTeX text ($...$), changing either field auto-updates the other
-            // to maintain the default 10:7 aspect ratio.
+            // Height controls the default 10:7 aspect ratio. Width remains
+            // independently editable so users can deliberately stretch text.
             {
-                const isLatex = () => prim.getString().includes('$');
-
                 const siyRow = this.createPropertyRow(getString('prop_font_size'));
                 const siyInp = document.createElement('input');
                 siyInp.type = 'number';
@@ -283,21 +280,14 @@ export class PropertiesPanelController {
                 const handleSiyChange = () => {
                     const v = Number(siyInp.value);
                     prim.setFontDimension(v);
-                    if (isLatex()) {
-                        const newSix = Math.round((v * 7) / 10);
-                        sixInp.value = String(newSix);
-                        prim.setFontWidth(newSix);
-                    }
+                    const newSix = Math.max(1, Math.round((v * 7) / 10));
+                    sixInp.value = String(newSix);
+                    prim.setFontWidth(newSix);
                     redraw();
                 };
                 const handleSixChange = () => {
                     const v = Number(sixInp.value);
                     prim.setFontWidth(v);
-                    if (isLatex()) {
-                        const newSiy = Math.round((v * 10) / 7);
-                        siyInp.value = String(newSiy);
-                        prim.setFontDimension(newSiy);
-                    }
                     redraw();
                 };
                 siyInp.addEventListener('change', handleSiyChange);
