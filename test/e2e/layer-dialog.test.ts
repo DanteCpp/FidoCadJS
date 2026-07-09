@@ -8,7 +8,7 @@ LI 45 35 60 15 0
 
 async function openLayerDialog(page: import('@playwright/test').Page) {
     await page.locator('button', { hasText: 'View' }).hover();
-    await page.getByText('Layer options...', { exact: true }).click();
+    await page.getByText('Layer options', { exact: true }).click();
     await expect(page.locator('[data-testid="layer-dialog"]')).toBeVisible();
 }
 

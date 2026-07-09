@@ -9,22 +9,26 @@ import {
 } from './utils';
 
 test('text selection follows glyph ink instead of the whole string box', async ({ page }) => {
+    // Large text (six=40 → 69px font) so inter-glyph ink gaps dwarf the
+    // hit-test padding (capped at 0.75 logical units) even when the CI
+    // platform substitutes Courier New with another monospace font whose
+    // ink bounds differ by a few pixels.
     await gotoApp(page);
-    await loadCircuit(page, '[FIDOCAD]\nTY 50 50 14 10 0 0 0 Courier++New String\n');
+    await loadCircuit(page, '[FIDOCAD]\nTY 50 50 56 40 0 0 0 Courier++New String\n');
     await pressKey(page, 'a');
 
     const hitPoints = await page.evaluate(() => {
         const canvas = document.createElement('canvas');
-        canvas.width = 100;
-        canvas.height = 100;
+        canvas.width = 400;
+        canvas.height = 400;
         const ctx = canvas.getContext('2d')!;
-        ctx.font = '17px "Courier New", monospace';
+        ctx.font = '69px "Courier New", monospace';
 
         const inkBounds = (character: string) => {
-            const originX = 30;
-            const baseline = 60;
+            const originX = 100;
+            const baseline = 250;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.font = '17px "Courier New", monospace';
+            ctx.font = '69px "Courier New", monospace';
             ctx.textBaseline = 'alphabetic';
             ctx.fillStyle = '#000';
             ctx.fillText(character, originX, baseline);
@@ -51,7 +55,7 @@ test('text selection follows glyph ink instead of the whole string box', async (
             };
         };
 
-        const fontAscent = ctx.measureText('M').actualBoundingBoxAscent || 17 * 0.8;
+        const fontAscent = ctx.measureText('M').actualBoundingBoxAscent || 69 * 0.8;
         const s = inkBounds('S');
         const t = inkBounds('t');
         const g = inkBounds('g');
@@ -59,7 +63,7 @@ test('text selection follows glyph ink instead of the whole string box', async (
         const gOrigin = ctx.measureText('String').width - g.width;
         const gapStart = s.right;
         const gapEnd = tOrigin - t.left;
-        const verticalScale = (14 * 22) / (40 * 10);
+        const verticalScale = (56 * 22) / (40 * 40);
 
         return {
             gap: {
