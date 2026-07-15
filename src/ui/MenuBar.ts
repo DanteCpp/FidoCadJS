@@ -3,6 +3,7 @@ import { showOptionsDialog } from './OptionsDialog.js';
 import { showExportDialog, executeExport } from './ExportDialog.js';
 import { showLayerDialog } from './DialogLayer.js';
 import { showAboutDialog } from './DialogAbout.js';
+import { showShortcutsDialog } from './DialogShortcuts.js';
 import { triggerBlobDownload } from './download.js';
 import { getString } from '../i18n/i18n.js';
 
@@ -498,6 +499,13 @@ export class MenuBar {
                         '_blank',
                         'noopener,noreferrer',
                     ),
+            },
+            { kind: 'separator' },
+            {
+                kind: 'action',
+                label: getString('Shortcuts_menu'),
+                icon: 'info.png',
+                action: () => showShortcutsDialog(),
             },
             { kind: 'separator' },
             {

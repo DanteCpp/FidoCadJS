@@ -65,6 +65,13 @@ export class Ruler {
         const yb = cs.unmapYnosnap(ey);
         const length = Math.sqrt((xa - xb) * (xa - xb) + (ya - yb) * (ya - yb));
 
+        // Angle from the horizontal, in degrees. Measured in logical space so
+        // it reflects the drawing geometry (a 45° line reads 45°) regardless
+        // of independent X/Y zoom. Logical Y grows downward, so negating the
+        // vertical delta makes an upward-right drag a positive acute angle,
+        // matching the on-screen protractor intuition. Range: (-180, 180].
+        const angleDeg = (Math.atan2(-(yb - ya), xb - xa) * 180.0) / Math.PI;
+
         g.save();
         g.setLineDash([]);
         g.strokeStyle = '#00bb00';
@@ -129,14 +136,17 @@ export class Ruler {
         }
         g.stroke();
 
-        // Measurement labels: logical units and millimetres.
+        // Measurement labels: logical units, millimetres, and angle.
         const t1 = length.toFixed(2);
         const t2 = `${(length * MM_PER_UNIT).toFixed(2)} mm`;
+        const t3 = `${angleDeg.toFixed(2)}°`;
 
         const fontPx = 10 * dpr;
         g.font = `${fontPx}px "Lucida Sans", "Segoe UI", sans-serif`;
-        const boxW = Math.max(g.measureText(t1).width, g.measureText(t2).width) + 1 * dpr;
-        const boxH = 24 * dpr;
+        const boxW =
+            Math.max(g.measureText(t1).width, g.measureText(t2).width, g.measureText(t3).width) +
+            1 * dpr;
+        const boxH = 34 * dpr;
         const bx = ex + 10 * dpr;
 
         g.fillStyle = '#ffffff';
@@ -149,6 +159,7 @@ export class Ruler {
         g.textBaseline = 'alphabetic';
         g.fillText(t1, bx, ey + 10 * dpr);
         g.fillText(t2, bx, ey + 20 * dpr);
+        g.fillText(t3, bx, ey + 30 * dpr);
 
         g.restore();
     }

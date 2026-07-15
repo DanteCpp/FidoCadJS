@@ -227,10 +227,11 @@ export class GraphicsNull implements Graphics {
     ): void {}
 
     drawMathSegments(
-        _segments: LaidOutSegment[],
+        _lines: LaidOutSegment[][],
         _xa: number,
         _ya: number,
         _baseline: number,
+        _lineHeight: number,
         _fontPx: number,
         _needsStretching: boolean,
         _xyfactor: number,

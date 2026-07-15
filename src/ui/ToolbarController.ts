@@ -208,7 +208,7 @@ export class ToolbarController {
             'font-family: monospace; font-size: 11px; color: #555; min-width: 120px; text-align: right;';
         secondRow.appendChild(coordsLabel);
         this.circuitPanel.onCoordinatesChange = (lx, ly) => {
-            coordsLabel.textContent = `X: ${Math.round(lx)}  Y: ${Math.round(ly)}`;
+            coordsLabel.textContent = `X: ${lx.toFixed(2)}  Y: ${ly.toFixed(2)}`;
         };
 
         this.toolbar.appendChild(secondRow);

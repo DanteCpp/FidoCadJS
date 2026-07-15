@@ -196,6 +196,24 @@ export class KeyboardController {
             return;
         }
 
+        // ===== ARROWHEADS ON SELECTED PRIMITIVES =====
+        // Shift+S / Shift+E toggle a start / end arrowhead on any selected
+        // arrow-capable primitive (line, Bézier, complex curve). Handled before
+        // the single-key tool/transform shortcuts below, which ignore shiftKey
+        // and would otherwise treat these as Mirror (S) / Ellipse (E).
+        if (e.shiftKey && !isCtrlOrMeta && !isAlt) {
+            if (key === 's') {
+                e.preventDefault();
+                this.host.toggleArrowStartSelected();
+                return;
+            }
+            if (key === 'e') {
+                e.preventDefault();
+                this.host.toggleArrowEndSelected();
+                return;
+            }
+        }
+
         // ===== TOOL SELECTION (single key, case-insensitive) =====
         // A or Escape: Selection tool
         if (key === 'a' && !isCtrlOrMeta) {

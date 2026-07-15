@@ -24,6 +24,10 @@ export interface KeyboardHost {
     // Transform
     rotateSelected(): void;
     mirrorSelected(): void;
+    /** Toggle a start arrowhead on selected arrow-capable primitives. */
+    toggleArrowStartSelected(): void;
+    /** Toggle an end arrowhead on selected arrow-capable primitives. */
+    toggleArrowEndSelected(): void;
     deleteSelected(): void;
     startMoveSelected(): void;
     nudgeSelected(dx: number, dy: number): void;

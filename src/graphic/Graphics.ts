@@ -52,16 +52,19 @@ export interface Graphics {
         txt: string,
     ): void;
     /**
-     * Draw a laid-out mixed text/math run (see MathLayout). Plain-text segments
+     * Draw laid-out mixed text/math lines (see MathLayout). Plain-text segments
      * are drawn with the current font; math segments are filled as glyph paths
      * scaled from MathJax native units by `fontPx`. Shares the placement
      * transform (anchor, orientation, mirror, vertical stretch) with drawAdvText.
+     * `lines` holds one laid-out segment array per "\n"-separated line; each
+     * line's baseline is `baseline + i * lineHeight`.
      */
     drawMathSegments(
-        segments: LaidOutSegment[],
+        lines: LaidOutSegment[][],
         xa: number,
         ya: number,
         baseline: number,
+        lineHeight: number,
         fontPx: number,
         needsStretching: boolean,
         xyfactor: number,

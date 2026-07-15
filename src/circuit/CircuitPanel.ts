@@ -693,6 +693,24 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.onUndoStateChange?.();
     }
 
+    /** Toggle a start arrowhead on the selected arrow-capable primitives. */
+    toggleArrowStartSelected(): void {
+        if (this.editorActions.toggleArrowOnSelected(true)) {
+            this.model.setModified(true);
+            this.render();
+            this.onUndoStateChange?.();
+        }
+    }
+
+    /** Toggle an end arrowhead on the selected arrow-capable primitives. */
+    toggleArrowEndSelected(): void {
+        if (this.editorActions.toggleArrowOnSelected(false)) {
+            this.model.setModified(true);
+            this.render();
+            this.onUndoStateChange?.();
+        }
+    }
+
     alignLeftSelected(): void {
         this.editorActions.alignLeftSelected();
         if (this.selectionActions.getSelectedPrimitives().length > 0) this.model.setModified(true);

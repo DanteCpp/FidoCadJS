@@ -402,6 +402,39 @@ describe('Keyboard Shortcuts', () => {
             expect(prim.virtualPoint[1].x).toBe(-20); // mirrored across x=10
         });
 
+        it('Shift+E toggles an end arrowhead on the selected line', () => {
+            addLineToPanel(panel, 10, 10, 40, 10, 0);
+            selectAll(panel);
+            const prim = getModelPrimitives(panel)[0];
+            expect(prim.getArrowData().isArrowEnd()).toBe(false);
+
+            pressKey(canvas, 'e', { shiftKey: true });
+            expect(prim.getArrowData().isArrowEnd()).toBe(true);
+            // Toggling again removes it; the start arrow is never touched.
+            pressKey(canvas, 'e', { shiftKey: true });
+            expect(prim.getArrowData().isArrowEnd()).toBe(false);
+            expect(prim.getArrowData().isArrowStart()).toBe(false);
+        });
+
+        it('Shift+S toggles a start arrowhead without mirroring', () => {
+            addLineToPanel(panel, 10, 10, 40, 10, 0);
+            selectAll(panel);
+            const prim = getModelPrimitives(panel)[0];
+
+            pressKey(canvas, 's', { shiftKey: true });
+            expect(prim.getArrowData().isArrowStart()).toBe(true);
+            // Shift+S must NOT mirror: the endpoint x stays put.
+            expect(prim.virtualPoint[1].x).toBe(40);
+        });
+
+        it('Shift+E does nothing when nothing supporting arrows is selected', () => {
+            addLineToPanel(panel, 10, 10, 40, 10, 0);
+            const prim = getModelPrimitives(panel)[0];
+            // No selection.
+            pressKey(canvas, 'e', { shiftKey: true });
+            expect(prim.getArrowData().isArrowEnd()).toBe(false);
+        });
+
         it('M starts move mode for selected elements', () => {
             addLineToPanel(panel, 10, 10, 30, 10, 0);
             selectAll(panel);

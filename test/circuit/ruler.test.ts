@@ -76,6 +76,31 @@ describe('Ruler', () => {
         expect(ctx.texts).toContain((50 * 0.127).toFixed(2) + ' mm');
     });
 
+    it('reports a zero angle for a horizontal ruler', () => {
+        const ruler = new Ruler();
+        ruler.setStart(0, 0);
+        ruler.setEnd(100, 0);
+        ruler.setActive(true);
+
+        const ctx = makeFakeCtx();
+        ruler.draw(ctx, mc, 1);
+
+        expect(ctx.texts).toContain('0.00°');
+    });
+
+    it('reports the angle from horizontal for a diagonal ruler', () => {
+        const ruler = new Ruler();
+        ruler.setStart(0, 0);
+        ruler.setEnd(30, 40); // downward-right → negative angle
+        ruler.setActive(true);
+
+        const ctx = makeFakeCtx();
+        ruler.draw(ctx, mc, 1);
+
+        // atan2(-40, 30) = -53.13°
+        expect(ctx.texts).toContain('-53.13°');
+    });
+
     it('exposes its start point', () => {
         const ruler = new Ruler();
         ruler.setStart(12, 34);
