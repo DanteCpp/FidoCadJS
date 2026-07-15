@@ -82,6 +82,8 @@
     "stroke_size_oval": "Bent lines stroke width:",
     "PCBsizes": "PCB primitives",
     "connection_size": "Diameter of a connection primitive",
+    "default_arrow_length": "Default arrow length:",
+    "default_arrow_half_width": "Default arrow half width:",
     "Warning": "Warning!",
     "Warning_overwrite": "A file with the same name exists. Overwrite it?",
     "Warning_unsaved": "There are unsaved changes. Continue anyway?",

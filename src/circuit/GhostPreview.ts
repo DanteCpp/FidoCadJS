@@ -13,6 +13,7 @@ import { PrimitivePCBLine } from '../primitives/PrimitivePCBLine.js';
 import { PrimitivePCBPad } from '../primitives/PrimitivePCBPad.js';
 import { PrimitiveMacro } from '../primitives/PrimitiveMacro.js';
 import * as StandardLayers from '../layers/StandardLayers.js';
+import { Globals } from '../globals/Globals.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Per-tool ghost handlers (strategy implementations)
@@ -29,8 +30,8 @@ const lineGhost: ToolGhostHandler = (ctx) => {
             false,
             false,
             0,
-            3,
-            2,
+            Globals.arrowLength,
+            Globals.arrowHalfWidth,
             0,
             ctx.font,
             ctx.fontSize,
@@ -54,8 +55,8 @@ const bezierGhost: ToolGhostHandler = (ctx) => {
             false,
             false,
             0,
-            3,
-            2,
+            Globals.arrowLength,
+            Globals.arrowHalfWidth,
             0,
             ctx.font,
             ctx.fontSize,
@@ -126,8 +127,8 @@ const complexCurveGhost: ToolGhostHandler = (ctx) => {
             false,
             false,
             0,
-            3,
-            2,
+            Globals.arrowLength,
+            Globals.arrowHalfWidth,
             0,
             ctx.font,
             ctx.fontSize,

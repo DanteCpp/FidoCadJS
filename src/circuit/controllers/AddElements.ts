@@ -1,4 +1,5 @@
 import { DrawingModel } from '../model/DrawingModel.js';
+import { Globals } from '../../globals/Globals.js';
 import { UndoActions } from './UndoActions.js';
 import { SelectionActions } from './SelectionActions.js';
 import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
@@ -93,8 +94,8 @@ export class AddElements {
                 false,
                 false,
                 0,
-                3,
-                2,
+                Globals.arrowLength,
+                Globals.arrowHalfWidth,
                 0,
                 this.model.getTextFont(),
                 this.model.getTextFontSize(),
@@ -245,8 +246,8 @@ export class AddElements {
                 false,
                 false,
                 0,
-                3,
-                2,
+                Globals.arrowLength,
+                Globals.arrowHalfWidth,
                 0,
                 this.model.getTextFont(),
                 this.model.getTextFontSize(),

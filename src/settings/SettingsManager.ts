@@ -11,6 +11,8 @@ export interface AppSettings {
     antiAlias: boolean;
     strokeSize: number;
     connectionSize: number;
+    defaultArrowLength: number;
+    defaultArrowHalfWidth: number;
 
     // PCB
     pcbLineWidth: number;
@@ -39,6 +41,8 @@ const DEFAULTS: AppSettings = {
     antiAlias: false,
     strokeSize: 0.5,
     connectionSize: 2.0,
+    defaultArrowLength: 3,
+    defaultArrowHalfWidth: 2,
     pcbLineWidth: 5,
     pcbPadWidth: 5,
     pcbPadHeight: 5,
@@ -80,6 +84,10 @@ function sanitize(parsed: unknown): Partial<AppSettings> {
     if (typeof p.antiAlias === 'boolean') out.antiAlias = p.antiAlias;
     if (isFiniteNumberInRange(p.strokeSize, 0.01, 100)) out.strokeSize = p.strokeSize;
     if (isFiniteNumberInRange(p.connectionSize, 0.01, 100)) out.connectionSize = p.connectionSize;
+    if (isFiniteNumberInRange(p.defaultArrowLength, 0.01, 100))
+        out.defaultArrowLength = p.defaultArrowLength;
+    if (isFiniteNumberInRange(p.defaultArrowHalfWidth, 0.01, 100))
+        out.defaultArrowHalfWidth = p.defaultArrowHalfWidth;
     if (isFiniteNumberInRange(p.pcbLineWidth, 0.01, 1000)) out.pcbLineWidth = p.pcbLineWidth;
     if (isFiniteNumberInRange(p.pcbPadWidth, 0.01, 1000)) out.pcbPadWidth = p.pcbPadWidth;
     if (isFiniteNumberInRange(p.pcbPadHeight, 0.01, 1000)) out.pcbPadHeight = p.pcbPadHeight;
@@ -131,6 +139,8 @@ export class SettingsManager {
         panel.setAntiAlias(s.antiAlias);
         Globals.lineWidth = s.strokeSize;
         Globals.diameterConnection = s.connectionSize;
+        Globals.arrowLength = s.defaultArrowLength;
+        Globals.arrowHalfWidth = s.defaultArrowHalfWidth;
 
         const ae = panel.getAddElements();
         ae.setPcbThickness(s.pcbLineWidth);

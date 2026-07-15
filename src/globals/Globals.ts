@@ -13,6 +13,12 @@ export class Globals {
     static readonly diameterConnectionDefault = 2.0;
     static diameterConnection = Globals.diameterConnectionDefault;
 
+    static readonly arrowLengthDefault = 3;
+    static arrowLength = Globals.arrowLengthDefault;
+
+    static readonly arrowHalfWidthDefault = 2;
+    static arrowHalfWidth = Globals.arrowHalfWidthDefault;
+
     static readonly version = '0.24.9 gamma';
     static readonly isBeta = true;
 

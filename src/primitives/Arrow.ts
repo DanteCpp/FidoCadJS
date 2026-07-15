@@ -3,13 +3,14 @@ import type { MapCoordinates } from '../geom/MapCoordinates.js';
 import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { PointG } from '../graphic/PointG.js';
 import { PointPr } from '../export/PointPr.js';
+import { Globals } from '../globals/Globals.js';
 
 export class Arrow {
     static readonly flagLimiter = 0x01;
     static readonly flagEmpty = 0x02;
 
-    private arrowLength: number = 3;
-    private arrowHalfWidth: number = 1;
+    private arrowLength: number = Globals.arrowLength;
+    private arrowHalfWidth: number = Globals.arrowHalfWidth;
     private arrowStyle: number = 0;
     private arrowStart: boolean = false;
     private arrowEnd: boolean = false;

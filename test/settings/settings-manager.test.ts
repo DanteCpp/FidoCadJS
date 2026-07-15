@@ -51,6 +51,8 @@ describe('SettingsManager', () => {
             expect(s.antiAlias).toBe(false);
             expect(s.strokeSize).toBe(0.5);
             expect(s.connectionSize).toBe(2.0);
+            expect(s.defaultArrowLength).toBe(3);
+            expect(s.defaultArrowHalfWidth).toBe(2);
             expect(s.pcbLineWidth).toBe(5);
             expect(s.pcbPadWidth).toBe(5);
             expect(s.pcbPadHeight).toBe(5);
@@ -159,6 +161,8 @@ describe('SettingsManager', () => {
                     antiAlias: true,
                     strokeSize: 1.0,
                     connectionSize: 3.0,
+                    defaultArrowLength: 4.5,
+                    defaultArrowHalfWidth: 1.5,
                     pcbLineWidth: 8,
                     pcbPadWidth: 6,
                     pcbPadHeight: 7,
@@ -183,6 +187,8 @@ describe('SettingsManager', () => {
             expect(s.antiAlias).toBe(true);
             expect(s.strokeSize).toBe(1.0);
             expect(s.connectionSize).toBe(3.0);
+            expect(s.defaultArrowLength).toBe(4.5);
+            expect(s.defaultArrowHalfWidth).toBe(1.5);
             expect(s.pcbLineWidth).toBe(8);
             expect(s.pcbPadWidth).toBe(6);
             expect(s.pcbPadHeight).toBe(7);

@@ -185,6 +185,24 @@ function buildDrawingPanel(s: AppSettings): HTMLElement {
     p.appendChild(
         numRow(getString('connection_size'), 'connectionSize', s.connectionSize, 0.1, 0.1),
     );
+    p.appendChild(
+        numRow(
+            getString('default_arrow_length'),
+            'defaultArrowLength',
+            s.defaultArrowLength,
+            0.5,
+            0.1,
+        ),
+    );
+    p.appendChild(
+        numRow(
+            getString('default_arrow_half_width'),
+            'defaultArrowHalfWidth',
+            s.defaultArrowHalfWidth,
+            0.5,
+            0.1,
+        ),
+    );
     return p;
 }
 

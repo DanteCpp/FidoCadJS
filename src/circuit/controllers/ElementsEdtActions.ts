@@ -10,6 +10,7 @@ import { PrimitiveComplexCurve } from '../../primitives/PrimitiveComplexCurve.js
 import { PrimitivePolygon } from '../../primitives/PrimitivePolygon.js';
 import { PrimitiveAdvText } from '../../primitives/PrimitiveAdvText.js';
 import { PrimitiveMacro } from '../../primitives/PrimitiveMacro.js';
+import { Globals } from '../../globals/Globals.js';
 
 /**
  * ElementsEdtActions: main controller for adding and editing elements.
@@ -268,8 +269,8 @@ export class ElementsEdtActions {
                         false,
                         false,
                         0,
-                        3,
-                        2,
+                        Globals.arrowLength,
+                        Globals.arrowHalfWidth,
                         0,
                         this.model.getTextFont(),
                         this.model.getTextFontSize(),
