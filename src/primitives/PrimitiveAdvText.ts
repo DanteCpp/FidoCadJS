@@ -70,8 +70,12 @@ export class PrimitiveAdvText extends GraphicPrimitive {
 
     /** Canvas px size of one em for the current draw pass (math scale reference). */
     private fontPx: number = 0;
-    /** Laid-out math/text segments for the current draw pass, null when no math. */
-    private mathLayout: MathLayoutResult | null = null;
+    /**
+     * Laid-out math/text segments for the current draw pass, one entry per
+     * "\n"-separated line, null when no math. Always the same length as the
+     * line split of `txt` when set.
+     */
+    private mathLayout: MathLayoutResult[] | null = null;
 
     constructor();
     constructor(
@@ -199,21 +203,28 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             const lines = this.txt.split('\n');
             this.w = Math.max(...lines.map((line) => g.getStringWidth(line)));
 
-            // Render LaTeX math to glyph geometry when enabled. The advance and
-            // height come back analytically from MathJax, so the bounding box
-            // below (zoom-to-fit, selection) reflects the typeset math.
+            // Render LaTeX math to glyph geometry when enabled. Each line is
+            // laid out independently (math doesn't cross line breaks); the
+            // advance/height come back analytically from MathJax, so the
+            // bounding box below (zoom-to-fit, selection) reflects the
+            // typeset math. All lines share one line-pitch, sized to fit the
+            // tallest line's content.
             this.mathLayout = null;
             if (TeXMode.active && hasMathDelimiter(this.txt)) {
-                const layout = layoutMath(this.txt, this.fontPx, (s) => g.getStringWidth(s));
-                if (layout.hasMath) {
-                    this.mathLayout = layout;
-                    this.w = layout.totalWidth;
+                const mathLines = lines.map((line) =>
+                    layoutMath(line, this.fontPx, (s) => g.getStringWidth(s)),
+                );
+                if (mathLines.some((m) => m.hasMath)) {
+                    this.mathLayout = mathLines;
+                    this.w = Math.max(...mathLines.map((m) => m.totalWidth));
                     let asc = this.h;
                     let desc = this.th - this.h;
-                    for (const seg of layout.segments) {
-                        if (!seg.geom) continue;
-                        asc = Math.max(asc, seg.geom.heightEm * this.fontPx);
-                        desc = Math.max(desc, seg.geom.depthEm * this.fontPx);
+                    for (const m of mathLines) {
+                        for (const seg of m.segments) {
+                            if (!seg.geom) continue;
+                            asc = Math.max(asc, seg.geom.heightEm * this.fontPx);
+                            desc = Math.max(desc, seg.geom.depthEm * this.fontPx);
+                        }
                     }
                     this.h = asc;
                     this.th = asc + desc;
@@ -227,9 +238,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 this.needsStretching = true;
             }
 
-            // Math layout only typesets a single run — multi-line + math is
-            // not supported, so treat that combination as one line.
-            const lineCount = this.mathLayout ? 1 : lines.length;
+            const lineCount = lines.length;
             const totalTh = this.th * lineCount;
 
             if (this.orientation === 0) {
@@ -276,10 +285,11 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         // draw the string with the plain-text path (unchanged behaviour).
         if (this.mathLayout) {
             g.drawMathSegments(
-                this.mathLayout.segments,
+                this.mathLayout.map((m) => m.segments),
                 this.xa,
                 this.ya,
                 this.h,
+                this.th,
                 this.fontPx,
                 this.needsStretching,
                 this.xyfactor,
@@ -367,27 +377,30 @@ export class PrimitiveAdvText extends GraphicPrimitive {
 
             // For LaTeX text, size the selection box from the typeset math
             // geometry (analytical, in logical units), matching what is drawn.
+            // Each line is laid out independently, same as in draw().
             if (TeXMode.active && hasMathDelimiter(this.txt)) {
                 const emPxLogical = Math.trunc(this.six * PrimitiveAdvText.FONT_SIZE_RATIO + 0.5);
-                const layout = layoutMath(this.txt, emPxLogical, (s) => gSCI.getStringWidth(s));
-                if (layout.hasMath) {
+                const mathLinesSCI = linesSCI.map((line) =>
+                    layoutMath(line, emPxLogical, (s) => gSCI.getStringWidth(s)),
+                );
+                if (mathLinesSCI.some((m) => m.hasMath)) {
                     this.glyphHitTestingSCI = false;
-                    this.wSCI = Math.trunc(layout.totalWidth);
+                    this.wSCI = Math.trunc(Math.max(...mathLinesSCI.map((m) => m.totalWidth)));
                     let asc = this.hSCI;
                     let desc = this.thSCI - this.hSCI;
-                    for (const seg of layout.segments) {
-                        if (!seg.geom) continue;
-                        asc = Math.max(asc, seg.geom.heightEm * emPxLogical);
-                        desc = Math.max(desc, seg.geom.depthEm * emPxLogical);
+                    for (const m of mathLinesSCI) {
+                        for (const seg of m.segments) {
+                            if (!seg.geom) continue;
+                            asc = Math.max(asc, seg.geom.heightEm * emPxLogical);
+                            desc = Math.max(desc, seg.geom.depthEm * emPxLogical);
+                        }
                     }
                     this.hSCI = Math.trunc(asc);
                     this.thSCI = Math.trunc(asc + desc);
                 }
             }
 
-            // Math layout only handles a single run — multi-line + math is
-            // not supported, so treat that combination as one line.
-            const lineCountSCI = this.glyphHitTestingSCI ? linesSCI.length : 1;
+            const lineCountSCI = linesSCI.length;
 
             if (this.glyphHitTestingSCI) {
                 const linePitchSCI = this.thSCI;

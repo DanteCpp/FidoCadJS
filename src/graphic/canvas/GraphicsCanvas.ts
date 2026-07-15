@@ -264,10 +264,11 @@ export class GraphicsCanvas implements Graphics {
     }
 
     drawMathSegments(
-        segments: LaidOutSegment[],
+        lines: LaidOutSegment[][],
         xa: number,
         ya: number,
         baseline: number,
+        lineHeight: number,
         fontPx: number,
         needsStretching: boolean,
         xyfactor: number,
@@ -285,33 +286,36 @@ export class GraphicsCanvas implements Graphics {
         if (needsStretching) {
             this.ctx.scale(1, xyfactor);
         }
-        for (const seg of segments) {
-            if (seg.kind === 'text') {
-                this.ctx.fillText(seg.text ?? '', seg.x, baseline);
-                continue;
-            }
-            const geom = seg.geom;
-            if (!geom) continue;
-            // Native MathJax units (y-down, baseline 0) → px.
-            const s = fontPx / geom.unitsPerEm;
-            this.ctx.save();
-            this.ctx.translate(seg.x, baseline);
-            this.ctx.scale(s, s);
-            for (const glyph of geom.glyphs) {
-                const m = glyph.m;
+        for (let i = 0; i < lines.length; i++) {
+            const y = baseline + i * lineHeight;
+            for (const seg of lines[i]!) {
+                if (seg.kind === 'text') {
+                    this.ctx.fillText(seg.text ?? '', seg.x, y);
+                    continue;
+                }
+                const geom = seg.geom;
+                if (!geom) continue;
+                // Native MathJax units (y-down, baseline 0) → px.
+                const s = fontPx / geom.unitsPerEm;
                 this.ctx.save();
-                this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-                this.ctx.fill(new Path2D(glyph.d));
+                this.ctx.translate(seg.x, y);
+                this.ctx.scale(s, s);
+                for (const glyph of geom.glyphs) {
+                    const m = glyph.m;
+                    this.ctx.save();
+                    this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                    this.ctx.fill(new Path2D(glyph.d));
+                    this.ctx.restore();
+                }
+                for (const r of geom.rects) {
+                    const m = r.m;
+                    this.ctx.save();
+                    this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                    this.ctx.fillRect(r.x, r.y, r.w, r.h);
+                    this.ctx.restore();
+                }
                 this.ctx.restore();
             }
-            for (const r of geom.rects) {
-                const m = r.m;
-                this.ctx.save();
-                this.ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-                this.ctx.fillRect(r.x, r.y, r.w, r.h);
-                this.ctx.restore();
-            }
-            this.ctx.restore();
         }
         this.ctx.restore();
     }
