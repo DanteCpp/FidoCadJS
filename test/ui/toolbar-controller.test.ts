@@ -161,6 +161,6 @@ describe('ToolbarController', () => {
         const coords = toolbar.querySelector('[data-testid="coords-display"]') as HTMLElement;
         expect(coords.textContent).toBe('X: 0  Y: 0');
         facade.onCoordinatesChange?.(12.6, 7.2);
-        expect(coords.textContent).toBe('X: 13  Y: 7');
+        expect(coords.textContent).toBe('X: 12.60  Y: 7.20');
     });
 });

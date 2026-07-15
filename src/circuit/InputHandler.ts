@@ -461,7 +461,13 @@ export class InputHandler {
         const lx = this.mapCoords.unmapXsnap(sx);
         const ly = this.mapCoords.unmapYsnap(sy);
 
-        this.cb.onCoordinatesChange?.(lx, ly);
+        // The indicator reports the true (unsnapped) cursor position so its
+        // two-decimal readout carries sub-grid precision; snapping would round
+        // every value to an integer grid coordinate.
+        this.cb.onCoordinatesChange?.(
+            this.mapCoords.unmapXnosnap(sx),
+            this.mapCoords.unmapYnosnap(sy),
+        );
 
         // Interactive paste: the ghost tracks the cursor until the user commits.
         if (this.cb.isPastePlacing()) {

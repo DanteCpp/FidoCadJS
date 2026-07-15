@@ -8,6 +8,8 @@ import { RectangleG } from '../graphic/RectangleG.js';
 import * as GeometricDistances from '../geom/GeometricDistances.js';
 import { Globals } from '../globals/Globals.js';
 import { LayerDesc } from '../layers/LayerDesc.js';
+import { TeXMode } from '../graphic/TeXMode.js';
+import { layoutMath, hasMathDelimiter, type MathLayoutResult } from '../graphic/MathLayout.js';
 
 export abstract class GraphicPrimitive {
     static readonly NO_DRAG = -1;
@@ -54,6 +56,11 @@ export abstract class GraphicPrimitive {
     private _tc_y2: number = 0;
     private _tc_x3: number = 0;
     private _tc_y3: number = 0;
+    // Typeset-math layout for the name/value labels, when LaTeX rendering is
+    // active and the string contains a `$...$` delimiter (null otherwise).
+    private _tc_fontPx: number = 0;
+    private _tc_nameMath: MathLayoutResult | null = null;
+    private _tc_valueMath: MathLayoutResult | null = null;
 
     constructor(f: string = '', size: number = 4) {
         this.macroFont = f;
@@ -114,15 +121,54 @@ export abstract class GraphicPrimitive {
             this._tc_xb = coordSys.mapX(this._tc_x3, this._tc_y3);
             this._tc_yb = coordSys.mapY(this._tc_x3, this._tc_y3);
 
-            g.setFont(
-                this.macroFont,
-                Math.trunc((this.macroFontSize * 12 * coordSys.getYMagnitude()) / 7 + 0.5),
-            );
+            this._tc_fontPx = (this.macroFontSize * 12 * coordSys.getYMagnitude()) / 7 + 0.5;
+            g.setFont(this.macroFont, Math.trunc(this._tc_fontPx));
 
             this._tc_h = g.getFontAscent();
             this._tc_th = this._tc_h + g.getFontDescent();
             this._tc_w1 = this.name ? g.getStringWidth(this.name) : 0;
             this._tc_w2 = this.value ? g.getStringWidth(this.value) : 0;
+
+            // Lay out any LaTeX math in the name/value labels. When present the
+            // typeset advance replaces the plain-text width so bbox tracking,
+            // selection and zoom-to-fit match what is actually drawn; a taller
+            // formula (fractions, large operators) also grows the shared
+            // ascent/height used for both labels.
+            this._tc_nameMath = null;
+            this._tc_valueMath = null;
+            if (TeXMode.active) {
+                const measure = (s: string): number => g.getStringWidth(s);
+                let asc = this._tc_h;
+                let desc = this._tc_th - this._tc_h;
+                if (this.name && hasMathDelimiter(this.name)) {
+                    const m = layoutMath(this.name, this._tc_fontPx, measure);
+                    if (m.hasMath) {
+                        this._tc_nameMath = m;
+                        this._tc_w1 = m.totalWidth;
+                        for (const seg of m.segments) {
+                            if (!seg.geom) continue;
+                            asc = Math.max(asc, seg.geom.heightEm * this._tc_fontPx);
+                            desc = Math.max(desc, seg.geom.depthEm * this._tc_fontPx);
+                        }
+                    }
+                }
+                if (this.value && hasMathDelimiter(this.value)) {
+                    const m = layoutMath(this.value, this._tc_fontPx, measure);
+                    if (m.hasMath) {
+                        this._tc_valueMath = m;
+                        this._tc_w2 = m.totalWidth;
+                        for (const seg of m.segments) {
+                            if (!seg.geom) continue;
+                            asc = Math.max(asc, seg.geom.heightEm * this._tc_fontPx);
+                            desc = Math.max(desc, seg.geom.depthEm * this._tc_fontPx);
+                        }
+                    }
+                }
+                if (this._tc_nameMath || this._tc_valueMath) {
+                    this._tc_h = asc;
+                    this._tc_th = asc + desc;
+                }
+            }
 
             this._tc_tw1 = Math.round(this._tc_w1 / coordSys.getXMagnitude());
             this._tc_tw2 = Math.round(this._tc_w2 / coordSys.getXMagnitude());
@@ -154,12 +200,46 @@ export abstract class GraphicPrimitive {
             );
         }
 
-        // Phase 2: replace with DecoratedText for sub/superscript support
+        // Labels are drawn horizontally, unmirrored and unstretched, so the
+        // math path only needs the anchor, baseline (h) and font size; the
+        // remaining drawMathSegments transform arguments are the identity.
         const dt = g.getTextInterface();
-        if (this.name && this.name.length !== 0)
-            dt.drawString(this.name, this._tc_xa, this._tc_ya + this._tc_h);
-        if (this.value && this.value.length !== 0)
-            dt.drawString(this.value, this._tc_xb, this._tc_yb + this._tc_h);
+        if (this.name && this.name.length !== 0) {
+            if (this._tc_nameMath) {
+                g.drawMathSegments(
+                    [this._tc_nameMath.segments],
+                    this._tc_xa,
+                    this._tc_ya,
+                    this._tc_h,
+                    this._tc_th,
+                    this._tc_fontPx,
+                    false,
+                    1.0,
+                    0,
+                    false,
+                );
+            } else {
+                dt.drawString(this.name, this._tc_xa, this._tc_ya + this._tc_h);
+            }
+        }
+        if (this.value && this.value.length !== 0) {
+            if (this._tc_valueMath) {
+                g.drawMathSegments(
+                    [this._tc_valueMath.segments],
+                    this._tc_xb,
+                    this._tc_yb,
+                    this._tc_h,
+                    this._tc_th,
+                    this._tc_fontPx,
+                    false,
+                    1.0,
+                    0,
+                    false,
+                );
+            } else {
+                dt.drawString(this.value, this._tc_xb, this._tc_yb + this._tc_h);
+            }
+        }
     }
 
     saveText(extensions: boolean): string {

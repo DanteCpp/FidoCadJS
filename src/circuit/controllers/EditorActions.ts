@@ -4,6 +4,16 @@ import { SelectionActions } from './SelectionActions.js';
 import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import { PrimitiveMacro } from '../../primitives/PrimitiveMacro.js';
 import { MapCoordinates } from '../../geom/MapCoordinates.js';
+import type { Arrow } from '../../primitives/Arrow.js';
+
+/** A primitive that can carry start/end arrowheads (line, Bézier, curve). */
+interface ArrowCapable {
+    getArrowData(): Arrow;
+}
+
+function hasArrowData(p: GraphicPrimitive): p is GraphicPrimitive & ArrowCapable {
+    return typeof (p as Partial<ArrowCapable>).getArrowData === 'function';
+}
 
 /**
  * EditorActions: handles basic editing operations like rotate, mirror, move, delete.
@@ -78,6 +88,33 @@ export class EditorActions {
                 v.splice(i, 1);
             }
         }
+    }
+
+    /**
+     * Toggle a start (`atStart`) or end arrowhead on every selected primitive
+     * that supports arrows (lines, Bézier and complex curves). The whole
+     * selection is driven to a single state: if any affected primitive is
+     * currently missing the arrow, all get it; otherwise all lose it. No-op
+     * (returns false, no undo entry) when nothing selected supports arrows.
+     */
+    toggleArrowOnSelected(atStart: boolean): boolean {
+        const affected = this.model
+            .getPrimitiveVector()
+            .filter((p): p is GraphicPrimitive & ArrowCapable => p.isSelected() && hasArrowData(p));
+        if (affected.length === 0) return false;
+
+        const has = (a: Arrow): boolean => (atStart ? a.isArrowStart() : a.isArrowEnd());
+        const newVal = !affected.every((p) => has(p.getArrowData()));
+
+        this.undoActions.saveUndoState();
+        for (const prim of affected) {
+            const a = prim.getArrowData();
+            if (atStart) a.setArrowStart(newVal);
+            else a.setArrowEnd(newVal);
+            prim.setChanged(true);
+        }
+        this.model.setChanged(true);
+        return true;
     }
 
     /** Set layer for selected primitives */
