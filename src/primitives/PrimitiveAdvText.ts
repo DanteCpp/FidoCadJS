@@ -120,6 +120,24 @@ export class PrimitiveAdvText extends GraphicPrimitive {
         return PrimitiveAdvText.N_POINTS;
     }
 
+    /**
+     * Decode "\n" escape sequences from a FidoCad text field into real
+     * newline characters for in-memory storage and rendering. Any other use
+     * of a backslash (including pre-existing files with raw backslashes, e.g.
+     * LaTeX commands in math mode) is left untouched for backward compat.
+     */
+    private static unescapeText(s: string): string {
+        return s.replace(/\\n/g, '\n');
+    }
+
+    /**
+     * Inverse of unescapeText: encode real newlines so the text fits on the
+     * single physical line required by the FidoCad file format.
+     */
+    private static escapeText(s: string): string {
+        return s.replace(/\n/g, '\\n');
+    }
+
     checkSizes(): void {
         if (this.siy < PrimitiveAdvText.MINSIZE) this.siy = PrimitiveAdvText.MINSIZE;
         if (this.six < PrimitiveAdvText.MINSIZE) this.six = PrimitiveAdvText.MINSIZE;
@@ -175,7 +193,11 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             this.h = g.getFontAscent();
             this.th = this.h + g.getFontDescent();
             // Phase 2: replace with DecoratedText.getDecoratedStringWidth(txt)
-            this.w = g.getStringWidth(this.txt);
+            // "\n" splits the text into stacked lines; width is the widest
+            // line and each extra line adds one more line-pitch (this.th)
+            // below the first, tracked further down via lineCount.
+            const lines = this.txt.split('\n');
+            this.w = Math.max(...lines.map((line) => g.getStringWidth(line)));
 
             // Render LaTeX math to glyph geometry when enabled. The advance and
             // height come back analytically from MathJax, so the bounding box
@@ -205,13 +227,21 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 this.needsStretching = true;
             }
 
+            // Math layout only typesets a single run — multi-line + math is
+            // not supported, so treat that combination as one line.
+            const lineCount = this.mathLayout ? 1 : lines.length;
+            const totalTh = this.th * lineCount;
+
             if (this.orientation === 0) {
                 if (this.mirror) {
                     coordSys.trackPoint(this.xa - this.w, this.ya);
-                    coordSys.trackPoint(this.xa, this.ya + Math.trunc(this.th * this.xyfactor));
+                    coordSys.trackPoint(this.xa, this.ya + Math.trunc(totalTh * this.xyfactor));
                 } else {
                     coordSys.trackPoint(this.xa + this.w, this.ya);
-                    coordSys.trackPoint(this.xa, this.ya + Math.trunc(this.h * this.xyfactor));
+                    coordSys.trackPoint(
+                        this.xa,
+                        this.ya + Math.trunc((this.h + this.th * (lineCount - 1)) * this.xyfactor),
+                    );
                 }
             } else {
                 if (this.mirror) {
@@ -223,15 +253,15 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 }
                 const bbx1 = this.xa,
                     bby1 = this.ya;
-                let bbx2 = this.xa + this.th * this.si;
-                const bby2 = this.ya + this.th * this.co * this.xyfactor;
-                let bbx3 = this.xa + this.w * this.co + this.th * this.si;
-                const bby3 = this.ya + (this.th * this.co - this.w * this.si) * this.xyfactor;
+                let bbx2 = this.xa + totalTh * this.si;
+                const bby2 = this.ya + totalTh * this.co * this.xyfactor;
+                let bbx3 = this.xa + this.w * this.co + totalTh * this.si;
+                const bby3 = this.ya + (totalTh * this.co - this.w * this.si) * this.xyfactor;
                 let bbx4 = this.xa + this.w * this.co;
                 const bby4 = this.ya - this.w * this.si * this.xyfactor;
                 if (this.mirror) {
-                    bbx2 = this.xa - this.th * this.si;
-                    bbx3 = this.xa - this.w * this.co - this.th * this.si;
+                    bbx2 = this.xa - totalTh * this.si;
+                    bbx3 = this.xa - this.w * this.co - totalTh * this.si;
                     bbx4 = this.xa - this.w * this.co;
                 }
                 coordSys.trackPoint(Math.trunc(bbx1), Math.trunc(bby1));
@@ -264,7 +294,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 this.qq,
                 this.h,
                 this.w,
-                this.h,
+                this.th,
                 this.needsStretching,
                 this.orientation,
                 this.mirror,
@@ -294,7 +324,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 parts.push(tokens[++j]!);
                 if (j < nn - 1) parts.push(' ');
             }
-            this.txt = parts.join('');
+            this.txt = PrimitiveAdvText.unescapeText(parts.join(''));
         } else if (tokens[0] === 'TE') {
             if (nn < 4) throw new Error('Bad arguments on TE');
             this.virtualPoint[0]!.x = Globals.coord(tokens[1]);
@@ -309,7 +339,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 teParts.push(tokens[++j]!);
                 if (j < nn - 1) teParts.push(' ');
             }
-            this.txt = teParts.join('');
+            this.txt = PrimitiveAdvText.unescapeText(teParts.join(''));
             this.parseLayer('0');
         } else {
             throw new Error('Invalid primitive: programming error?');
@@ -328,7 +358,8 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0,
                 (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0,
             );
-            this.wSCI = Math.trunc(gSCI.getStringWidth(this.txt));
+            const linesSCI = this.txt.split('\n');
+            this.wSCI = Math.trunc(Math.max(...linesSCI.map((line) => gSCI.getStringWidth(line))));
             this.hSCI = gSCI.getFontAscent();
             this.thSCI = this.hSCI + gSCI.getFontDescent();
             this.glyphHitBoxesSCI = [];
@@ -354,22 +385,30 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                 }
             }
 
-            if (this.glyphHitTestingSCI) {
-                let prefix = '';
-                for (const character of this.txt) {
-                    prefix += character;
-                    if (/^\s$/u.test(character)) continue;
+            // Math layout only handles a single run — multi-line + math is
+            // not supported, so treat that combination as one line.
+            const lineCountSCI = this.glyphHitTestingSCI ? linesSCI.length : 1;
 
-                    const metrics = gSCI.measureGlyphInk(character);
-                    const endAdvance = gSCI.measureTextInk(prefix).advance;
-                    const origin = endAdvance - metrics.advance;
-                    this.glyphHitBoxesSCI.push({
-                        left: origin - metrics.left,
-                        top: this.hSCI - metrics.ascent,
-                        right: origin + metrics.right,
-                        bottom: this.hSCI + metrics.descent,
-                    });
-                }
+            if (this.glyphHitTestingSCI) {
+                const linePitchSCI = this.thSCI;
+                linesSCI.forEach((line, lineIndex) => {
+                    const yOffset = lineIndex * linePitchSCI;
+                    let prefix = '';
+                    for (const character of line) {
+                        prefix += character;
+                        if (/^\s$/u.test(character)) continue;
+
+                        const metrics = gSCI.measureGlyphInk(character);
+                        const endAdvance = gSCI.measureTextInk(prefix).advance;
+                        const origin = endAdvance - metrics.advance;
+                        this.glyphHitBoxesSCI.push({
+                            left: origin - metrics.left,
+                            top: this.hSCI - metrics.ascent + yOffset,
+                            right: origin + metrics.right,
+                            bottom: this.hSCI + metrics.descent + yOffset,
+                        });
+                    }
+                });
             }
 
             this.recalcSize = false;
@@ -386,6 +425,9 @@ export class PrimitiveAdvText extends GraphicPrimitive {
                     box.bottom *= stretch;
                 }
             }
+            // From here on thSCI represents the full stacked-lines block
+            // height (rectangle/polygon bounds below), not a single line's.
+            this.thSCI *= lineCountSCI;
             if ((this.sty & PrimitiveAdvText.TEXT_MIRRORED) !== 0) {
                 this.orientationSCI = -this.orientationSCI;
                 this.wSCI = -this.wSCI;
@@ -459,7 +501,7 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             `TY ${Globals.formatCoord(this.virtualPoint[0]!.x)} ` +
             `${Globals.formatCoord(this.virtualPoint[0]!.y)} ` +
             `${this.siy} ${this.six} ${this.o} ${this.sty} ${this.getLayer()} ` +
-            `${subsFont} ${this.txt}\n`
+            `${subsFont} ${PrimitiveAdvText.escapeText(this.txt)}\n`
         );
     }
 
@@ -598,9 +640,12 @@ export class PrimitiveAdvText extends GraphicPrimitive {
             (this.sty & PrimitiveAdvText.TEXT_ITALIC) !== 0,
             (this.sty & PrimitiveAdvText.TEXT_BOLD) !== 0,
         );
-        const textWidth = Math.trunc(gSCI.getStringWidth(this.txt));
+        const linesForIntersect = this.txt.split('\n');
+        const textWidth = Math.trunc(
+            Math.max(...linesForIntersect.map((line) => gSCI.getStringWidth(line))),
+        );
         const textAscent = gSCI.getFontAscent();
-        const textHeight = textAscent + gSCI.getFontDescent();
+        const textHeight = (textAscent + gSCI.getFontDescent()) * linesForIntersect.length;
 
         const angleRad = (this.o * Math.PI) / 180;
         let cos = Math.cos(angleRad);

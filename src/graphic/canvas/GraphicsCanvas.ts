@@ -204,7 +204,7 @@ export class GraphicsCanvas implements Graphics {
         qq: number,
         h: number,
         _w: number,
-        _th: number,
+        lineHeight: number,
         needsStretching: boolean,
         orientation: number,
         mirror: boolean,
@@ -219,17 +219,27 @@ export class GraphicsCanvas implements Graphics {
         // positive canvas rotate are both clockwise, so the sign carries over
         // directly. The draw point is (xa, qq+h) — qq = ya / xyfactor, so after
         // the vertical stretch the baseline lands at ya + h*xyfactor.
+        //
+        // "\n" in txt stacks additional lines below the first, one lineHeight
+        // (ascent+descent) apart; the loop below runs inside the same
+        // rotate/mirror/stretch transform so every line follows the anchor.
         const rad = (orientation * Math.PI) / 180;
+        const lines = txt.split('\n');
+        const drawLines = (x: number): void => {
+            for (let i = 0; i < lines.length; i++) {
+                this.ctx.fillText(lines[i]!, x, qq + h + i * lineHeight);
+            }
+        };
         this.ctx.save();
         if (orientation === 0) {
             if (mirror) {
                 // Mirrored, unrotated: Java does at.scale(-1, xyfactor) then
                 // drawString(txt, -xa, qq+h) so the glyphs land at +xa flipped.
                 this.ctx.scale(-1, xyfactor);
-                this.ctx.fillText(txt, -xa, qq + h);
+                drawLines(-xa);
             } else {
                 if (needsStretching) this.ctx.scale(1, xyfactor);
-                this.ctx.fillText(txt, xa, qq + h);
+                drawLines(xa);
             }
         } else if (mirror) {
             // Rotated and mirrored: Java concatenates scale(-1,1), then
@@ -240,7 +250,7 @@ export class GraphicsCanvas implements Graphics {
             this.ctx.rotate(rad);
             this.ctx.translate(xa, -ya);
             if (needsStretching) this.ctx.scale(1, xyfactor);
-            this.ctx.fillText(txt, -xa, qq + h);
+            drawLines(-xa);
         } else {
             // Rotated only: Java rotates by -orientation about (xa, ya), then
             // optional stretch, and draws at (xa, qq+h).
@@ -248,7 +258,7 @@ export class GraphicsCanvas implements Graphics {
             this.ctx.rotate(-rad);
             this.ctx.translate(-xa, -ya);
             if (needsStretching) this.ctx.scale(1, xyfactor);
-            this.ctx.fillText(txt, xa, qq + h);
+            drawLines(xa);
         }
         this.ctx.restore();
     }

@@ -321,10 +321,15 @@ export class ExportTikZ implements Exporter {
          * Text is emitted verbatim — no escaping. Users embed LaTeX
          * commands directly in FidoCad text primitives.
          * Font size/style/orientation are ignored; LaTeX handles formatting.
+         *
+         * "\n" stacks additional lines via \shortstack, since a plain node
+         * body does not break lines on its own.
          */
+        const lines = text.split('\n').map((line) => escapeLatex(line));
+        const content = lines.length > 1 ? `\\shortstack[l]{${lines.join('\\\\')}}` : lines[0];
         this.buffer.push(
             `\\node[anchor=north west, color=layer${layer}] at (${this.cLe(x)},${this.cLe(y)}) ` +
-                `{${escapeLatex(text)}};`,
+                `{${content}};`,
         );
     }
 

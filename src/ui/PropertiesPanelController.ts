@@ -245,11 +245,21 @@ export class PropertiesPanelController {
 
         if (prim instanceof PrimitiveAdvText) {
             addSection(getString('Text'));
-            const contentInput = addText(
-                getString('prop_content'),
-                () => prim.getString(),
-                (v) => prim.setString(v),
-            );
+            // Textarea (not addText's single-line <input>) so users can type
+            // real newlines directly; PrimitiveAdvText renders "\n" as stacked
+            // lines and escapes it as "\n" when saving to the FidoCad format.
+            const contentRow = this.createPropertyRow(getString('prop_content'));
+            const contentInput = document.createElement('textarea');
+            contentInput.value = prim.getString();
+            contentInput.rows = 3;
+            contentInput.style.cssText =
+                'flex: 1; padding: 4px; font-size: 12px; resize: vertical; font-family: inherit;';
+            contentInput.addEventListener('input', () => {
+                prim.setString(contentInput.value);
+                redraw();
+            });
+            contentRow.appendChild(contentInput);
+            form.appendChild(contentRow);
             requestAnimationFrame(() => {
                 contentInput.focus();
                 contentInput.select();

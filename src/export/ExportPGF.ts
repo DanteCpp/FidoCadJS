@@ -381,12 +381,17 @@ export class ExportPGF implements Exporter {
          *
          * Text is emitted verbatim — no escaping. Users can embed LaTeX
          * commands directly in FidoCad text primitives (e.g. \small $R_1$).
+         *
+         * "\n" stacks additional lines via \shortstack, since \pgfbox only
+         * places a single box.
          */
+        const lines = text.split('\n').map((line) => escapeLatex(line));
+        const content = lines.length > 1 ? `\\shortstack[l]{${lines.join('\\\\')}}` : lines[0];
 
         this.buffer.push(`\\begin{pgfmagnify}{1}{-1}`);
         this.buffer.push(
             `\\pgfputat{\\pgfxy(${this.cLe(x)},${this.cLe(-y)})}` +
-                `{\\pgfbox[left,top]{${escapeLatex(text)}}}`,
+                `{\\pgfbox[left,top]{${content}}}`,
         );
         this.buffer.push(`\\end{pgfmagnify}`);
     }

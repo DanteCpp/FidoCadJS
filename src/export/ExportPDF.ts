@@ -337,39 +337,57 @@ export class ExportPDF implements Exporter {
 
         // Render LaTeX math (between $...$) as filled glyph paths; plain text
         // stays a PDF text run. Pen advances come from MathLayout (emPx = ys).
-        const layout = layoutMath(text, ys, (s) => s.length * 0.6 * ys);
-        if (!layout.hasMath) {
-            this.emitPdfTextRun(text, 0, x, y, ys, ratio, isMirrored, orientation, font);
-            return;
-        }
-        for (const seg of layout.segments) {
-            if (seg.kind === 'math' && seg.geom) {
-                this.emitPdfMathRun(seg.geom, seg.x, x, y, ys, ratio, isMirrored, orientation);
-            } else {
-                this.emitPdfTextRun(
-                    seg.text ?? '',
-                    seg.x,
-                    x,
-                    y,
-                    ys,
-                    ratio,
-                    isMirrored,
-                    orientation,
-                    font,
-                );
+        // "\n" stacks additional lines below the first (dy per line, same
+        // 1.2x pitch convention as the SVG exporter and the in-place editor).
+        const lineHeight = ys * 1.2;
+        for (const [i, line] of text.split('\n').entries()) {
+            const dy = i * lineHeight;
+            const layout = layoutMath(line, ys, (s) => s.length * 0.6 * ys);
+            if (!layout.hasMath) {
+                this.emitPdfTextRun(line, 0, dy, x, y, ys, ratio, isMirrored, orientation, font);
+                continue;
+            }
+            for (const seg of layout.segments) {
+                if (seg.kind === 'math' && seg.geom) {
+                    this.emitPdfMathRun(
+                        seg.geom,
+                        seg.x,
+                        dy,
+                        x,
+                        y,
+                        ys,
+                        ratio,
+                        isMirrored,
+                        orientation,
+                    );
+                } else {
+                    this.emitPdfTextRun(
+                        seg.text ?? '',
+                        seg.x,
+                        dy,
+                        x,
+                        y,
+                        ys,
+                        ratio,
+                        isMirrored,
+                        orientation,
+                        font,
+                    );
+                }
             }
         }
     }
 
     /**
-     * Emit a plain-text run. With `dx === 0` this reproduces the original
-     * single-string text placement exactly; a non-zero `dx` advances the run
-     * horizontally (mixed text/math). Mirror/rotation use the same chain as
-     * the original exporter.
+     * Emit a plain-text run. With `dx === 0 && dy === 0` this reproduces the
+     * original single-string text placement exactly; a non-zero `dx` advances
+     * the run horizontally (mixed text/math), `dy` stacks it under an earlier
+     * line. Mirror/rotation use the same chain as the original exporter.
      */
     private emitPdfTextRun(
         text: string,
         dx: number,
+        dy: number,
         x: number,
         y: number,
         ys: number,
@@ -389,8 +407,8 @@ export class ExportPDF implements Exporter {
                 `  ${this.fmt(Math.cos(a))} ${this.fmt(Math.sin(a))} ${this.fmt(-Math.sin(a))} ${this.fmt(Math.cos(a))} 0 0 cm`,
             );
         }
-        if (dx !== 0) {
-            this.content.push(`  1 0 0 1 ${this.fmt(dx)} 0 cm`);
+        if (dx !== 0 || dy !== 0) {
+            this.content.push(`  1 0 0 1 ${this.fmt(dx)} ${this.fmt(dy)} cm`);
         }
         this.content.push(isMirrored ? '  -1 0 0 -1 0 0 cm' : '  1 0 0 -1 0 0 cm');
         this.content.push(`  1 0 0 ${this.fmt(ratio)} 0 ${this.fmt(-ys * ratio * 0.8)} cm`);
@@ -408,6 +426,7 @@ export class ExportPDF implements Exporter {
     private emitPdfMathRun(
         geom: MathGeometry,
         dx: number,
+        dy: number,
         x: number,
         y: number,
         ys: number,
@@ -424,8 +443,8 @@ export class ExportPDF implements Exporter {
                 `  ${this.fmt(Math.cos(a))} ${this.fmt(Math.sin(a))} ${this.fmt(-Math.sin(a))} ${this.fmt(Math.cos(a))} 0 0 cm`,
             );
         }
-        if (dx !== 0) {
-            this.content.push(`  1 0 0 1 ${this.fmt(dx)} 0 cm`);
+        if (dx !== 0 || dy !== 0) {
+            this.content.push(`  1 0 0 1 ${this.fmt(dx)} ${this.fmt(dy)} cm`);
         }
         if (isMirrored) {
             this.content.push('  -1 0 0 1 0 0 cm');

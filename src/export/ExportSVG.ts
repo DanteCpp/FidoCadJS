@@ -375,27 +375,40 @@ export class ExportSVG implements Exporter {
 
         // Render LaTeX math (between $...$) as embedded glyph paths; plain text
         // stays an SVG <text>. The whole run shares this group's transform.
+        // "\n" stacks additional lines below the first, each in its own
+        // sub-group offset by one line-pitch (matches the 1.2x convention
+        // used by the in-place text editor).
         const fontSize = sizex * 2;
-        const layout = layoutMath(text, fontSize, (s) => s.length * 0.6 * fontSize);
-        if (layout.hasMath) {
-            for (const seg of layout.segments) {
-                if (seg.kind === 'math' && seg.geom) {
-                    this.buffer.push(this.svgMathGroup(seg.geom, seg.x, fontSize));
-                } else {
-                    this.buffer.push(
-                        this.svgTextElement(
-                            seg.text ?? '',
-                            seg.x,
-                            fontSize,
-                            isBold,
-                            isItalic,
-                            fontname,
-                        ),
-                    );
+        const lineHeight = fontSize * 1.2;
+        for (const [i, line] of text.split('\n').entries()) {
+            const dy = i * lineHeight;
+            if (dy !== 0) this.buffer.push(`<g transform="translate(0,${this.fmt(dy)})">`);
+
+            const layout = layoutMath(line, fontSize, (s) => s.length * 0.6 * fontSize);
+            if (layout.hasMath) {
+                for (const seg of layout.segments) {
+                    if (seg.kind === 'math' && seg.geom) {
+                        this.buffer.push(this.svgMathGroup(seg.geom, seg.x, fontSize));
+                    } else {
+                        this.buffer.push(
+                            this.svgTextElement(
+                                seg.text ?? '',
+                                seg.x,
+                                fontSize,
+                                isBold,
+                                isItalic,
+                                fontname,
+                            ),
+                        );
+                    }
                 }
+            } else {
+                this.buffer.push(
+                    this.svgTextElement(line, 0, fontSize, isBold, isItalic, fontname),
+                );
             }
-        } else {
-            this.buffer.push(this.svgTextElement(text, 0, fontSize, isBold, isItalic, fontname));
+
+            if (dy !== 0) this.buffer.push('</g>');
         }
         this.buffer.push('</g>\n');
     }
