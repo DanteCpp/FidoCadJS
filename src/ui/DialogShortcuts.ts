@@ -15,7 +15,9 @@ interface ShortcutGroup {
 /**
  * The full FidoCadJS keyboard map. Kept in sync with KeyboardController
  * (single-key tools, transforms, arrowheads, clipboard) and MenuBar (file/edit
- * accelerators). `Ctrl`/`Alt` are displayed as `⌘`/`⌥` on macOS (see displayKey).
+ * accelerators). Modifiers are shown as `Ctrl`/`Alt` on every platform: the
+ * browser reserves most ⌘ combos on macOS (⌘N, ⌘S, ⌘W, …), so the app's
+ * bindings fire on the Ctrl key there too.
  */
 const SHORTCUT_GROUPS: ShortcutGroup[] = [
     {
@@ -85,30 +87,10 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     },
 ];
 
-/** True when running on a macOS/iOS device (jsdom-safe). */
-function isMac(): boolean {
-    if (typeof navigator === 'undefined') return false;
-    const platform = navigator.platform || '';
-    const ua = navigator.userAgent || '';
-    return /Mac|iPhone|iPad|iPod/.test(platform) || /Mac OS X/.test(ua);
-}
-
-/**
- * Map a logical modifier name to its display label for the current platform.
- * On macOS the app's bindings fire on ⌘ (metaKey) and ⌥ (altKey), so the
- * cheatsheet shows those symbols instead of Ctrl/Alt.
- */
-function displayKey(label: string): string {
-    if (!isMac()) return label;
-    if (label === 'Ctrl') return '⌘';
-    if (label === 'Alt') return '⌥';
-    return label;
-}
-
 /** Build a styled <kbd> element for one key cap. */
 function keyCap(label: string): HTMLElement {
     const kbd = document.createElement('kbd');
-    kbd.textContent = displayKey(label);
+    kbd.textContent = label;
     kbd.style.cssText =
         'display: inline-block; padding: 2px 7px; margin: 0 2px; ' +
         'font-family: monospace; font-size: 11px; line-height: 1.4; color: #333; ' +

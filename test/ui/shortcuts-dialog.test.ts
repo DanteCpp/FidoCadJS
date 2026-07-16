@@ -32,8 +32,8 @@ describe('DialogShortcuts', () => {
         expect(text).not.toContain('Libraries');
         expect(text).not.toContain('alternate');
 
-        // Keys are rendered as <kbd> caps. (jsdom is treated as non-mac, so the
-        // Ctrl label is shown verbatim rather than ⌘.)
+        // Keys are rendered as <kbd> caps, with modifiers shown as Ctrl/Alt on
+        // every platform (no ⌘ substitution on macOS).
         const caps = Array.from(dlg!.querySelectorAll('kbd')).map((k) => k.textContent);
         expect(caps).toContain('Ctrl');
         expect(caps).toContain('L');
