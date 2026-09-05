@@ -19,6 +19,7 @@ import { Library } from './librarymodel/Library.js';
 import { Category } from './librarymodel/Category.js';
 import { MacroDesc } from './primitives/MacroDesc.js';
 import type { ContextMenuAction } from './macropicker/MacroPicker.js';
+import { initDesktopIntegration, isDesktop } from './desktop/desktopBridge.js';
 
 /**
  * Minimal typings for the File Handling API (Launch Queue). These are not yet
@@ -251,6 +252,18 @@ class FidoCadJS {
      * handle so a later Save writes straight back to the same file.
      */
     private initFileHandling(): void {
+        // The desktop build has no Launch Queue: Electron delivers the file
+        // over IPC instead, and the bridge wraps it in an equivalent handle.
+        initDesktopIntegration({
+            librariesReady: this.librariesReady,
+            openCircuit: (file, handle) => {
+                this.circuitPanel.loadCircuit(file.text);
+                this.circuitPanel.setFileName(file.name);
+                this.circuitPanel.setFileHandle(handle);
+            },
+            isDirty: () => this.circuitPanel.getModel().isModified(),
+        });
+
         const launchQueue = (window as unknown as { launchQueue?: LaunchQueue }).launchQueue;
         if (!launchQueue) return;
         launchQueue.setConsumer(async (params: LaunchParams) => {
@@ -271,6 +284,9 @@ class FidoCadJS {
     }
 
     private registerServiceWorker(): void {
+        // The desktop app already ships every asset locally, and a worker
+        // cannot be registered on the app:// scheme it is served from.
+        if (isDesktop()) return;
         if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
         const base = import.meta.env.BASE_URL;
         const register = () => {

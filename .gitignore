@@ -8,6 +8,10 @@ node_modules/
 
 # Build output
 dist/
+dist-desktop/
+
+# Electron packaging output
+release/
 
 # Tauri build artifacts and generated schemas
 src-tauri/target/

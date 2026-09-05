@@ -34,6 +34,7 @@
   - [Development Server](#development-server)
   - [Project Architecture](#project-architecture)
   - [Building from Source](#building-from-source)
+  - [Desktop App](#desktop-app)
   - [Scripts Reference](#scripts-reference)
   - [Testing](#testing)
   - [Coding Conventions](#coding-conventions)
@@ -219,9 +220,14 @@ The project is currently at a **beta** release. Editing, parsing, and SVG export
 ```
 FidoCadJS/
     ├── index.html           # Entry HTML
-    ├── vite.config.ts       # Vite build configuration
+    ├── vite.config.ts       # Vite build configuration (web)
+    ├── vite.config.desktop.ts  # Vite build configuration (Electron renderer)
+    ├── electron-builder.yml # Desktop packaging targets
     ├── tsconfig.json        # Strict TypeScript configuration
     ├── package.json         # Dependencies and scripts
+    ├── desktop/
+    │   ├── main.cjs         # Electron main process
+    │   └── preload.cjs      # Privileged bridge exposed to the renderer
     ├── src/
     │   ├── app.ts           # Application entry point and UI bootstrap
     │   ├── circuit/         # Editor core
@@ -251,6 +257,7 @@ FidoCadJS/
     │   ├── settings/        # Persisted application settings
     │   ├── i18n/            # Internationalization framework
     │   ├── globals/         # Constants and utility functions
+    │   ├── desktop/         # Electron integration (OS file open, close guard)
     │   └── vendor/          # Vendored third-party code (KaTeX shim)
     ├── test/                # Unit and E2E test suites
     └── public/
@@ -295,6 +302,25 @@ Output goes to `dist/`. The build target is ES2022, with full sourcemaps.
 npm run build
 ```
 
+### Desktop App
+
+FidoCadJS also builds as a standalone desktop application — the same editor,
+wrapped in Electron, with no browser and no network needed.
+
+```bash
+npm run desktop:start     # build and launch
+npm run desktop:dist      # package installers for the host platform
+```
+
+Targets are AppImage and deb (Linux), NSIS (Windows), and dmg (macOS). Because
+Electron bundles its own Chromium, the desktop build keeps every capability the
+web app has — including native Save dialogs, save-in-place, and linked library
+folders — and adds file associations, so a `.fcd` opened from the file manager
+launches straight into the editor.
+
+See [docs/desktop.md](docs/desktop.md) for the architecture, the development
+loop, and host prerequisites for packaging.
+
 ### Scripts Reference
 
 | Command | Description |
@@ -307,6 +333,9 @@ npm run build
 | `npm run test:e2e` | Run Playwright E2E tests (headless) |
 | `npm run test:e2e:ui` | Run Playwright E2E tests (interactive UI) |
 | `npm run typecheck` | TypeScript type checking (`tsc --noEmit`) |
+| `npm run desktop:start` | Build and launch the Electron desktop app |
+| `npm run desktop:smoke` | Headless end-to-end check of the desktop shell |
+| `npm run desktop:dist` | Package installers for the host platform |
 
 ### Testing
 

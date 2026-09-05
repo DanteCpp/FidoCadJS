@@ -34,11 +34,14 @@ and jsdom. It was originaly developed as a browser port of FidoCadJ.
 - `docs/`: project documentation.
 - `scripts/`: repository automation and validation helpers.
 - `public/`: static assets served by Vite.
+- `desktop/`: Electron main process and preload bridge (see `docs/desktop.md`).
 - `FIDOSPECS.md`: FidoCad/FidoCadJ format reference.
 
 ## Testing
 
 - Use `npm test` for the main Vitest suite.
 - Use `npm run build` for production build validation.
+- Use `npm run desktop:smoke` after touching the Electron shell or anything it
+  depends on (the app:// bundle, library loading, file open/save).
 - Use Playwright or browser tests only when changing interactive UI behavior.
 - Prefer e2e tests to unit tests. 

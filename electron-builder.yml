@@ -1,0 +1,61 @@
+appId: net.fidocadjs.app
+productName: FidoCadJS
+copyright: (c) 2026 Dante Loi. Released under the GPL v3 license.
+
+directories:
+  output: release
+  buildResources: build
+
+# Only the built renderer, the Electron entry points, and the icons the main
+# process loads at runtime. Everything else (src/, test/, the web dist/) stays
+# out of the package.
+files:
+  - dist-desktop/**/*
+  - desktop/**/*
+  - public/icons/icon-512.png
+  - package.json
+
+# .fcd files are plain text; the main process picks them off argv (Linux and
+# Windows) or the open-file event (macOS).
+fileAssociations:
+  - ext: fcd
+    name: FidoCad circuit
+    description: FidoCad circuit drawing
+    # A dedicated type, not text/plain: registering the broad type would offer
+    # FidoCadJS as a handler for every text file on the system.
+    mimeType: application/x-fidocad
+    role: Editor
+
+linux:
+  # Required by the .deb target for the Maintainer control field. Uses the
+  # same address that authors the repository's commits.
+  maintainer: Dante Loi <danteloi1993@gmail.com>
+  # Without this the binary takes its name from package.json ("fidocadts").
+  executableName: fidocadjs
+  category: Science
+  icon: public/icons/icon-512.png
+  # Electron derives the X11 WM_CLASS / Wayland app_id from package.json's
+  # "name" before main.cjs runs, so app.setName() cannot change it and this
+  # has to track that field. Without a match the launcher shows a generic
+  # icon for the running window instead of the app's own.
+  desktop:
+    entry:
+      StartupWMClass: fidocadts
+  target:
+    - AppImage
+    - deb
+
+win:
+  icon: public/icons/icon-512.png
+  target:
+    - nsis
+
+mac:
+  category: public.app-category.developer-tools
+  icon: public/icons/icon-512.png
+  target:
+    - dmg
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
