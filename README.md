@@ -312,6 +312,12 @@ npm run desktop:start     # build and launch
 npm run desktop:dist      # package installers for the host platform
 ```
 
+On Arch Linux it installs from the AUR, built against the system Electron:
+
+```bash
+yay -S fidocadjs          # or fidocadjs-git to track main
+```
+
 Targets are AppImage and deb (Linux), NSIS (Windows), and dmg (macOS). Because
 Electron bundles its own Chromium, the desktop build keeps every capability the
 web app has — including native Save dialogs, save-in-place, and linked library
@@ -319,7 +325,8 @@ folders — and adds file associations, so a `.fcd` opened from the file manager
 launches straight into the editor.
 
 See [docs/desktop.md](docs/desktop.md) for the architecture, the development
-loop, and host prerequisites for packaging.
+loop, and host prerequisites for packaging, and
+[packaging/aur/](packaging/aur/README.md) for the Arch packages.
 
 ### Scripts Reference
 

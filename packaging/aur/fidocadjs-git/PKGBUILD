@@ -1,0 +1,105 @@
+# Maintainer: Dante Loi <danteloi1993@gmail.com>
+
+# The Electron runtime to build against and depend on. Arch keeps several
+# versioned electron packages in parallel; pin one so an Electron major bump
+# cannot silently break the app, and bump this after testing the new runtime.
+_electronversion=43
+
+pkgname=fidocadjs-git
+_pkgname=fidocadjs
+_pkgsrc=FidoCadJS
+pkgver=0.1.0.r0.g0000000
+pkgrel=1
+pkgdesc='Electronic schematic and PCB layout editor, compatible with the FidoCad (.fcd) format'
+arch=('any')
+url='https://github.com/DanteCpp/FidoCadJS'
+license=('GPL-3.0-or-later')
+depends=("electron${_electronversion}")
+makedepends=('npm' 'nodejs>=22' 'asar' 'git')
+provides=('fidocadjs')
+conflicts=('fidocadjs')
+source=("${_pkgsrc}::git+${url}.git")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "${_pkgsrc}"
+    printf '%s.r%s.g%s' \
+        "$(node -p 'require("./package.json").version')" \
+        "$(git rev-list --count HEAD)" \
+        "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+    cd "${_pkgsrc}"
+    # The app runs on the system Electron, so npm has no reason to pull the
+    # ~100 MB prebuilt binary that the electron devDependency would fetch.
+    export ELECTRON_SKIP_BINARY_DOWNLOAD=1
+    npm ci --cache "${srcdir}/npm-cache"
+}
+
+build() {
+    cd "${_pkgsrc}"
+    npm run desktop:build
+    # Sourcemaps are ~4 MB and of no use in a distro package.
+    find dist-desktop -name '*.map' -delete
+
+    # Stage exactly what the app loads at runtime. The main process resolves
+    # the renderer at ../dist-desktop and its window icon at
+    # ../public/icons/, both relative to desktop/, so the layout inside the
+    # archive has to mirror the repository.
+    install -d "${srcdir}/app/public/icons"
+    cp -r desktop dist-desktop "${srcdir}/app/"
+    cp package.json "${srcdir}/app/"
+    cp public/icons/icon-512.png "${srcdir}/app/public/icons/"
+
+    asar pack "${srcdir}/app" "${srcdir}/app.asar"
+}
+
+package() {
+    install -Dm644 "${srcdir}/app.asar" "${pkgdir}/usr/lib/${_pkgname}/app.asar"
+
+    # Deliberately exec the versioned wrapper rather than /usr/lib/electronNN
+    # directly: it applies the user's electron flags file, which is how a
+    # Wayland session gets native rendering out of an Electron app.
+    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/${_pkgname}" <<-EOF
+	#!/bin/sh
+	exec electron${_electronversion} /usr/lib/${_pkgname}/app.asar "\$@"
+	EOF
+
+    # StartupWMClass must match the WM_CLASS the running window reports, or
+    # the launcher shows a generic icon beside it. Electron derives that from
+    # the "name" field of the packaged package.json ("fidocadts") before any
+    # application code runs, so it is not the same string as the binary.
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/${_pkgname}.desktop" <<-EOF
+	[Desktop Entry]
+	Type=Application
+	Name=FidoCadJS
+	GenericName=Schematic Editor
+	Comment=Draw electronic schematics and PCB layouts in the FidoCad format
+	Exec=${_pkgname} %U
+	Icon=${_pkgname}
+	Terminal=false
+	Categories=Science;Electronics;Engineering;
+	MimeType=application/x-fidocad;
+	StartupWMClass=fidocadts
+	StartupNotify=true
+	EOF
+
+    # A dedicated MIME type, not text/plain: claiming the broad type would
+    # offer FidoCadJS as a handler for every text file on the system.
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/mime/packages/${_pkgname}.xml" <<-EOF
+	<?xml version="1.0" encoding="UTF-8"?>
+	<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+	  <mime-type type="application/x-fidocad">
+	    <comment>FidoCad circuit drawing</comment>
+	    <glob pattern="*.fcd"/>
+	    <sub-class-of type="text/plain"/>
+	  </mime-type>
+	</mime-info>
+	EOF
+
+    cd "${_pkgsrc}"
+    install -Dm644 public/icons/icon-512.png \
+        "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_pkgname}.png"
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

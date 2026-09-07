@@ -104,6 +104,12 @@ produces a self-contained ~130 MB application: Chromium is the bulk of it.
 electron-builder cross-compiles poorly, so build each platform on that platform
 (or in CI).
 
+Arch Linux is packaged differently — see [packaging/aur/](../packaging/aur/README.md).
+Those PKGBUILDs link against the distro's own `electron43` package instead of
+bundling Chromium, which is what the Arch guidelines ask for and cuts the
+package to ~1.2 MB. The app is verified on Electron 43 as well as the 44 that
+`package.json` builds against.
+
 ### Host prerequisites
 
 electron-builder shells out to tools that are not part of the npm install:

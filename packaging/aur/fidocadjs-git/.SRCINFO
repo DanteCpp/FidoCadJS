@@ -1,0 +1,18 @@
+pkgbase = fidocadjs-git
+	pkgdesc = Electronic schematic and PCB layout editor, compatible with the FidoCad (.fcd) format
+	pkgver = 0.1.0.r0.g0000000
+	pkgrel = 1
+	url = https://github.com/DanteCpp/FidoCadJS
+	arch = any
+	license = GPL-3.0-or-later
+	makedepends = npm
+	makedepends = nodejs>=22
+	makedepends = asar
+	makedepends = git
+	depends = electron43
+	provides = fidocadjs
+	conflicts = fidocadjs
+	source = FidoCadJS::git+https://github.com/DanteCpp/FidoCadJS.git
+	sha256sums = SKIP
+
+pkgname = fidocadjs-git
