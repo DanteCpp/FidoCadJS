@@ -240,18 +240,37 @@ export class InputHandler {
     // Event handlers (attached by CircuitPanel)
     // ═══════════════════════════════════════════════════════════════════════════
 
+    private gestureFramePending = false;
+
+    private renderGesture(): void {
+        // Preserve every input delta, but paint only once per display frame.
+        if (this.gestureFramePending) return;
+        this.gestureFramePending = true;
+        requestAnimationFrame(() => {
+            this.gestureFramePending = false;
+            this.cb.render();
+        });
+    }
+
     onMouseWheel(e: WheelEvent): void {
         e.preventDefault();
         if (this.cb.isTextEditActive()) {
             this.cb.commitTextEdit();
         }
 
+        // Wheel deltas can be pixels, lines, or pages depending on the device.
+        const rect = this.canvas.getBoundingClientRect();
+        const unitX = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rect.width : 1;
+        const unitY = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rect.height : 1;
+        const deltaX = e.deltaX * unitX;
+        const deltaY = e.deltaY * unitY;
+
         // Zoom is reserved for the pinch gesture (delivered as a ctrl+wheel
         // synthesised by the OS) and an explicit Ctrl/Cmd + wheel — the latter
         // being how a mouse user zooms. The step is scaled by the (continuous)
         // delta so a pinch feels smooth.
         if (e.ctrlKey || e.metaKey) {
-            this.zoomTowardCursor(Math.pow(1.0015, -e.deltaY), e.clientX, e.clientY);
+            this.zoomTowardCursor(Math.exp(-deltaY * 0.004), e.clientX, e.clientY);
             return;
         }
 
@@ -259,10 +278,10 @@ export class InputHandler {
         // direction. A plain mouse wheel pans too — it is indistinguishable from
         // a two-finger vertical drag, so both share this behaviour.
         const dpr = window.devicePixelRatio || 1;
-        this.mapCoords.setXCenter(this.mapCoords.getXCenter() - e.deltaX * dpr);
-        this.mapCoords.setYCenter(this.mapCoords.getYCenter() - e.deltaY * dpr);
+        this.mapCoords.setXCenter(this.mapCoords.getXCenter() - deltaX * dpr * 1.25);
+        this.mapCoords.setYCenter(this.mapCoords.getYCenter() - deltaY * dpr * 1.25);
         this.cb.clampCenter();
-        this.cb.render();
+        this.renderGesture();
     }
 
     /** Zoom level captured when a Safari pinch gesture starts. */
@@ -309,7 +328,7 @@ export class InputHandler {
         this.cb.clampCenter();
         this.mapCoords.setXMagnitudeNoCheck(newZ);
         this.mapCoords.setYMagnitudeNoCheck(newZ);
-        this.cb.render();
+        this.renderGesture();
         this.cb.onZoomChange?.();
     }
 
