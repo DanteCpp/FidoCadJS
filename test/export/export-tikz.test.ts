@@ -182,15 +182,25 @@ describe('ExportTikZ', () => {
         expect(result).toContain('ellipse');
     });
 
-    it('exportAdvText produces node with anchor', () => {
-        tikz.exportAdvText(100, 100, 10, 10, 'Arial', false, false, false, 0, 0, 'Hello $R_1$');
+    it('exportAdvText produces node with anchor, keeping $...$ as math', () => {
+        tikz.exportAdvText(100, 100, 3, 4, 'Arial', false, false, false, 0, 0, 'Hello_x $R_1$');
         tikz.exportEnd();
         const result = tikz.getTikZString();
         expect(result).toContain('\\node[anchor=north west');
         expect(result).toContain('color=layer0');
         expect(result).toContain('at (100,100)');
-        // LaTeX special chars are escaped now
-        expect(result).toContain('{Hello \\$R\\_1\\$}');
+        // Plain text is escaped; the math segment reaches LaTeX as math.
+        expect(result).toContain('{Hello\\_x $R_1$};');
+    });
+
+    it('exportAdvText scales text, math included, by its size', () => {
+        tikz.exportAdvText(10, 10, 3, 4, 'Arial', false, false, false, 0, 0, '$x^2$');
+        tikz.exportAdvText(10, 30, 6, 9, 'Arial', false, false, false, 0, 0, '$x^2$');
+        tikz.exportEnd();
+        const result = tikz.getTikZString();
+        // Default size keeps the document font; double width doubles it.
+        expect(result).toContain('at (10,10) {$x^2$};');
+        expect(result).toContain('at (10,30) {\\scalebox{2}{$x^2$}};');
     });
 
     it('exportAdvText escapes LaTeX special chars', () => {

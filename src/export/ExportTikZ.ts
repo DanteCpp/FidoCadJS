@@ -5,7 +5,7 @@ import type { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
 import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
-import { escapeLatex } from './LatexEscape.js';
+import { latexTextBody } from './LatexEscape.js';
 
 export class ExportTikZ implements Exporter {
     private buffer: string[] = [];
@@ -307,7 +307,7 @@ export class ExportTikZ implements Exporter {
     exportAdvText(
         x: number,
         y: number,
-        _sizex: number,
+        sizex: number,
         _sizey: number,
         _fontname: string,
         _isBold: boolean,
@@ -317,16 +317,9 @@ export class ExportTikZ implements Exporter {
         layer: number,
         text: string,
     ): void {
-        /*
-         * Text is emitted verbatim — no escaping. Users embed LaTeX
-         * commands directly in FidoCad text primitives.
-         * Font size/style/orientation are ignored; LaTeX handles formatting.
-         *
-         * "\n" stacks additional lines via \shortstack, since a plain node
-         * body does not break lines on its own.
-         */
-        const lines = text.split('\n').map((line) => escapeLatex(line));
-        const content = lines.length > 1 ? `\\shortstack[l]{${lines.join('\\\\')}}` : lines[0];
+        // Font, style and orientation are left to LaTeX; size scales relative
+        // to the document font (see latexTextBody).
+        const content = latexTextBody(text, sizex);
         this.buffer.push(
             `\\node[anchor=north west, color=layer${layer}] at (${this.cLe(x)},${this.cLe(y)}) ` +
                 `{${content}};`,

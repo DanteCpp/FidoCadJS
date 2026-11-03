@@ -213,16 +213,20 @@ describe('ExportPGF', () => {
         expect(result).toContain('\\pgfellipse[fillstroke]');
     });
 
-    it('exportAdvText produces pgfputat with escaped text', () => {
-        pgf.exportAdvText(100, 100, 10, 10, 'Arial', false, false, false, 0, 0, 'Hello $R_1$');
+    it('exportAdvText produces pgfputat with escaped text and math kept', () => {
+        pgf.exportAdvText(100, 100, 3, 4, 'Arial', false, false, false, 0, 0, 'Hello_x $R_1$');
         pgf.exportEnd();
         const result = pgf.getPgfString();
         expect(result).toContain('\\pgfputat');
-        expect(result).toContain('\\pgfbox[left,top]');
-        // LaTeX special chars are escaped now
-        expect(result).toContain('Hello \\$R\\_1\\$');
+        expect(result).toContain('\\pgfbox[left,top]{Hello\\_x $R_1$}');
         // Y is negated in PGF output
         expect(result).toContain('\\pgfxy(100,-100)');
+    });
+
+    it('exportAdvText scales a larger label', () => {
+        pgf.exportAdvText(100, 100, 9, 13, 'Arial', false, false, false, 0, 0, '$V_{out}$');
+        pgf.exportEnd();
+        expect(pgf.getPgfString()).toContain('\\pgfbox[left,top]{\\scalebox{3}{$V_{out}$}}');
     });
 
     it('exportAdvText escapes LaTeX special chars', () => {

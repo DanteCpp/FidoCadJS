@@ -5,7 +5,7 @@ import type { LayerDesc } from '../layers/LayerDesc.js';
 import { Globals } from '../globals/Globals.js';
 import { Arrow } from '../primitives/Arrow.js';
 import { PointPr } from './PointPr.js';
-import { escapeLatex } from './LatexEscape.js';
+import { latexTextBody } from './LatexEscape.js';
 
 export class ExportPGF implements Exporter {
     private buffer: string[] = [];
@@ -358,7 +358,7 @@ export class ExportPGF implements Exporter {
     exportAdvText(
         x: number,
         y: number,
-        _sizex: number,
+        sizex: number,
         _sizey: number,
         _fontname: string,
         _isBold: boolean,
@@ -371,22 +371,14 @@ export class ExportPGF implements Exporter {
         this.registerColorSize(layer, -1.0);
 
         /*
-         * THIS VERSION OF TEXT EXPORT IS NOT COMPLETE! IN PARTICULAR,
-         * MIRRORING EFFECTS, ANGLES AND A PRECISE SIZE CONTROL IS NOT
-         * HANDLED at ALL!
-         * This is somehow wanted, since the main use of the PGF export is
-         * for inserting LaTeX commands inside drawings meant for use in a
-         * LaTeX documents. So this is something LaTeX should do, and it is
-         * not a business for FidoCadJS.
-         *
-         * Text is emitted verbatim — no escaping. Users can embed LaTeX
-         * commands directly in FidoCad text primitives (e.g. \small $R_1$).
-         *
-         * "\n" stacks additional lines via \shortstack, since \pgfbox only
-         * places a single box.
+         * Mirroring and angles are not handled, and the text keeps the LaTeX
+         * document's font (as in FidoCadJ): the main use of the PGF export is
+         * inserting drawings into LaTeX documents, so formatting is LaTeX's
+         * business. Unlike FidoCadJ, a non-default text size scales the text
+         * relative to that font (see latexTextBody), so enlarging a label,
+         * math included, enlarges it in the document too.
          */
-        const lines = text.split('\n').map((line) => escapeLatex(line));
-        const content = lines.length > 1 ? `\\shortstack[l]{${lines.join('\\\\')}}` : lines[0];
+        const content = latexTextBody(text, sizex);
 
         this.buffer.push(`\\begin{pgfmagnify}{1}{-1}`);
         this.buffer.push(
