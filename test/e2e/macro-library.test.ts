@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import {
     gotoApp,
+    canvasBox,
     clickCanvasScreen,
     primitiveCount,
     getCircuitText,
@@ -114,5 +115,53 @@ SA 140 100 0
         // Nothing is added and the app keeps responding to API calls.
         expect(await primitiveCount(page)).toBe(0);
         expect(await getCircuitText(page)).not.toContain('MC');
+    });
+});
+
+test.describe('Macro — orient before placement', () => {
+    test.beforeEach(async ({ page }) => {
+        await gotoApp(page);
+        await page.evaluate(() => {
+            const panel = (window as any).__FidoCadJS__.circuitPanel;
+            panel.clearCircuit();
+            panel.loadLibraryString(
+                '[PART]\nPart\nLI 100 100 140 100 0\nLI 140 100 140 110 0\n',
+                'e2e',
+            );
+            panel.setMacroTool('e2e.part');
+        });
+    });
+
+    /** Orientation/mirror of the ghost following the cursor, or null without one. */
+    async function ghostState(page: any): Promise<{ o: number; m: boolean } | null> {
+        return page.evaluate(() => {
+            const g = (window as any).__FidoCadJS__.circuitPanel.inputHandler.ghostPrimitive;
+            return g ? { o: g.getOrientation(), m: g.isMirrored() } : null;
+        });
+    }
+
+    test('R and S turn the ghost and the placed part matches it', async ({ page }) => {
+        const canvas = page.locator('[data-testid="editor-canvas"]');
+        const box = await canvasBox(page);
+        if (!box) throw new Error('Canvas not found');
+
+        await page.mouse.move(box.x + 300, box.y + 300);
+        await settle(page);
+        expect(await ghostState(page)).toEqual({ o: 0, m: false });
+        const unrotated = await canvas.screenshot();
+
+        // The ghost turns and repaints on the key press alone, with no mouse move.
+        await page.keyboard.press('r');
+        await settle(page);
+        expect(await ghostState(page)).toEqual({ o: 1, m: false });
+        expect((await canvas.screenshot()).equals(unrotated)).toBe(false);
+
+        await page.keyboard.press('s');
+        await settle(page);
+        expect(await ghostState(page)).toEqual({ o: 1, m: true });
+
+        await page.mouse.click(box.x + 300, box.y + 300);
+        await expect.poll(() => primitiveCount(page)).toBe(1);
+        expect(await getCircuitText(page)).toMatch(/^MC \d+ \d+ 1 1 e2e\.part$/m);
     });
 });

@@ -2,7 +2,6 @@ import { DrawingModel } from '../model/DrawingModel.js';
 import { Globals } from '../../globals/Globals.js';
 import { UndoActions } from './UndoActions.js';
 import { SelectionActions } from './SelectionActions.js';
-import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import { PrimitiveConnection } from '../../primitives/PrimitiveConnection.js';
 import { PrimitiveLine } from '../../primitives/PrimitiveLine.js';
 import { PrimitiveOval } from '../../primitives/PrimitiveOval.js';
@@ -313,33 +312,28 @@ export class AddElements {
      * @param x logical x coordinate
      * @param y logical y coordinate
      * @param sa SelectionActions controller
-     * @param primEdit current primitive being edited (may contain orientation/mirror info)
      * @param macroKey the macro key to insert
-     * @returns the new primitive being edited, or null if finished
+     * @param orientation quarter turns clockwise (0-3)
+     * @param mirror whether the macro is mirrored
+     * @returns the placed macro, or null if nothing was added
      */
     addMacro(
         x: number,
         y: number,
         sa: SelectionActions,
-        primEdit: GraphicPrimitive | null,
         macroKey: string,
-    ): GraphicPrimitive | null {
+        orientation: number = 0,
+        mirror: boolean = false,
+    ): PrimitiveMacro | null {
         try {
             // Unknown keys must not leave an empty placeholder primitive in
             // the drawing (FidoCadJ drops them with an error instead).
             if (!this.model.getLibrary().get(macroKey.toLowerCase())) {
                 console.error(`Unrecognized macro key: ${macroKey}`);
-                return primEdit;
+                return null;
             }
 
             sa.setSelectionAll(false);
-
-            let orientation = 0;
-            let mirror = false;
-            if (primEdit instanceof PrimitiveMacro) {
-                orientation = primEdit.getOrientation();
-                mirror = primEdit.isMirrored();
-            }
 
             const macro = new PrimitiveMacro(
                 this.model.getLibrary(),
@@ -360,7 +354,7 @@ export class AddElements {
             return macro;
         } catch (e) {
             console.error('Error adding macro:', e);
-            return primEdit;
+            return null;
         }
     }
 
