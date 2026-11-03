@@ -118,6 +118,26 @@ test.describe('Export — TikZ', () => {
         expect(tikz).toContain('\\begin{tikzpicture}');
         expect(tikz).toContain('\\end{tikzpicture}');
     });
+
+    test('enlarging a LaTeX label in Properties enlarges it in TikZ and PGF', async ({ page }) => {
+        await loadCircuit(page, '[FIDOCAD]\nTY 10 10 4 3 0 0 0 * $x^2$ gain\n');
+        expect(await exportTikZ(page)).toContain(') {$x^2$ gain};');
+
+        await page.evaluate(() => {
+            const panel = (window as any).__FidoCadJS__.circuitPanel;
+            panel.onPropertiesRequested(panel.getModel().getPrimitiveVector()[0]);
+        });
+        const fontSize = page.locator('input[type="number"]').first();
+        await expect(fontSize).toHaveValue('4');
+        await fontSize.fill('12');
+        await fontSize.dispatchEvent('change');
+
+        // Size 12 → width 8, i.e. 8/3 of the default; the math stays math.
+        expect(await exportTikZ(page)).toContain(') {\\scalebox{2.667}{$x^2$ gain}};');
+        expect(await exportPGF(page)).toContain(
+            '\\pgfbox[left,top]{\\scalebox{2.667}{$x^2$ gain}}',
+        );
+    });
 });
 
 test.describe('Export — Round-trip consistency', () => {
