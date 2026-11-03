@@ -176,13 +176,6 @@ const pcbLineGhost: ToolGhostHandler = (ctx, edt) => {
 const macroGhost: ToolGhostHandler = (ctx, edt, model) => {
     if (edt.macroKey === '') return null;
     try {
-        let orientation = 0;
-        let mirror = false;
-        if (edt.primEdit instanceof PrimitiveMacro) {
-            orientation = edt.primEdit.getOrientation();
-            mirror = edt.primEdit.isMirrored();
-        }
-
         const macroPreview = new PrimitiveMacro(
             model.getLibrary(),
             StandardLayers.createEditingLayerArray(),
@@ -195,8 +188,8 @@ const macroGhost: ToolGhostHandler = (ctx, edt, model) => {
         macroPreview.virtualPoint[1]!.y = ctx.ly + 10;
         macroPreview.virtualPoint[2]!.x = ctx.lx + 10;
         macroPreview.virtualPoint[2]!.y = ctx.ly + 5;
-        macroPreview.setOrientation(orientation);
-        macroPreview.setMirrored(mirror);
+        macroPreview.setOrientation(edt.macroOrientation);
+        macroPreview.setMirrored(edt.macroMirrored);
         macroPreview.initializeFromKey(edt.macroKey);
         macroPreview.setDrawOnlyLayer(-1);
         return macroPreview;

@@ -9,7 +9,6 @@ import { GraphicPrimitive } from '../../primitives/GraphicPrimitive.js';
 import { PrimitiveComplexCurve } from '../../primitives/PrimitiveComplexCurve.js';
 import { PrimitivePolygon } from '../../primitives/PrimitivePolygon.js';
 import { PrimitiveAdvText } from '../../primitives/PrimitiveAdvText.js';
-import { PrimitiveMacro } from '../../primitives/PrimitiveMacro.js';
 import { Globals } from '../../globals/Globals.js';
 
 /**
@@ -29,7 +28,10 @@ export class ElementsEdtActions {
     public ypoly: number[];
     public macroKey: string = '';
     public clickNumber: number = 0;
-    public primEdit: GraphicPrimitive | null = null;
+    /** Orientation (0-3, quarter turns clockwise) given to the next placed macro. */
+    public macroOrientation: number = 0;
+    /** Mirroring given to the next placed macro. */
+    public macroMirrored: boolean = false;
     public actionSelected: number = Tool.SELECTION;
     public successiveMove: boolean = false;
 
@@ -71,23 +73,22 @@ export class ElementsEdtActions {
         this.clickNumber = 0;
         this.successiveMove = false;
         this.macroKey = macro;
-        this.primEdit = null;
+        this.macroOrientation = 0;
+        this.macroMirrored = false;
     }
 
-    /** Rotate macro 90 degrees clockwise */
+    /**
+     * Rotate the macro about to be placed 90 degrees clockwise. The change
+     * sticks for every following placement until another tool or macro is
+     * chosen, matching the effect of R on an already-placed macro.
+     */
     rotateMacro(): void {
-        if (this.primEdit instanceof PrimitiveMacro) {
-            const first = this.primEdit.getFirstPoint();
-            this.primEdit.rotatePrimitive(false, first.x, first.y);
-        }
+        this.macroOrientation = (this.macroOrientation + 1) % 4;
     }
 
-    /** Mirror macro horizontally */
+    /** Mirror the macro about to be placed horizontally (see rotateMacro). */
     mirrorMacro(): void {
-        if (this.primEdit instanceof PrimitiveMacro) {
-            const first = this.primEdit.getFirstPoint();
-            this.primEdit.mirrorPrimitive(first.x);
-        }
+        this.macroMirrored = !this.macroMirrored;
     }
 
     /**
@@ -114,16 +115,10 @@ export class ElementsEdtActions {
             this.clickNumber = ElementsEdtActions.NPOLY - 1;
         }
 
-        // Reset primEdit unless entering a macro (need to preserve orientation/mirror)
-        if (this.actionSelected !== Tool.MACRO) {
-            this.primEdit = null;
-        }
-
         // Right-click cancels any active drawing tool and returns to selection
         if (button3 && this.actionSelected > Tool.HAND) {
             this.actionSelected = Tool.SELECTION;
             this.clickNumber = 0;
-            this.primEdit = null;
             return true;
         }
 
@@ -341,12 +336,13 @@ export class ElementsEdtActions {
 
             case Tool.MACRO:
                 this.successiveMove = false;
-                this.primEdit = this.addElements.addMacro(
+                this.addElements.addMacro(
                     cs.unmapXsnap(x),
                     cs.unmapYsnap(y),
                     this.selectionActions,
-                    this.primEdit,
                     this.macroKey,
+                    this.macroOrientation,
+                    this.macroMirrored,
                 );
                 repaint = true;
                 break;

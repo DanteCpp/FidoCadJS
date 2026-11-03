@@ -241,7 +241,7 @@ export class KeyboardController {
             // Deselect all objects
             this.host.deselectAll();
 
-            // Switch to Selection tool (resets clickNumber, successiveMove, primEdit)
+            // Switch to Selection tool (resets clickNumber, successiveMove, macro orientation)
             this.host.setTool(Tool.SELECTION);
             this.host.clearGhostAndSelection();
             this.host.render();

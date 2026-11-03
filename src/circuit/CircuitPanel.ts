@@ -306,6 +306,24 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         );
     }
 
+    /** True while a library macro is armed and waiting to be placed. */
+    private isPlacingMacro(): boolean {
+        return this.currentTool === Tool.MACRO && this.elementsEdt.macroKey !== '';
+    }
+
+    /**
+     * Rebuild the macro ghost where it currently sits so an orientation change
+     * shows up without waiting for the next mouse move. Without a ghost (cursor
+     * not over the canvas yet) the next mouse move picks up the new state.
+     */
+    private refreshMacroGhost(): void {
+        const ghost = this.inputHandler.ghostPrimitive;
+        if (ghost === null) return;
+        const anchor = ghost.getFirstPoint();
+        this.updateGhostPreview(anchor.x, anchor.y);
+        this.render();
+    }
+
     getModel(): DrawingModel {
         return this.model;
     }
@@ -679,14 +697,26 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
         this.onUndoStateChange?.();
     }
 
+    /** Rotate the selection, or the pending macro while one is being placed. */
     rotateSelected(): void {
+        if (this.isPlacingMacro()) {
+            this.elementsEdt.rotateMacro();
+            this.refreshMacroGhost();
+            return;
+        }
         this.editorActions.rotateAllSelected();
         this.model.setModified(true);
         this.render();
         this.onUndoStateChange?.();
     }
 
+    /** Mirror the selection, or the pending macro while one is being placed. */
     mirrorSelected(): void {
+        if (this.isPlacingMacro()) {
+            this.elementsEdt.mirrorMacro();
+            this.refreshMacroGhost();
+            return;
+        }
         this.editorActions.mirrorAllSelected();
         this.model.setModified(true);
         this.render();

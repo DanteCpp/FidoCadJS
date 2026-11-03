@@ -66,8 +66,8 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
         title: 'Transform selection',
         items: [
             { keys: ['M'], description: 'Move' },
-            { keys: ['R'], description: 'Rotate' },
-            { keys: ['S'], description: 'Mirror' },
+            { keys: ['R'], description: 'Rotate (also the component being placed)' },
+            { keys: ['S'], description: 'Mirror (also the component being placed)' },
             { keys: ['Alt', '←/→/↑/↓'], description: 'Nudge by one unit' },
             { keys: ['Shift', 'S'], description: 'Toggle start arrowhead' },
             { keys: ['Shift', 'E'], description: 'Toggle end arrowhead' },
