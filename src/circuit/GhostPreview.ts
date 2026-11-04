@@ -72,14 +72,14 @@ const bezierGhost: ToolGhostHandler = (ctx) => {
     return null;
 };
 
-const rectangleGhost: ToolGhostHandler = (ctx) => {
+const rectangleGhost: ToolGhostHandler = (ctx, edt) => {
     if (ctx.clickNum === 1) {
         return new PrimitiveRectangle(
             ctx.xpoly[1],
             ctx.ypoly[1],
             ctx.lx,
             ctx.ly,
-            false,
+            edt.getAddElements().filled,
             ctx.layer,
             0,
             ctx.font,
@@ -89,14 +89,14 @@ const rectangleGhost: ToolGhostHandler = (ctx) => {
     return null;
 };
 
-const ellipseGhost: ToolGhostHandler = (ctx) => {
+const ellipseGhost: ToolGhostHandler = (ctx, edt) => {
     if (ctx.clickNum === 1) {
         return new PrimitiveOval(
             ctx.xpoly[1],
             ctx.ypoly[1],
             ctx.lx,
             ctx.ly,
-            false,
+            edt.getAddElements().filled,
             ctx.layer,
             0,
             ctx.font,

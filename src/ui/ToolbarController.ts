@@ -6,21 +6,21 @@ import { getString } from '../i18n/i18n.js';
 /**
  * Canonical, language-independent keyboard shortcut shown for each tool in its
  * toolbar tooltip. These mirror the bindings in KeyboardController and match
- * FidoCadJ 0.24.9 exactly. The shortcut label is injected at build time so it
+ * FidoCadAI. The shortcut label is injected at build time so it
  * is always identical regardless of the UI language (translators only provide
  * the descriptive text, never the key letter).
  */
 const TOOL_SHORTCUTS: Record<number, string> = {
-    [Tool.SELECTION]: 'A',
+    [Tool.SELECTION]: 'S',
     [Tool.LINE]: 'L',
     [Tool.TEXT]: 'T',
-    [Tool.BEZIER]: 'B',
-    [Tool.POLYGON]: 'P',
+    [Tool.BEZIER]: 'Shift+B',
+    [Tool.POLYGON]: 'Shift+P',
     [Tool.COMPLEXCURVE]: 'O',
     [Tool.ELLIPSE]: 'E',
-    [Tool.RECTANGLE]: 'G',
-    [Tool.CONNECTION]: 'C',
-    [Tool.PCB_LINE]: 'I',
+    [Tool.RECTANGLE]: 'B',
+    [Tool.CONNECTION]: 'J',
+    [Tool.PCB_LINE]: 'Shift+T',
     [Tool.PCB_PAD]: 'Z',
 };
 
@@ -180,6 +180,19 @@ export class ToolbarController {
         });
         this.setToggleActive(snapBtn, this.circuitPanel.isSnapActive());
 
+        const fillBtn = this.addTextButton(secondRow, getString('ctrl_filled'), () => {
+            this.circuitPanel.toggleFilled();
+        });
+        fillBtn.title = 'F: filled rectangles and ellipses';
+        this.circuitPanel.onViewSettingsChange = () => {
+            this.setToggleActive(gridBtn, this.circuitPanel.isGridVisible());
+            this.setToggleActive(snapBtn, this.circuitPanel.isSnapActive());
+            this.setToggleActive(fillBtn, this.circuitPanel.getAddElements().filled);
+        };
+        this.circuitPanel.onViewSettingsChange();
+        gridBtn.title = 'G: show grid';
+        snapBtn.title = 'Shift+G: snap to grid';
+
         // Library toggle
         const libBtn = this.addTextButton(secondRow, getString('Libs'), () => {
             if (this.onLibraryToggle) this.onLibraryToggle();
@@ -187,6 +200,8 @@ export class ToolbarController {
             const isActive = libBtn.style.background === 'rgb(176, 200, 232)';
             this.setToggleActive(libBtn, !isActive);
         });
+        libBtn.dataset.testid = 'library-toggle';
+        libBtn.title = 'Ctrl+B: symbol library';
         this.setToggleActive(libBtn, true);
 
         // Divider
@@ -223,6 +238,8 @@ export class ToolbarController {
             this.circuitPanel.getCurrentLayer(),
             (idx) => this.circuitPanel.setCurrentLayer(idx),
         );
+        this.circuitPanel.onLayerChange = (layer) => dropdown.updateSelection(layer);
+        dropdown.element.dataset.testid = 'layer-dropdown';
         row.appendChild(dropdown.element);
     }
 

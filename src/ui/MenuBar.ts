@@ -330,7 +330,7 @@ export class MenuBar {
             {
                 kind: 'action',
                 label: getString('Mirror_E'),
-                shortcut: 'S',
+                shortcut: 'M',
                 icon: 'mirror.png',
                 action: () => this.panel.mirrorSelected(),
             },
@@ -419,6 +419,7 @@ export class MenuBar {
             {
                 kind: 'action',
                 label: getString('Attach_image_menu'),
+                shortcut: 'Shift+I',
                 icon: 'back_image.png',
                 action: () => this.attachImageFile(),
             },
@@ -443,7 +444,7 @@ export class MenuBar {
     }
 
     /** Open a file picker for the user to select a background image. */
-    private attachImageFile(): void {
+    attachImageFile(): void {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
@@ -504,6 +505,7 @@ export class MenuBar {
             {
                 kind: 'action',
                 label: getString('Shortcuts_menu'),
+                shortcut: 'K',
                 icon: 'info.png',
                 action: () => showShortcutsDialog(),
             },

@@ -18,6 +18,8 @@ export class AddElements {
     private readonly model: DrawingModel;
     private readonly undoActions: UndoActions | null;
 
+    public filled = false;
+
     // Default sizes for PCB elements
     public pcbPadSizeX: number = 5;
     public pcbPadSizeY: number = 5;
@@ -148,7 +150,7 @@ export class AddElements {
                 ypoly[1],
                 xpoly[2],
                 ypoly[2],
-                false,
+                this.filled,
                 currentLayer,
                 0,
                 this.model.getTextFont(),
@@ -196,7 +198,7 @@ export class AddElements {
                 ypoly[1],
                 xpoly[2],
                 ypoly[2],
-                false,
+                this.filled,
                 currentLayer,
                 0,
                 this.model.getTextFont(),

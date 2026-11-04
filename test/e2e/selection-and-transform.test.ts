@@ -94,11 +94,11 @@ test.describe('Transform Operations', () => {
         expect(await primitiveCount(page)).toBe(2);
     });
 
-    test('mirror selected primitives with S key', async ({ page }) => {
+    test('mirror selected primitives with M key', async ({ page }) => {
         await selectAll(page);
         const before = await getCircuitText(page);
 
-        await pressKey(page, 's');
+        await pressKey(page, 'm');
 
         const after = await getCircuitText(page);
         expect(after).not.toBe(before);
@@ -144,10 +144,10 @@ test.describe('Transform Operations', () => {
         expect(await primitiveCount(page)).toBe(2);
     });
 
-    test('move mode via M key changes cursor when selection exists', async ({ page }) => {
+    test('move mode via Shift+M key changes cursor when selection exists', async ({ page }) => {
         await selectAll(page);
 
-        await pressKey(page, 'm');
+        await pressKey(page, 'Shift+m');
 
         const cursor = await page
             .locator('[data-testid="editor-canvas"]')

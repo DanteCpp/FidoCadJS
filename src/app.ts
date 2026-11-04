@@ -199,6 +199,17 @@ class FidoCadJS {
             this.libraryPanel.style.display = visible ? 'none' : 'flex';
         });
         this.toolbarController.build();
+        this.circuitPanel.onLibraryToggle = () => {
+            this.toolbarEl
+                .querySelector<HTMLButtonElement>('[data-testid="library-toggle"]')
+                ?.click();
+        };
+        this.circuitPanel.onInfoBarToggle = () => {
+            const coords = this.toolbarEl.querySelector<HTMLElement>(
+                '[data-testid="coords-display"]',
+            );
+            if (coords) coords.hidden = !coords.hidden;
+        };
 
         // Wire undo state change to menu bar updates
         this.circuitPanel.onUndoStateChange = () => this.menuBar.updateState();

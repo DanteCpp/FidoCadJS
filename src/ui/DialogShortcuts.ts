@@ -26,6 +26,9 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
             { keys: ['Ctrl', 'N'], description: 'New circuit' },
             { keys: ['Ctrl', 'O'], description: 'Open file' },
             { keys: ['Ctrl', 'S'], description: 'Save' },
+            { keys: ['Ctrl', 'Enter'], description: 'Save and keep browser tab open' },
+            { keys: ['Ctrl', 'W'], description: 'Close browser tab (browser shortcut)' },
+            { keys: ['Shift', 'I'], description: 'Attach background image' },
             { keys: ['Ctrl', 'Shift', 'S'], description: 'Save as…' },
             { keys: ['Ctrl', 'E'], description: 'Export' },
             { keys: ['Ctrl', 'P'], description: 'Print' },
@@ -37,37 +40,41 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
         items: [
             { keys: ['Ctrl', 'Z'], description: 'Undo' },
             { keys: ['Ctrl', 'Y'], description: 'Redo' },
+            { keys: ['Ctrl', 'Shift', 'Z'], description: 'Redo' },
             { keys: ['Ctrl', 'X'], description: 'Cut selection' },
             { keys: ['Ctrl', 'C'], description: 'Copy selection' },
             { keys: ['Ctrl', 'V'], description: 'Paste' },
             { keys: ['Ctrl', 'D'], description: 'Duplicate selection' },
             { keys: ['Ctrl', 'I'], description: 'Copy as image' },
             { keys: ['Ctrl', 'A'], description: 'Select all' },
-            { keys: ['Delete'], description: 'Delete selection' },
+            { keys: ['Delete / Backspace'], description: 'Delete selection' },
+            { keys: ['P / F2'], description: 'Selection properties' },
+            { keys: ['[ / ]'], description: 'Previous / next layer, also moves selection' },
         ],
     },
     {
         title: 'Tools',
         items: [
-            { keys: ['A'], description: 'Selection tool' },
+            { keys: ['S / A'], description: 'Selection tool' },
             { keys: ['L'], description: 'Line' },
             { keys: ['T'], description: 'Text' },
-            { keys: ['B'], description: 'Bézier curve' },
-            { keys: ['P'], description: 'Polygon' },
+            { keys: ['Shift', 'B'], description: 'Bézier curve' },
+            { keys: ['Shift', 'P'], description: 'Polygon' },
             { keys: ['O'], description: 'Complex curve' },
             { keys: ['E'], description: 'Ellipse' },
-            { keys: ['G'], description: 'Rectangle' },
-            { keys: ['C'], description: 'Connection' },
-            { keys: ['I'], description: 'PCB track' },
+            { keys: ['B'], description: 'Rectangle' },
+            { keys: ['J / C'], description: 'Connection' },
+            { keys: ['Shift', 'T'], description: 'PCB track' },
             { keys: ['Z'], description: 'PCB pad' },
         ],
     },
     {
         title: 'Transform selection',
         items: [
-            { keys: ['M'], description: 'Move' },
+            { keys: ['Shift', 'M'], description: 'Move' },
             { keys: ['R'], description: 'Rotate (also the component being placed)' },
-            { keys: ['S'], description: 'Mirror (also the component being placed)' },
+            { keys: ['M'], description: 'Mirror (also the component being placed)' },
+            { keys: ['←/→/↑/↓'], description: 'Nudge by one grid step' },
             { keys: ['Alt', '←/→/↑/↓'], description: 'Nudge by one unit' },
             { keys: ['Shift', 'S'], description: 'Toggle start arrowhead' },
             { keys: ['Shift', 'E'], description: 'Toggle end arrowhead' },
@@ -78,12 +85,21 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
         items: [
             { keys: ['+'], description: 'Zoom in' },
             { keys: ['−'], description: 'Zoom out' },
-            { keys: ['Space'], description: 'Fit drawing to view' },
+            { keys: ['0 / Space / Home'], description: 'Fit drawing to view' },
+            { keys: ['G'], description: 'Toggle grid' },
+            { keys: ['Shift', 'G'], description: 'Toggle snap to grid' },
+            { keys: ['F'], description: 'Toggle filled rectangles and ellipses' },
+            { keys: ['I'], description: 'Show / hide coordinate info' },
+            { keys: ['Ctrl', 'B'], description: 'Show / hide symbol library' },
         ],
     },
     {
         title: 'General',
-        items: [{ keys: ['Esc'], description: 'Deselect / cancel current action' }],
+        items: [
+            { keys: ['K'], description: 'Search keyboard shortcuts' },
+            { keys: ['Enter'], description: 'Finish current line / place pasted drawing' },
+            { keys: ['Esc'], description: 'Finish line / deselect / cancel current action' },
+        ],
     },
 ];
 
@@ -103,6 +119,8 @@ function keyCap(label: string): HTMLElement {
  * Show the keyboard-shortcut cheatsheet as a modal overlay.
  */
 export function showShortcutsDialog(): void {
+    if (document.querySelector('[data-testid="shortcuts-dialog"]')) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
     const overlay = document.createElement('div');
     overlay.setAttribute('data-testid', 'shortcuts-dialog');
     overlay.style.cssText =
@@ -119,6 +137,13 @@ export function showShortcutsDialog(): void {
     title.textContent = getString('Shortcuts_title');
     title.style.cssText = 'margin: 0 0 16px; font-size: 18px; font-weight: 700;';
     box.appendChild(title);
+
+    const search = document.createElement('input');
+    search.type = 'search';
+    search.placeholder = 'Search shortcuts';
+    search.setAttribute('aria-label', 'Search shortcuts');
+    search.style.cssText = 'width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;';
+    box.appendChild(search);
 
     // Two-column masonry-ish layout: groups flow into columns.
     const grid = document.createElement('div');
@@ -139,6 +164,7 @@ export function showShortcutsDialog(): void {
 
         for (const item of group.items) {
             const row = document.createElement('div');
+            row.dataset.shortcut = `${item.keys.join(' ')} ${item.description}`.toLowerCase();
             row.style.cssText =
                 'display: flex; align-items: baseline; justify-content: space-between; ' +
                 'gap: 12px; padding: 3px 0;';
@@ -166,6 +192,22 @@ export function showShortcutsDialog(): void {
 
         grid.appendChild(section);
     }
+    search.addEventListener('input', () => {
+        const query = search.value.trim().toLowerCase();
+        for (const section of grid.querySelectorAll('section')) {
+            const groupMatches = section
+                .querySelector('h3')!
+                .textContent!.toLowerCase()
+                .includes(query);
+            let visible = false;
+            for (const row of section.querySelectorAll<HTMLElement>('[data-shortcut]')) {
+                const matches = groupMatches || row.dataset.shortcut!.includes(query);
+                row.style.display = matches ? 'flex' : 'none';
+                visible ||= matches;
+            }
+            section.hidden = !visible;
+        }
+    });
     box.appendChild(grid);
 
     const footer = document.createElement('div');
@@ -182,14 +224,16 @@ export function showShortcutsDialog(): void {
     document.body.appendChild(overlay);
 
     const onKey = (e: KeyboardEvent) => {
+        e.stopPropagation();
         if (e.key === 'Escape') {
-            e.stopPropagation();
+            e.preventDefault();
             cleanup();
         }
     };
     const cleanup = () => {
         document.removeEventListener('keydown', onKey, true);
         if (overlay.parentNode) document.body.removeChild(overlay);
+        previousFocus?.focus();
     };
 
     closeBtn.addEventListener('click', cleanup);
@@ -199,4 +243,5 @@ export function showShortcutsDialog(): void {
     // Capture phase so Escape closes the dialog before the editor's global
     // keydown handler treats it as a "switch to Selection tool" shortcut.
     document.addEventListener('keydown', onKey, true);
+    search.focus();
 }

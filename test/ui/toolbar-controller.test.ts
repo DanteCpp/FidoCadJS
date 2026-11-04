@@ -41,6 +41,7 @@ function makeFacade() {
         getLayers: () => StandardLayers.createStandardLayers(),
         getLayerDescriptions: () =>
             StandardLayers.createStandardLayers().map((l) => l.getDescription()),
+        getAddElements: () => ({ filled: false }),
         getCurrentLayer: () => state.currentLayer,
         setCurrentLayer: vi.fn((idx: number) => {
             state.currentLayer = idx;
@@ -82,7 +83,7 @@ describe('ToolbarController', () => {
         // onToolChange highlight: the clicked button is active, others not.
         expect(lineBtn.style.background).toBe('rgb(176, 200, 232)');
         const selBtn = Array.from(toolbar.querySelectorAll('button')).find((b) =>
-            (b as HTMLButtonElement).title.startsWith('A:'),
+            (b as HTMLButtonElement).title.startsWith('S:'),
         ) as HTMLButtonElement;
         expect(selBtn.style.background).not.toBe('rgb(176, 200, 232)');
     });
@@ -91,7 +92,18 @@ describe('ToolbarController', () => {
         const titles = Array.from(toolbar.querySelectorAll('button'))
             .map((b) => (b as HTMLButtonElement).title)
             .filter(Boolean);
-        for (const prefix of ['L:', 'T:', 'B:', 'P:', 'O:', 'E:', 'G:', 'C:', 'I:', 'Z:']) {
+        for (const prefix of [
+            'L:',
+            'T:',
+            'Shift+B:',
+            'Shift+P:',
+            'O:',
+            'E:',
+            'B:',
+            'J:',
+            'Shift+T:',
+            'Z:',
+        ]) {
             expect(titles.some((t) => t.startsWith(prefix))).toBe(true);
         }
     });

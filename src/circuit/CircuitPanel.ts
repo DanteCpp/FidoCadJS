@@ -75,6 +75,10 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     private textEditDialog: InPlaceTextEditor;
 
+    onViewSettingsChange: (() => void) | null = null;
+    onLayerChange: ((layer: number) => void) | null = null;
+    onLibraryToggle: (() => void) | null = null;
+    onInfoBarToggle: (() => void) | null = null;
     onZoomChange: (() => void) | null = null;
     onToolChange: ((toolId: number) => void) | null = null;
     onUndoStateChange: (() => void) | null = null;
@@ -342,6 +346,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setGridVisible(visible: boolean): void {
         this.gridVisible = visible;
+        this.onViewSettingsChange?.();
         this.render();
     }
 
@@ -403,6 +408,7 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
     setSnap(s: boolean): void {
         this.mapCoordinates.setSnap(s);
+        this.onViewSettingsChange?.();
     }
 
     getZoomPercent(): number {
@@ -804,6 +810,76 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     setCurrentLayer(layer: number): void {
         this.elementsEdt.currentLayer = layer;
+        this.onLayerChange?.(layer);
+    }
+
+    toggleLibrary(): void {
+        this.onLibraryToggle?.();
+    }
+
+    toggleInfoBar(): void {
+        this.onInfoBarToggle?.();
+    }
+
+    toggleGrid(): void {
+        this.setGridVisible(!this.isGridVisible());
+    }
+
+    toggleSnap(): void {
+        this.setSnap(!this.isSnapActive());
+    }
+
+    toggleFilled(): void {
+        const add = this.getAddElements();
+        add.filled = !add.filled;
+        this.updateGhostPreview(this.lastCursorLx, this.lastCursorLy);
+        this.render();
+        this.onViewSettingsChange?.();
+    }
+
+    cycleLayer(step: number): void {
+        const count = this.model.getLayers().length;
+        if (!count) return;
+        const layer = (this.getCurrentLayer() + step + count) % count;
+        const selected = this.getSelectedPrimitives();
+        if (selected.some((prim) => prim.getLayer() !== layer)) {
+            this.undoActions.saveUndoState();
+            for (const prim of selected) prim.setLayer(layer);
+            this.model.setModified(true);
+            this.onUndoStateChange?.();
+        }
+        this.setCurrentLayer(layer);
+        this.updateGhostPreview(this.lastCursorLx, this.lastCursorLy);
+        this.render();
+    }
+
+    editSelectedProperties(): void {
+        const selected = this.getSelectedPrimitives();
+        if (selected.length === 1) this.onPropertiesRequested?.(selected[0]);
+        else if (selected.length > 1) this.onBatchPropertiesRequested?.(selected);
+    }
+
+    cancelRuler(): boolean {
+        if (!this.inputHandler.ruler.isActive()) return false;
+        this.inputHandler.ruler.setActive(false);
+        this.render();
+        return true;
+    }
+
+    finishLine(): boolean {
+        if (this.currentTool !== Tool.LINE || this.elementsEdt.clickNumber === 0) return false;
+        this.elementsEdt.clickNumber = 0;
+        this.elementsEdt.successiveMove = false;
+        this.inputHandler.setGhostPrimitive(null);
+        this.render();
+        return true;
+    }
+
+    nudgeByKeyboard(dx: number, dy: number, fine: boolean): void {
+        this.nudgeSelected(
+            dx * (fine ? 1 : this.mapCoordinates.getXGridStep()),
+            dy * (fine ? 1 : this.mapCoordinates.getYGridStep()),
+        );
     }
 
     getLayerDescriptions(): string[] {

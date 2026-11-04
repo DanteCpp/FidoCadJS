@@ -37,8 +37,8 @@ test.describe('Keyboard Shortcuts — Tool Selection', () => {
         expect(await getCurrentTool(page)).toBe(Tools.LINE);
     });
 
-    test('uppercase G also selects Rectangle tool', async ({ page }) => {
-        await pressKey(page, 'G');
+    test('uppercase B also selects Rectangle tool', async ({ page }) => {
+        await pressKey(page, 'B');
         expect(await getCurrentTool(page)).toBe(Tools.RECTANGLE);
     });
 

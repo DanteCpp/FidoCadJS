@@ -140,7 +140,7 @@ test.describe('Macro — orient before placement', () => {
         });
     }
 
-    test('R and S turn the ghost and the placed part matches it', async ({ page }) => {
+    test('R and M turn the ghost and the placed part matches it', async ({ page }) => {
         const canvas = page.locator('[data-testid="editor-canvas"]');
         const box = await canvasBox(page);
         if (!box) throw new Error('Canvas not found');
@@ -156,7 +156,7 @@ test.describe('Macro — orient before placement', () => {
         expect(await ghostState(page)).toEqual({ o: 1, m: false });
         expect((await canvas.screenshot()).equals(unrotated)).toBe(false);
 
-        await page.keyboard.press('s');
+        await page.keyboard.press('m');
         await settle(page);
         expect(await ghostState(page)).toEqual({ o: 1, m: true });
 

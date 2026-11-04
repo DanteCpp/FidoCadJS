@@ -1,3 +1,4 @@
+import { showShortcutsDialog } from '../../ui/DialogShortcuts.js';
 import { Tool } from './Tool.js';
 import type { ClipboardController } from './ClipboardController.js';
 import type { KeyboardHost } from '../KeyboardHost.js';
@@ -30,7 +31,9 @@ export class KeyboardController {
      */
     private handleDocumentKeyDown(e: KeyboardEvent): void {
         const target = e.target as HTMLElement;
-        const tagName = target.tagName.toLowerCase();
+        // Modal dialogs own Enter/Escape and their focused controls.
+        if (target.closest?.('dialog')) return;
+        const tagName = target.tagName?.toLowerCase();
         const isInput =
             tagName === 'input' ||
             tagName === 'textarea' ||
@@ -49,7 +52,8 @@ export class KeyboardController {
                     key === 's' ||
                     key === 'e' ||
                     key === 'p' ||
-                    key === 'w')
+                    key === 'w' ||
+                    key === 'enter')
             ) {
                 this.onKeyDown(e);
                 return;
@@ -98,6 +102,53 @@ export class KeyboardController {
         const key = e.key.toLowerCase();
         const isCtrlOrMeta = e.ctrlKey || e.metaKey;
         const isAlt = e.altKey;
+        if (isAlt && !key.startsWith('arrow')) return;
+
+        if (isCtrlOrMeta && key === 'b') {
+            e.preventDefault();
+            this.host.toggleLibrary();
+            return;
+        }
+        if (isCtrlOrMeta && key === 'enter') {
+            e.preventDefault();
+            this.host.getMenuBar()?.saveFile();
+            return;
+        }
+        // Ctrl/Cmd+W belongs to the browser's tab lifecycle.
+        if (isCtrlOrMeta && key === 'w') return;
+
+        if (!isCtrlOrMeta && !isAlt) {
+            const actions: Record<string, () => void> = {
+                k: () => showShortcutsDialog(),
+                i: () =>
+                    e.shiftKey
+                        ? this.host.getMenuBar()?.attachImageFile()
+                        : this.host.toggleInfoBar(),
+                j: () => this.host.setTool(Tool.CONNECTION),
+                p: () =>
+                    e.shiftKey
+                        ? this.host.setTool(Tool.POLYGON)
+                        : this.host.editSelectedProperties(),
+                f2: () => this.host.editSelectedProperties(),
+                '[': () => this.host.cycleLayer(-1),
+                ']': () => this.host.cycleLayer(1),
+                f: () => this.host.toggleFilled(),
+                g: () => (e.shiftKey ? this.host.toggleSnap() : this.host.toggleGrid()),
+                '0': () => this.host.zoomToFit(),
+                enter: () => this.host.finishLine(),
+            };
+            // Shift+I is image import; Shift+T keeps the PCB track tool reachable.
+            if (e.shiftKey && key === 't') {
+                e.preventDefault();
+                this.host.setTool(Tool.PCB_LINE);
+                return;
+            }
+            if (actions[key]) {
+                e.preventDefault();
+                actions[key]();
+                return;
+            }
+        }
 
         // ===== CLIPBOARD OPERATIONS =====
         if (key === 'x' && isCtrlOrMeta) {
@@ -215,8 +266,8 @@ export class KeyboardController {
         }
 
         // ===== TOOL SELECTION (single key, case-insensitive) =====
-        // A or Escape: Selection tool
-        if (key === 'a' && !isCtrlOrMeta) {
+        // S or A: Selection tool
+        if ((key === 'a' || key === 's') && !isCtrlOrMeta) {
             e.preventDefault();
             this.host.setTool(Tool.SELECTION);
             this.host.clearGhostAndSelection();
@@ -234,6 +285,8 @@ export class KeyboardController {
 
         if (key === 'escape') {
             e.preventDefault();
+
+            if (this.host.cancelRuler() || this.host.finishLine()) return;
 
             // Close any open text-editing UI (properties sidebar, etc.)
             this.host.cancelTextEdit();
@@ -262,17 +315,10 @@ export class KeyboardController {
             return;
         }
 
-        // B: Bezier curve tool
+        // B: rectangle; Shift+B: Bézier curve
         if (key === 'b' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.setTool(Tool.BEZIER);
-            return;
-        }
-
-        // P: Polygon tool
-        if (key === 'p' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.host.setTool(Tool.POLYGON);
+            this.host.setTool(e.shiftKey ? Tool.BEZIER : Tool.RECTANGLE);
             return;
         }
 
@@ -290,24 +336,10 @@ export class KeyboardController {
             return;
         }
 
-        // G: Rectangle tool
-        if (key === 'g' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.host.setTool(Tool.RECTANGLE);
-            return;
-        }
-
         // C: Connection tool
         if (key === 'c' && !isCtrlOrMeta) {
             e.preventDefault();
             this.host.setTool(Tool.CONNECTION);
-            return;
-        }
-
-        // I: PCB track tool
-        if (key === 'i' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.host.setTool(Tool.PCB_LINE);
             return;
         }
 
@@ -319,10 +351,11 @@ export class KeyboardController {
         }
 
         // ===== TRANSFORM OPERATIONS (when something is selected) =====
-        // M: Move selected elements
+        // M: mirror; Shift+M: move selected elements
         if (key === 'm' && !isCtrlOrMeta) {
             e.preventDefault();
-            this.host.startMoveSelected();
+            if (e.shiftKey) this.host.startMoveSelected();
+            else this.host.mirrorSelected();
             return;
         }
 
@@ -333,13 +366,6 @@ export class KeyboardController {
             return;
         }
 
-        // S: Mirror selected elements
-        if (key === 's' && !isCtrlOrMeta) {
-            e.preventDefault();
-            this.host.mirrorSelected();
-            return;
-        }
-
         // Delete or Backspace: Delete selected objects
         if (key === 'delete' || key === 'backspace') {
             e.preventDefault();
@@ -347,28 +373,13 @@ export class KeyboardController {
             return;
         }
 
-        // ===== NUDGE WITH ALT + ARROW KEYS =====
-        if (isAlt) {
-            const nudgeStep = 1;
-            let dx = 0,
-                dy = 0;
-
-            if (key === 'arrowleft') {
+        // Plain arrows follow the drawing grid; Alt+arrows retain fine nudging.
+        if (!isCtrlOrMeta && key.startsWith('arrow')) {
+            const dx = key === 'arrowleft' ? -1 : key === 'arrowright' ? 1 : 0;
+            const dy = key === 'arrowup' ? -1 : key === 'arrowdown' ? 1 : 0;
+            if (dx || dy) {
                 e.preventDefault();
-                dx = -nudgeStep;
-            } else if (key === 'arrowright') {
-                e.preventDefault();
-                dx = nudgeStep;
-            } else if (key === 'arrowup') {
-                e.preventDefault();
-                dy = nudgeStep;
-            } else if (key === 'arrowdown') {
-                e.preventDefault();
-                dy = -nudgeStep;
-            }
-
-            if (dx !== 0 || dy !== 0) {
-                this.host.nudgeSelected(dx, dy);
+                this.host.nudgeByKeyboard(dx, dy, isAlt);
                 return;
             }
         }

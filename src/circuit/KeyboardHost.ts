@@ -16,6 +16,17 @@ export interface KeyboardHost {
     setTool(toolId: number): void;
     cancelTextEdit(): void;
 
+    toggleLibrary(): void;
+    toggleInfoBar(): void;
+    editSelectedProperties(): void;
+    cycleLayer(step: number): void;
+    toggleFilled(): void;
+    toggleGrid(): void;
+    toggleSnap(): void;
+    finishLine(): boolean;
+    cancelRuler(): boolean;
+    nudgeByKeyboard(dx: number, dy: number, fine: boolean): void;
+
     // Zoom
     zoomIn(): void;
     zoomOut(): void;

@@ -93,11 +93,11 @@ describe('Rotating and mirroring a macro before placement', () => {
         expect(seen).toEqual([1, 2, 3, 0]);
     });
 
-    it('S mirrors the ghost', () => {
+    it('M mirrors the ghost', () => {
         mouse(panel, 'mousemove', 200, 200);
-        press(panel, 's');
+        press(panel, 'm');
         expect(ghost(panel).isMirrored()).toBe(true);
-        press(panel, 's');
+        press(panel, 'm');
         expect(ghost(panel).isMirrored()).toBe(false);
     });
 
@@ -105,7 +105,7 @@ describe('Rotating and mirroring a macro before placement', () => {
         mouse(panel, 'mousemove', 200, 200);
         press(panel, 'r');
         press(panel, 'r');
-        press(panel, 's');
+        press(panel, 'm');
         click(panel, 200, 200);
 
         const [placed] = placedMacros(panel);
@@ -134,7 +134,7 @@ describe('Rotating and mirroring a macro before placement', () => {
 
     it('resets the orientation when another macro or tool is chosen', () => {
         press(panel, 'r');
-        press(panel, 's');
+        press(panel, 'm');
         panel.setMacroTool(KEY);
         click(panel, 200, 200);
         expect(placedMacros(panel)[0]!.getOrientation()).toBe(0);

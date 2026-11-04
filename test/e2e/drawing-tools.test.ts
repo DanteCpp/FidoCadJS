@@ -17,13 +17,13 @@ test.describe('Drawing Tools — Keyboard Selection', () => {
         ['a', Tools.SELECTION, 'Selection'],
         ['l', Tools.LINE, 'Line'],
         ['t', Tools.TEXT, 'Text'],
-        ['b', Tools.BEZIER, 'Bezier'],
-        ['p', Tools.POLYGON, 'Polygon'],
+        ['Shift+b', Tools.BEZIER, 'Bezier'],
+        ['Shift+p', Tools.POLYGON, 'Polygon'],
         ['o', Tools.COMPLEXCURVE, 'Complex Curve'],
         ['e', Tools.ELLIPSE, 'Ellipse'],
-        ['g', Tools.RECTANGLE, 'Rectangle'],
+        ['b', Tools.RECTANGLE, 'Rectangle'],
         ['c', Tools.CONNECTION, 'Connection'],
-        ['i', Tools.PCB_LINE, 'PCB Line'],
+        ['Shift+t', Tools.PCB_LINE, 'PCB Line'],
         ['z', Tools.PCB_PAD, 'PCB Pad'],
     ];
 
@@ -54,7 +54,7 @@ test.describe('Drawing Primitives', () => {
     });
 
     test('draw a rectangle with two clicks', async ({ page }) => {
-        await pressKey(page, 'g');
+        await pressKey(page, 'b');
         await clickCanvasScreen(page, 150, 150);
         await settle(page);
         await clickCanvasScreen(page, 400, 400);
@@ -78,7 +78,7 @@ test.describe('Drawing Primitives', () => {
     });
 
     test('draw a bezier with four clicks', async ({ page }) => {
-        await pressKey(page, 'b');
+        await pressKey(page, 'Shift+b');
         await clickCanvasScreen(page, 100, 200);
         await settle(page);
         await clickCanvasScreen(page, 200, 100);
@@ -94,7 +94,7 @@ test.describe('Drawing Primitives', () => {
     });
 
     test('draw a polygon and finish with double-click', async ({ page }) => {
-        await pressKey(page, 'p');
+        await pressKey(page, 'Shift+p');
         // 3 points + double-click to finish
         await clickCanvasScreen(page, 100, 100);
         await settle(page);
@@ -123,7 +123,7 @@ test.describe('Drawing Primitives', () => {
     });
 
     test('draw a PCB line with two clicks', async ({ page }) => {
-        await pressKey(page, 'i');
+        await pressKey(page, 'Shift+t');
         await clickCanvasScreen(page, 150, 200);
         await settle(page);
         await clickCanvasScreen(page, 500, 250);
@@ -184,7 +184,7 @@ test.describe('Drawing Primitives', () => {
         await settle(page);
 
         // Draw a rectangle
-        await pressKey(page, 'g');
+        await pressKey(page, 'b');
         await clickCanvasScreen(page, 400, 100);
         await settle(page);
         await clickCanvasScreen(page, 600, 300);

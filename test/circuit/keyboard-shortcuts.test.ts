@@ -160,13 +160,13 @@ describe('Keyboard Shortcuts', () => {
             expect(panel.getTool()).toBe(Tool.TEXT);
         });
 
-        it('B selects the Bezier tool', () => {
-            pressKey(canvas, 'b');
+        it('Shift+B selects the Bezier tool', () => {
+            pressKey(canvas, 'b', { shiftKey: true });
             expect(panel.getTool()).toBe(Tool.BEZIER);
         });
 
-        it('P selects the Polygon tool', () => {
-            pressKey(canvas, 'p');
+        it('Shift+P selects the Polygon tool', () => {
+            pressKey(canvas, 'p', { shiftKey: true });
             expect(panel.getTool()).toBe(Tool.POLYGON);
         });
 
@@ -180,8 +180,8 @@ describe('Keyboard Shortcuts', () => {
             expect(panel.getTool()).toBe(Tool.ELLIPSE);
         });
 
-        it('G selects the Rectangle tool', () => {
-            pressKey(canvas, 'g');
+        it('B selects the Rectangle tool', () => {
+            pressKey(canvas, 'b');
             expect(panel.getTool()).toBe(Tool.RECTANGLE);
         });
 
@@ -190,8 +190,8 @@ describe('Keyboard Shortcuts', () => {
             expect(panel.getTool()).toBe(Tool.CONNECTION);
         });
 
-        it('I selects the PCB track tool', () => {
-            pressKey(canvas, 'i');
+        it('Shift+T selects the PCB track tool', () => {
+            pressKey(canvas, 't', { shiftKey: true });
             expect(panel.getTool()).toBe(Tool.PCB_LINE);
         });
 
@@ -204,7 +204,7 @@ describe('Keyboard Shortcuts', () => {
             pressKey(canvas, 'L');
             expect(panel.getTool()).toBe(Tool.LINE);
 
-            pressKey(canvas, 'G');
+            pressKey(canvas, 'B');
             expect(panel.getTool()).toBe(Tool.RECTANGLE);
         });
     });
@@ -387,7 +387,7 @@ describe('Keyboard Shortcuts', () => {
             expect(panel.getTool()).toBe(Tool.LINE);
         });
 
-        it('S mirrors selected primitives horizontally', () => {
+        it('M mirrors selected primitives horizontally', () => {
             // Line from (10,10) to (40,10), layer 0
             // Mirror axis is first point's x = 10
             // Point at x=10 stays (on the axis)
@@ -396,7 +396,7 @@ describe('Keyboard Shortcuts', () => {
             selectAll(panel);
             const prim = getModelPrimitives(panel)[0];
 
-            pressKey(canvas, 's');
+            pressKey(canvas, 'm');
 
             expect(prim.virtualPoint[0].x).toBe(10); // on axis, unchanged
             expect(prim.virtualPoint[1].x).toBe(-20); // mirrored across x=10
@@ -435,21 +435,21 @@ describe('Keyboard Shortcuts', () => {
             expect(prim.getArrowData().isArrowEnd()).toBe(false);
         });
 
-        it('M starts move mode for selected elements', () => {
+        it('Shift+M starts move mode for selected elements', () => {
             addLineToPanel(panel, 10, 10, 30, 10, 0);
             selectAll(panel);
 
             const cursorBefore = canvas.style.cursor;
-            pressKey(canvas, 'm');
+            pressKey(canvas, 'm', { shiftKey: true });
 
             // Cursor should change to 'move'
             expect(canvas.style.cursor).toBe('move');
             expect(canvas.style.cursor).not.toBe(cursorBefore);
         });
 
-        it('M does nothing when nothing is selected', () => {
+        it('Shift+M does nothing when nothing is selected', () => {
             panel.setTool(Tool.LINE);
-            pressKey(canvas, 'm');
+            pressKey(canvas, 'm', { shiftKey: true });
             // Tool should not change — M is a transform, not a tool shortcut
             expect(panel.getTool()).toBe(Tool.LINE);
         });
@@ -518,7 +518,7 @@ describe('Keyboard Shortcuts', () => {
 
             pressKey(canvas, 'ArrowUp', { altKey: true });
 
-            expect(prim.virtualPoint[0].y).toBe(y0 + 1);
+            expect(prim.virtualPoint[0].y).toBe(y0 - 1);
         });
 
         it('Alt+ArrowDown nudges selected down by 1 unit', () => {
@@ -529,7 +529,7 @@ describe('Keyboard Shortcuts', () => {
 
             pressKey(canvas, 'ArrowDown', { altKey: true });
 
-            expect(prim.virtualPoint[0].y).toBe(y0 - 1);
+            expect(prim.virtualPoint[0].y).toBe(y0 + 1);
         });
 
         it('Alt+arrow does nothing when nothing is selected', () => {

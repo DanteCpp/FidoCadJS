@@ -6,6 +6,8 @@ import type { GraphicPrimitive } from '../primitives/GraphicPrimitive.js';
 
 export interface EditorFacade {
     // ─── Callback properties ──────────────────────────────────────────────
+    onViewSettingsChange: (() => void) | null;
+    onLayerChange: ((layer: number) => void) | null;
     onToolChange: ((toolId: number) => void) | null;
     onZoomChange: (() => void) | null;
     onUndoStateChange: (() => void) | null;
@@ -27,6 +29,7 @@ export interface EditorFacade {
     setGridVisible(v: boolean): void;
     isSnapActive(): boolean;
     setSnap(s: boolean): void;
+    toggleFilled(): void;
 
     // ─── Edit ─────────────────────────────────────────────────────────────
     undo(): void;
