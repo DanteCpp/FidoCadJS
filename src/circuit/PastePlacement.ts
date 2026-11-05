@@ -23,13 +23,10 @@ export class PastePlacement {
     private drawing: Drawing;
 
     private _active = false;
-    private originalText = '';
-    /** Anchor (top-left) of the parsed content as it came off the clipboard. */
+    private configurationText = '';
+    /** Placement pivot, initially the top-left of the copied control points. */
     private anchorX = 0;
     private anchorY = 0;
-    /** Offset currently applied to the ghost relative to the original anchor. */
-    private offsetX = 0;
-    private offsetY = 0;
 
     constructor() {
         this.model = new DrawingModel();
@@ -74,11 +71,13 @@ export class PastePlacement {
             minY = 0;
         }
 
-        this.originalText = text;
+        // Keep clipboard configuration, never the preview's green layer palette.
+        this.configurationText = text
+            .split(/\r?\n/)
+            .filter((line) => /^FJC\s/.test(line))
+            .join('\n');
         this.anchorX = minX;
         this.anchorY = minY;
-        this.offsetX = 0;
-        this.offsetY = 0;
         this.model.setChanged(true);
         this._active = true;
         return true;
@@ -87,22 +86,44 @@ export class PastePlacement {
     /** Move the ghost so its anchor lands on the given (already snapped) point. */
     moveTo(lx: number, ly: number): void {
         if (!this._active) return;
-        // The anchor is the blob's top-left, so keeping it non-negative keeps every
-        // control point >= 0. Primitives refuse to move below the origin, so this
-        // also guarantees the rigid blob never distorts and that the eventual
-        // committed move applies in full.
-        const tx = lx < 0 ? 0 : lx;
-        const ty = ly < 0 ? 0 : ly;
-        const targetOffsetX = tx - this.anchorX;
-        const targetOffsetY = ty - this.anchorY;
-        const dx = targetOffsetX - this.offsetX;
-        const dy = targetOffsetY - this.offsetY;
+        this.moveBy(lx - this.anchorX, ly - this.anchorY);
+    }
+
+    moveBy(dx: number, dy: number): void {
+        if (!this._active) return;
+        // Rotations can put control points left/above the pivot. Clamp the whole
+        // group together so no primitive refuses its move and breaks the layout.
+        for (const p of this.model.getPrimitiveVector()) {
+            for (let i = 0; i < p.getControlPointNumber(); i++) {
+                const pt = p.virtualPoint[i]!;
+                dx = Math.max(dx, -pt.x);
+                dy = Math.max(dy, -pt.y);
+            }
+        }
         if (dx === 0 && dy === 0) return;
         for (const p of this.model.getPrimitiveVector()) {
             p.movePrimitive(dx, dy);
         }
-        this.offsetX = targetOffsetX;
-        this.offsetY = targetOffsetY;
+        this.anchorX += dx;
+        this.anchorY += dy;
+        this.model.setChanged(true);
+    }
+
+    rotate(): void {
+        if (!this._active) return;
+        for (const p of this.model.getPrimitiveVector()) {
+            p.rotatePrimitive(false, this.anchorX, this.anchorY);
+        }
+        this.moveBy(0, 0);
+        this.model.setChanged(true);
+    }
+
+    mirror(): void {
+        if (!this._active) return;
+        for (const p of this.model.getPrimitiveVector()) {
+            p.mirrorPrimitive(this.anchorX);
+        }
+        this.moveBy(0, 0);
         this.model.setChanged(true);
     }
 
@@ -112,14 +133,16 @@ export class PastePlacement {
         this.drawing.draw(gi, cs);
     }
 
-    /** The clipboard text as it was received (unchanged by the drag). */
-    getOriginalText(): string {
-        return this.originalText;
-    }
-
-    /** Total offset to apply to the committed copy of the original text. */
-    getOffset(): { dx: number; dy: number } {
-        return { dx: this.offsetX, dy: this.offsetY };
+    /** Serialize the edited ghost at its final position for committing. */
+    getText(): string {
+        return (
+            this.configurationText +
+            '\n' +
+            this.model
+                .getPrimitiveVector()
+                .map((p) => p.toString(true))
+                .join('')
+        );
     }
 
     /** Leave placement mode and release the transient primitives. */

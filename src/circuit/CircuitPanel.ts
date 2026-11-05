@@ -705,6 +705,11 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     /** Rotate the selection, or the pending macro while one is being placed. */
     rotateSelected(): void {
+        if (this.pastePlacement.isActive()) {
+            this.pastePlacement.rotate();
+            this.render();
+            return;
+        }
         if (this.isPlacingMacro()) {
             this.elementsEdt.rotateMacro();
             this.refreshMacroGhost();
@@ -718,6 +723,11 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
 
     /** Mirror the selection, or the pending macro while one is being placed. */
     mirrorSelected(): void {
+        if (this.pastePlacement.isActive()) {
+            this.pastePlacement.mirror();
+            this.render();
+            return;
+        }
         if (this.isPlacingMacro()) {
             this.elementsEdt.mirrorMacro();
             this.refreshMacroGhost();
@@ -876,10 +886,14 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     }
 
     nudgeByKeyboard(dx: number, dy: number, fine: boolean): void {
-        this.nudgeSelected(
-            dx * (fine ? 1 : this.mapCoordinates.getXGridStep()),
-            dy * (fine ? 1 : this.mapCoordinates.getYGridStep()),
-        );
+        const stepX = dx * (fine ? 1 : this.mapCoordinates.getXGridStep());
+        const stepY = dy * (fine ? 1 : this.mapCoordinates.getYGridStep());
+        if (this.pastePlacement.isActive()) {
+            this.pastePlacement.moveBy(stepX, stepY);
+            this.render();
+            return;
+        }
+        this.nudgeSelected(stepX, stepY);
     }
 
     getLayerDescriptions(): string[] {
@@ -1027,17 +1041,12 @@ export class CircuitPanel implements KeyboardHost, EditorFacade {
     /** Drop the pasted content at the ghost's current position. */
     commitPastePlacement(): void {
         if (!this.pastePlacement.isActive()) return;
-        const text = this.pastePlacement.getOriginalText();
-        const { dx, dy } = this.pastePlacement.getOffset();
+        const text = this.pastePlacement.getText();
         this.pastePlacement.end();
 
         this.undoActions.saveUndoState();
         this.selectionActions.setSelectionAll(false);
         this.parserActions.addString(text, true);
-        if (dx !== 0 || dy !== 0) {
-            // Undo state already captured above — don't double-save.
-            this.editorActions.moveAllSelected(dx, dy, false);
-        }
         this.model.setModified(true);
         this.inputHandler.updateCursor(this.currentTool);
         this.render();
